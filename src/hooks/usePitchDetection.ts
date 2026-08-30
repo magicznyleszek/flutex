@@ -38,6 +38,7 @@ interface AudioSession {
   frame: number
 }
 
+/** Failures land in `status` and `error` instead of rejecting `start`. */
 export function usePitchDetection({
   minFreq,
   maxFreq,
@@ -48,11 +49,8 @@ export function usePitchDetection({
 
   const sessionRef = useRef<AudioSession | null>(null)
 
-  // The requestAnimationFrame loop reschedules itself, so it would close over
-  // the callback from the first render for the whole listening session. The ref
-  // is refreshed after every render, so each frame always sees the current game
-  // configuration. This was the cause of the "changing difficulty does nothing"
-  // bug.
+  // The frame loop reschedules itself, so a captured callback would stay on the
+  // first render's game configuration for the whole listening session.
   const onFrameRef = useRef(onFrame)
   useEffect(() => {
     onFrameRef.current = onFrame
@@ -64,8 +62,8 @@ export function usePitchDetection({
     sessionRef.current = null
 
     cancelAnimationFrame(session.frame)
-    // Closing the AudioContext alone does not turn off the browser's mic
-    // indicator — the stream tracks have to be stopped by hand.
+    // Closing the AudioContext leaves the browser's mic indicator on. The tracks
+    // have to be stopped by hand.
     for (const track of session.stream.getTracks()) track.stop()
     void session.context.close().catch(() => undefined)
   }, [])
@@ -82,8 +80,8 @@ export function usePitchDetection({
     setError(null)
 
     try {
-      // Speech processing is turned off: noise suppression and automatic gain
-      // control mangle long, steady tones and ruin detection.
+      // Noise suppression and automatic gain control mangle long, steady tones and
+      // ruin detection.
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -137,8 +135,8 @@ export function usePitchDetection({
     }
   }, [closeSession, minFreq, maxFreq])
 
-  // Switching instruments changes the frequency range being searched. The
-  // detector is rebuilt in place so listening is never interrupted.
+  // Switching instruments changes the search range. Rebuilding the detector in
+  // place keeps the running session alive.
   useEffect(() => {
     const session = sessionRef.current
     if (!session) return

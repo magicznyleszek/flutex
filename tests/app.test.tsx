@@ -6,12 +6,9 @@ import { DEFAULT_SONG } from '../src/data/songs'
 import { theme } from '../src/theme'
 
 /**
- * Smoke test for the whole application.
- *
- * Server-side rendering needs neither jsdom nor extra libraries, and it catches
- * what is easiest to break while assembling UI: a bad Mantine prop, a missing
- * provider, an exception during hook initialisation. The absence of `window` is
- * a feature here — it also proves the localStorage access is guarded.
+ * Server-side rendering needs no jsdom and catches what breaks while assembling UI: a
+ * bad Mantine prop, a missing provider, a throw during hook init. There is no `window`
+ * here, so it also proves the localStorage access is guarded.
  */
 const render = (): string =>
   renderToStaticMarkup(

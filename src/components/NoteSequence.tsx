@@ -15,13 +15,10 @@ export interface NoteSequenceProps {
 }
 
 /**
- * Diameter in px, phone first. The bubbles are the tallest thing in the card.
- *
- * The index signature is what makes this assignable to Mantine's `StyleProp`: a
- * breakpoint object there is a `Partial<Record<MantineBreakpoint, …>>` and
- * `MantineBreakpoint` ends in `string & {}`, so a closed two-key interface is not
- * enough. The two named keys keep `size.base` and `size.sm` from widening to
- * `number | undefined` under `noUncheckedIndexedAccess`.
+ * Bubble diameter in px. The index signature is what makes this assignable to Mantine's
+ * `StyleProp`, whose breakpoint object is `Partial<Record<MantineBreakpoint, T>>` with
+ * `MantineBreakpoint` ending in `string & {}`. The two named keys stop `base` and `sm`
+ * widening to `number | undefined` under `noUncheckedIndexedAccess`.
  */
 interface BubbleSize extends Record<string, number> {
   base: number
@@ -37,11 +34,9 @@ interface BubbleProps {
 }
 
 /**
- * `w`, `h` and `fz` are three of the Box style props that do accept a breakpoint
- * object — unlike `gap`, which is not a style prop at all. They compile to
- * min-width media queries in a generated class rather than staying in the `style`
- * attribute, so anything set inline below would outrank them; the inline styles
- * here deliberately touch nothing that these three set.
+ * `w`, `h` and `fz` accept a breakpoint object, `gap` does not. Responsive style props
+ * compile to media queries in a generated class, so the inline `style` below outranks
+ * them and must not set width, height or font size.
  */
 function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Element {
   // 3.4 keeps the note name at the proportion it was tuned to at 112px.
@@ -52,8 +47,7 @@ function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Elemen
       <Box
         w={size}
         h={size}
-        // dark-8 is the card colour: the neighbours sink to the page shade and
-        // the target rises above it, so the three read as one row of depth.
+        // The card is dark-8, so the neighbours sink below it and the target rises.
         bg={dimmed ? 'dark.9' : 'dark.7'}
         style={{
           borderRadius: '50%',
@@ -67,19 +61,16 @@ function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Elemen
           </Text>
         </Center>
       </Box>
-      {/* The captions are the row's cheapest 23px on a phone: which bubble is
-          which is already said three times over by left-to-right order, by size,
-          and by the target being the only one that is not dimmed. Only the tallest
-          column's caption actually costs height, but hiding one and not the others
-          would leave the row lopsided. */}
+      {/* On a phone the left-to-right order, the size and the dimming already say which
+          bubble is which, and the row saves 23px. All three hide together or it goes
+          lopsided. */}
       <Text size="xs" c="dimmed" visibleFrom="sm">{caption}</Text>
     </Stack>
   )
 }
 
-/* The row is exactly as tall as the target bubble, so the neighbours are free
-   vertically and only the target buys anything back. 96px still carries the note
-   name at 28px, which is larger than any other type on the screen. */
+/* The row is as tall as the target bubble, so only the target costs height. 96px still
+   carries the note name at 28px, larger than any other type on the screen. */
 const TARGET: BubbleSize = { base: 96, sm: 112 }
 const NEIGHBOUR: BubbleSize = { base: 56, sm: 64 }
 
@@ -104,9 +95,7 @@ export function NoteSequence({
         {meta.label}
         {targetBeats !== null && ` · ${beatsToGlyph(targetBeats)}`}
       </Text>
-      {/* The hint is a prose expansion of the status label directly above it, and
-          on a phone "the note shown above" is not much of a direction when
-          everything is above everything. The label stays, so no state is lost. */}
+      {/* A prose expansion of the status label right above it, so phones drop it. */}
       <Text size="xs" c="dimmed" ta="center" visibleFrom="sm">{meta.hint}</Text>
     </Stack>
   )

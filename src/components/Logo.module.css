@@ -1,30 +1,23 @@
-/* Both files bake in `fill="#191612"`, and they have to keep it: flutex-icon.svg
-   is also the favicon, where there is no stylesheet to ask. Referencing such a
-   file from `background` or `mask` gives the page no way in, so Logo.tsx inlines
-   the markup instead and the fill becomes an ordinary cascade problem — a
-   stylesheet rule outranks a presentation attribute, so the rule below wins
-   without the asset being edited.
-
-   `currentColor` rather than a colour: the caller can then retheme the mark with
-   `c=` or any rule that sets `color`, and the default tracks the colour scheme on
-   its own, `-filled` being accent-6 in light and accent-4 in dark.
-
-   The box is a span, not a div, because the logotype sits inside the page's h1
-   and an h1 only accepts phrasing content. */
+/* Both SVGs bake in `fill="#191612"`, needed because flutex-icon.svg is also the favicon.
+   An SVG used through `background` or `mask` cannot be styled, so Logo.tsx inlines the
+   markup and this rule outranks the presentation attribute. The box is a span, since the
+   logotype sits in the page's h1 and an h1 takes only phrasing content. */
 .mark {
   display: block;
   flex: none;
   color: var(--mantine-color-accent-filled);
 }
 
-/* Both viewBoxes are intrinsic, so `height: auto` derives the aspect ratio from
-   the artwork and no declared ratio can fall out of step with it. */
+/* Both viewBoxes are intrinsic, so `height: auto` takes the aspect ratio from the artwork
+   instead of a declared ratio that can drift from it. */
 .mark > svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
+/* `currentColor` lets a caller retheme the mark with `c=` or any rule that sets `color`,
+   and the default follows the colour scheme by itself. */
 .mark path {
   fill: currentColor;
 }

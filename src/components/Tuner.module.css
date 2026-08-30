@@ -1,5 +1,4 @@
-/* dark-8 is the card colour, so the track drops to the page shade to read as a
-   groove cut into the panel rather than a rectangle painted on it. */
+/* The card is dark-8, so dropping to the page shade reads as a groove cut into the panel. */
 .track {
   position: relative;
   height: 44px;

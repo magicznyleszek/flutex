@@ -1,6 +1,3 @@
-// Musical conversions: note name <-> MIDI <-> frequency.
-// The module is pure (no imports), so it can be tested without a DOM.
-
 export const NOTE_NAMES = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
 ] as const
@@ -16,6 +13,7 @@ type Accidental = keyof typeof ACCIDENTALS
 
 const NOTE_PATTERN = /^([A-G])(#{1,2}|b{1,2})?(-?\d+)$/
 
+/** `cents` is the signed deviation from `midi`, always within ±50. */
 export interface DetectedNote {
   midi: number
   note: string
@@ -37,7 +35,7 @@ export function noteToMidi(noteStr: unknown): number | null {
 /** 78 -> "F#5". Always spelled with sharps. */
 export function midiToNote(midi: number): string {
   const rounded = Math.round(midi)
-  // JS % returns negative results for negative operands, so normalise it.
+  // JS % keeps the sign of the dividend, so wrap negatives back into 0-11.
   const pitchClass = ((rounded % 12) + 12) % 12
   const name = NOTE_NAMES[pitchClass] as (typeof NOTE_NAMES)[number]
   return `${name}${Math.floor(rounded / 12) - 1}`
@@ -47,6 +45,7 @@ export function midiToFreq(midi: number): number {
   return A4_HZ * Math.pow(2, (midi - A4_MIDI) / 12)
 }
 
+/** Fractional MIDI number, so the fraction carries the detuning. */
 export function freqToMidi(hz: number): number {
   return 12 * Math.log2(hz / A4_HZ) + A4_MIDI
 }
@@ -56,7 +55,7 @@ export function noteToFreq(noteStr: unknown): number | null {
   return midi === null ? null : midiToFreq(midi)
 }
 
-/** Deviation in cents between a measured and a reference frequency. */
+/** Deviation in cents between two frequencies, 1200 to the octave. */
 export function centsBetween(hz: number, referenceHz: number): number {
   return 1200 * Math.log2(hz / referenceHz)
 }
@@ -76,10 +75,8 @@ export function freqToNearestNote(hz: number): DetectedNote | null {
 }
 
 /**
- * Deviation from the target note. Measured against the target rather than the
- * nearest note, so playing an octave up reads as +1200c. That is deliberate:
- * the tuner should show the player is far off, not that they nailed a
- * different octave.
+ * Cents from the target note rather than from the nearest note, so an octave up reads
+ * as +1200c instead of in tune. Returns 0 when the name will not parse.
  */
 export function centsFromNote(hz: number, noteStr: string): number {
   const targetHz = noteToFreq(noteStr)
@@ -87,7 +84,8 @@ export function centsFromNote(hz: number, noteStr: string): number {
   return centsBetween(hz, targetHz)
 }
 
-// Note-duration glyphs. Purely a UI hint — the trainer never enforces rhythm.
+// Display only; the trainer never enforces rhythm. Must stay in descending order, the
+// lookup takes the first entry that fits.
 const DURATION_GLYPHS: readonly (readonly [number, string])[] = [
   [4, '𝅝'],
   [3, '𝅗𝅥.'],

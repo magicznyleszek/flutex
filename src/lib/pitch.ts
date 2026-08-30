@@ -1,19 +1,14 @@
-// Pitch detection with the McLeod Pitch Method (MPM — normalised square
-// difference function). Compared to raw autocorrelation it buys three things:
-//
-//  1. Only the lags that fall inside the instrument's range are computed
-//     instead of all 1024 — roughly a 10x cut in work.
-//  2. Window energy comes from prefix sums, so normalisation is O(1) per lag
-//     instead of O(n).
-//  3. The NSDF is normalised to <-1, 1>, so peak height doubles as a measure
-//     of tone clarity and lets us reject noise without guessing thresholds.
+// Pitch detection with the McLeod Pitch Method (normalised square difference).
+// Only the lags inside the instrument's range are computed, roughly a tenth of
+// the 1024 possible, and prefix sums keep normalisation O(1) per lag. The NSDF
+// lands in <-1, 1>, so peak height also serves as a clarity score.
 
 export interface PitchReading {
   /** Frequency in Hz, or -1 when no tone was detected. */
   hz: number
   /** Tone clarity, 0-1. A sine reads ~1, noise close to 0. */
   clarity: number
-  /** Signal loudness (RMS) — useful for an input-level meter. */
+  /** Signal loudness (RMS), for the input-level meter. */
   rms: number
 }
 
@@ -46,10 +41,9 @@ export function createPitchDetector({
   // Past half the window there are too few overlapping samples left.
   const maxLag = Math.min(bufferSize >> 1, Math.ceil(sampleRate / minFreq))
 
-  // One extra lag is computed on each side of the range we actually search.
-  // Without that margin a peak sitting exactly on minFreq or maxFreq has no
-  // neighbour to compare against and gets skipped — a tone at the edge of the
-  // instrument's range would then fall through to its subharmonic.
+  // One lag of margin on each side of the searched range. Without it a peak
+  // sitting exactly on minFreq or maxFreq has no neighbour to compare against,
+  // gets skipped, and the tone reads as its subharmonic.
   const searchMin = Math.max(2, minLag - 1)
   const searchMax = Math.min(bufferSize >> 1, maxLag + 1)
   const lagCount = Math.max(0, searchMax - searchMin + 1)
@@ -58,7 +52,7 @@ export function createPitchDetector({
   const firstPeakIndex = Math.max(1, minLag - searchMin)
   const lastPeakIndex = Math.min(lagCount - 2, maxLag - searchMin)
 
-  // Buffers are allocated once. The loop runs 60x/s and must not create garbage.
+  // Allocated once. Detection runs 60x/s and must not create garbage.
   const nsdf = new Float32Array(lagCount)
   const prefixSquares = new Float64Array(bufferSize + 1)
 
@@ -67,7 +61,8 @@ export function createPitchDetector({
   return function detect(buffer: Float32Array): PitchReading {
     let sumSquares = 0
     for (let i = 0; i < bufferSize; i++) {
-      // Indices are in range by the loop condition, hence the assertions in hot code.
+      // `as number` here and below: the loop bounds keep every index in range,
+      // which noUncheckedIndexedAccess cannot see.
       const sample = buffer[i] as number
       sumSquares += sample * sample
       prefixSquares[i + 1] = sumSquares
@@ -85,8 +80,7 @@ export function createPitchDetector({
         correlation += (buffer[j] as number) * (buffer[j + lag] as number)
       }
 
-      // Energy of both compared windows, pulled from prefix sums instead of a
-      // second loop — this is the trick that brings the cost down.
+      // Energy of both compared windows, from prefix sums instead of a second loop.
       const energy
         = (prefixSquares[overlap] as number)
         + (totalEnergy - (prefixSquares[lag] as number))
@@ -101,8 +95,8 @@ export function createPitchDetector({
     }
     if (highestPeak <= 0) return noPitch(rms)
 
-    // Take the FIRST tall-enough peak, not the highest one. The highest often
-    // lands on a multiple of the period, which would read an octave too low.
+    // Take the first peak within `peakRatio` of the tallest. The tallest often
+    // lands on a multiple of the period and reads an octave too low.
     const cutoff = highestPeak * peakRatio
     let peakIndex = -1
     for (let i = firstPeakIndex; i <= lastPeakIndex; i++) {
@@ -114,8 +108,8 @@ export function createPitchDetector({
     }
     if (peakIndex < 0) return noPitch(rms)
 
-    // Parabolic interpolation. Without it the resolution is whole samples,
-    // which at 600 Hz means jumps of a dozen-plus cents.
+    // Parabolic interpolation. Whole-sample resolution jumps by a dozen cents or
+    // more around 600 Hz.
     const y1 = nsdf[peakIndex - 1] as number
     const y2 = nsdf[peakIndex] as number
     const y3 = nsdf[peakIndex + 1] as number
@@ -131,7 +125,7 @@ export function createPitchDetector({
 
     const hz = sampleRate / (searchMin + peakIndex + shift)
     if (clarity < clarityThreshold) return noPitch(rms)
-    // A margin, because minLag and maxLag are rounded to whole samples.
+    // 10% margin, since minLag and maxLag are rounded to whole samples.
     if (hz < minFreq * 0.9 || hz > maxFreq * 1.1) return noPitch(rms)
 
     return { hz, clarity, rms }
@@ -141,9 +135,9 @@ export function createPitchDetector({
 export type MedianFilter = (value: number) => number
 
 /**
- * Median of the last N readings. Kills single-frame octave jumps without the
- * lag a moving average would add. Silence clears the history so releasing a
- * note registers immediately — the trainer depends on that.
+ * Median of the last N readings, which kills single-frame octave jumps without
+ * the lag of a moving average. Silence clears the history, so releasing a note
+ * registers right away.
  */
 export function createMedianFilter(size = 3): MedianFilter {
   const history: number[] = []

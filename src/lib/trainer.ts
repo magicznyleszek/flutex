@@ -1,23 +1,19 @@
-// The "wait-and-proceed" trainer state machine: it waits until the player
-// holds the right note long enough, then moves on to the next one.
-//
-// This is deliberately pure logic, with no React and no Web Audio:
-//  - it can be tested frame by frame, deterministically,
-//  - the configuration lives inside the engine, so the animation loop cannot
-//    close over a stale tolerance or penalty mode (that was a real bug).
+// Wait-and-proceed state machine: hold the right note long enough and it advances to the
+// next one. Pure logic with no React and no Web Audio, so tests can step it frame by
+// frame. The config lives inside the engine because the animation loop would otherwise
+// close over a stale tolerance or penalty mode.
 
+/** Where a filled mistake bar sends the player: nowhere, back `backSteps` notes, or to 0. */
 export type PenaltyMode = 'wait' | 'back' | 'restart'
 
 export type TrainerStatus =
-  /** Waiting for a sound. */
   | 'waiting'
-  /** The player is holding the right note; the progress bar is filling. */
   | 'holding'
   /** Forced pause after a hit or a penalty. */
   | 'cooldown'
-  /** The sound must be broken, because the next note is the same one. */
+  /** The next note repeats this one, so the sound has to be broken first. */
   | 'release'
-  /** The player is playing something else; the mistake bar is filling. */
+  /** Some other note is sounding. Silence counts as `waiting`, not this. */
   | 'wrong'
   | 'finished'
 
@@ -32,13 +28,12 @@ export interface TrainerFrame {
 export interface TrainerOptions {
   toleranceCents: number
   penaltyMode: PenaltyMode
-  /** How many frames the note must be held to count. */
   holdFrames: number
-  /** How many frames of wrong playing fill the penalty bar. */
+  /** Frames of wrong playing that fill the mistake bar. */
   mistakeLimitFrames: number
   /** Forced pause after a hit. */
   cooldownFrames: number
-  /** Forced pause after a penalty — longer, so the player can catch up. */
+  /** Forced pause after a penalty, longer than after a hit so the player can catch up. */
   penaltyCooldownFrames: number
   /** How many notes the "back" mode rewinds. */
   backSteps: number
@@ -55,9 +50,9 @@ export interface TrainerSnapshot {
   mistakeProgress: number
   status: TrainerStatus
   finished: boolean
-  /** Number of penalties triggered in this run. */
+  /** Penalties triggered in this run, not wrong frames. */
   mistakes: number
-  /** Number of notes completed in this run. */
+  /** Notes completed in this run. */
   hits: number
   total: number
 }
@@ -82,6 +77,7 @@ export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value))
 
+/** Call `step` once per audio frame. Every `*Frames` option is counted in those frames. */
 export function createTrainerEngine(
   notes: readonly string[],
   options: Partial<TrainerOptions> = {},
@@ -136,8 +132,7 @@ export function createTrainerEngine(
     const previousNote = noteAt(index)
     index = Math.max(0, Math.min(position, Math.max(0, song.length - 1)))
     cooldownLeft = cooldown
-    // If the jump lands back on the same note, waiting out the frames is not
-    // enough — the player has to physically stop and re-articulate.
+    // Landing back on the same note needs a real re-articulation, not just a wait.
     awaitingRelease = previousNote !== null && noteAt(index) === previousNote
     status = cooldown > 0 ? 'cooldown' : 'waiting'
   }
@@ -161,8 +156,8 @@ export function createTrainerEngine(
     mistakes += 1
 
     if (config.penaltyMode === 'wait') {
-      // No penalty: the bar stays full as a "you are playing the wrong note"
-      // signal, but is not cleared — it decays once the player gets it right.
+      // The index does not move. The bar is pinned full as a "wrong note" signal and
+      // decays only once the wrong note stops.
       mistakeFrames = config.mistakeLimitFrames
       holdFrames = 0
       status = 'wrong'
@@ -172,7 +167,7 @@ export function createTrainerEngine(
     clearCounters()
     const destination = config.penaltyMode === 'back' ? index - config.backSteps : 0
     goTo(destination, config.penaltyCooldownFrames)
-    // After a penalty we always require a release, so the penalty is felt.
+    // A penalty always demands a release, even when the destination note differs.
     awaitingRelease = true
   }
 
@@ -189,6 +184,7 @@ export function createTrainerEngine(
     }
 
     if (awaitingRelease) {
+      // The frame that breaks the sound is not discarded, it still counts below.
       const target = noteAt(index)
       if (frame.note === null || frame.note !== target) {
         awaitingRelease = false
@@ -209,8 +205,8 @@ export function createTrainerEngine(
       mistakeFrames = Math.max(0, mistakeFrames - 1)
       status = 'holding'
     } else if (frame.note !== null) {
-      // A wrong note costs less than a right one gains, so a momentary wobble
-      // in intonation does not wipe out all the progress.
+      // Half a frame lost against a full frame gained, so a momentary wobble in
+      // intonation does not wipe out the hold.
       holdFrames = Math.max(0, holdFrames - 0.5)
       mistakeFrames += 0.5
       status = 'wrong'
@@ -220,6 +216,7 @@ export function createTrainerEngine(
       status = 'waiting'
     }
 
+    // A finished hold wins when both bars fill on the same frame.
     if (holdFrames >= config.holdFrames) {
       registerHit()
     } else if (mistakeFrames >= config.mistakeLimitFrames) {

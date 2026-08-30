@@ -6,10 +6,10 @@ export type HoleState = 0 | 0.5 | 1
 export interface Fingering {
   /** Holes from the mouthpiece down. On the recorder the first slot is the thumb. */
   holes: readonly HoleState[]
-  /** Technical hint, e.g. a note about the register. */
   hint?: string
 }
 
+/** Persisted in localStorage, so renaming a member drops the saved instrument choice. */
 export type InstrumentId = 'whistle_d' | 'recorder'
 
 interface InstrumentDefinition {
@@ -22,7 +22,7 @@ interface InstrumentDefinition {
 
 export interface Instrument extends InstrumentDefinition {
   id: InstrumentId
-  /** Notes sorted from the lowest — computed, not hand-written. */
+  /** Sorted from the lowest pitch up. */
   notes: readonly string[]
   holeCount: number
 }
@@ -43,8 +43,8 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
       B5: { holes: [1, 0, 0, 0, 0, 0] },
       C6: { holes: [0, 1, 1, 0, 0, 0] },
       'C#6': { holes: [0, 0, 0, 0, 0, 0] },
-      // Second register. D6 has its own fingering; the higher notes repeat the
-      // first register and differ only in breath pressure.
+      // Second register starts here. D6 has a grip of its own, the rest repeat the
+      // first-register holes with more breath.
       D6: {
         holes: [0, 1, 1, 1, 1, 1],
         hint: 'Second register. Some schools play D6 with all holes closed and more breath.',
@@ -65,8 +65,8 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
       C5: { holes: [1, 1, 1, 1, 1, 1, 1, 1] },
       D5: { holes: [1, 1, 1, 1, 1, 1, 1, 0] },
       E5: { holes: [1, 1, 1, 1, 1, 1, 0, 0] },
-      // Baroque grip: thumb + 1,2,3, hole 4 open, 5,6,7 closed.
-      // German fingering spells F differently — the systems are not mixed here.
+      // Baroque F5 is forked: hole 4 open, 5, 6, 7 closed. German recorders finger this
+      // note differently, so the whole table stays baroque.
       F5: { holes: [1, 1, 1, 1, 0, 1, 1, 1] },
       'F#5': { holes: [1, 1, 1, 1, 0, 1, 1, 0] },
       G5: { holes: [1, 1, 1, 1, 0, 0, 0, 0] },
@@ -115,9 +115,8 @@ export function getFingering(instrument: Instrument, note: string): Fingering | 
 }
 
 /**
- * The instrument's range in hertz, with headroom for intonation drift.
- * This is what lets the detector work on a narrow window of lags instead of
- * scanning the whole spectrum — the main saving in the analysis loop.
+ * The playable range in hertz, padded by `marginSemitones` so out-of-tune playing still
+ * falls inside it. The detector uses this to search a narrow band of lags.
  */
 export function instrumentFreqRange(
   instrument: Instrument,
@@ -133,7 +132,7 @@ export function instrumentFreqRange(
   }
 }
 
-/** Notes in a song that cannot be played on the given instrument. */
+/** Notes with no fingering on this instrument, deduplicated. */
 export function unplayableNotes(
   instrument: Instrument,
   notes: readonly string[],

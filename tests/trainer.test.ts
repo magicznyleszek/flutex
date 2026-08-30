@@ -8,7 +8,7 @@ import {
 
 const SONG = ['D5', 'E5', 'F#5', 'G5', 'A5', 'B5', 'C#6', 'D6']
 
-// Short thresholds, so the tests work in a handful of frames rather than dozens.
+// Short thresholds keep every test to a handful of frames.
 const HOLD = 4
 const MISTAKE_LIMIT = 4
 const COOLDOWN = 3
@@ -126,7 +126,6 @@ describe('cooldown and breaking the sound', () => {
     const engine = engineWith()
     feed(engine, HOLD, 'D5')
 
-    // The player blows the next note immediately, but the cooldown is still on.
     const during = feed(engine, 2, 'E5')
     expect(during.status).toBe('cooldown')
     expect(during.holdProgress).toBe(0)
@@ -141,7 +140,7 @@ describe('cooldown and breaking the sound', () => {
     feed(engine, HOLD, 'A5')
     feed(engine, COOLDOWN, 'A5')
 
-    // The cooldown is over but the sound never stopped — the second A5 fails.
+    // The cooldown is over, but the sound never stopped, so the second A5 does not count.
     const stillHeld = feed(engine, 20, 'A5')
     expect(stillHeld.index).toBe(1)
     expect(stillHeld.status).toBe('release')
@@ -230,8 +229,7 @@ describe('penalty modes', () => {
     const engine = engineWith('restart')
     for (let i = 0; i < 4; i++) playNote(engine)
 
-    // The penalty moves back to D5 and D5 is already sounding — without a
-    // release it must not count.
+    // The penalty lands back on D5 while D5 is still sounding, which must not count.
     feed(engine, 8, 'D5')
     const held = feed(engine, 30, 'D5')
     expect(held.index).toBe(0)
@@ -247,7 +245,7 @@ describe('configuration mid-song', () => {
   it('applies a tolerance change from the next frame', () => {
     const engine = engineWith()
 
-    // 40 cents does not fit inside the default 25.
+    // 40 cents sits outside the configured tolerance of 25.
     expect(feed(engine, 10, 'D5', 40).index).toBe(0)
 
     engine.configure({ toleranceCents: 50 })

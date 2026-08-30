@@ -13,18 +13,16 @@ export interface TunerProps {
   active: boolean
 }
 
-/**
- * The whole scale spans ±DISPLAY_RANGE cents, i.e. half a semitone each way.
- * There is nothing to show beyond that — it is a different note by then.
- */
+/** Half the scale's span in cents. A semitone end to end, past which it is another note. */
 const DISPLAY_RANGE = 50
 
 const clamp = (value: number, limit: number): number =>
   Math.max(-limit, Math.min(limit, value))
 
 export function Tuner({ cents, toleranceCents, active }: TunerProps): JSX.Element {
-  // The tolerance is one-sided, so the zone is 2x the tolerance wide.
-  // The scale maps DISPLAY_RANGE cents onto 50% of the track width.
+  // The tolerance is one-sided, so the green zone is twice the tolerance wide.
+  // DISPLAY_RANGE cents map onto 50% of the track, and the cap keeps a wide tolerance
+  // from overrunning it.
   const halfWidth = Math.min(50, (toleranceCents / DISPLAY_RANGE) * 50)
   const needleLeft = 50 + (clamp(cents, DISPLAY_RANGE) / DISPLAY_RANGE) * 50
   const inTune = active && Math.abs(cents) <= toleranceCents

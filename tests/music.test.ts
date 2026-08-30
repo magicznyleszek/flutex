@@ -72,8 +72,7 @@ describe('freqToNearestNote', () => {
 
 describe('centsFromNote', () => {
   it('measures against the target, not the nearest note', () => {
-    // An octave above the target is +1200c, not 0 — the player has to see that
-    // they are far off.
+    // An octave above the target reads +1200c, so the player sees how far off it is.
     const octaveUp = noteToFreq('D6') as number
     expect(centsFromNote(octaveUp, 'D5')).toBeCloseTo(1200, 9)
   })

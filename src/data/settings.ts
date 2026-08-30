@@ -1,5 +1,6 @@
 import type { PenaltyMode } from '../lib/trainer'
 
+/** Persisted in localStorage, so renaming a member drops the saved difficulty. */
 export type DifficultyId = 'loose' | 'normal' | 'strict'
 
 export interface DifficultyLevel {
@@ -31,7 +32,6 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyLevel> = {
   },
 }
 
-/** Order in the picker: from the most forgiving to the strictest. */
 export const DIFFICULTY_LIST: readonly DifficultyLevel[] = [
   DIFFICULTIES.loose,
   DIFFICULTIES.normal,

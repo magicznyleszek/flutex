@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 
+/** Renaming this drops everyone's saved progress. */
 const STORAGE_KEY = 'flutex_progress_v1'
 
 export interface SongRecord {
@@ -23,8 +24,8 @@ function isRecord(value: unknown): value is SongRecord {
 }
 
 /**
- * Stored progress may come from an older version or from a hand edit, so every
- * entry is validated on its own — one broken record does not wipe the rest.
+ * Every entry is checked on its own, so one bad record from an older version or a hand
+ * edit does not wipe the rest.
  */
 function readRecords(): Record<string, SongRecord> {
   try {
@@ -54,8 +55,8 @@ function writeRecords(records: Record<string, SongRecord>): void {
 
 export function useSongProgress(): SongProgress {
   const [records, setRecords] = useState<Record<string, SongRecord>>(readRecords)
-  // The write goes to localStorage right away, so the state is mirrored in a
-  // ref — a setState updater is no place for side effects.
+  // Mirrors the state because each change writes to storage right away, and a setState
+  // updater is no place for a side effect.
   const recordsRef = useRef(records)
 
   const commit = useCallback((next: Record<string, SongRecord>) => {

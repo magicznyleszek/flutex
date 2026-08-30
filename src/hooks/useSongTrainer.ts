@@ -14,6 +14,7 @@ export interface TrainerView extends TrainerSnapshot {
   detectedNote: string | null
   /** Deviation from the target note in cents. */
   cents: number
+  /** Confidence in the reading, 0-1. */
   clarity: number
 }
 
@@ -29,11 +30,7 @@ export interface SongTrainer {
   reset: () => void
 }
 
-/**
- * Detection runs 60 times a second, but the eye does not need 60 renders.
- * Game-state changes are published immediately; bar and tuner movement is
- * throttled to ~30 fps.
- */
+/** Detection runs at 60 fps. Bar and tuner movement is capped to ~30. */
 const UI_INTERVAL_MS = 33
 
 const asView = (snapshot: TrainerSnapshot): TrainerView => ({
@@ -43,15 +40,17 @@ const asView = (snapshot: TrainerSnapshot): TrainerView => ({
   clarity: 0,
 })
 
+/**
+ * One microphone reading per frame in, a throttled view out. `notes` is compared by
+ * identity, so a caller that rebuilds the array every render restarts the song.
+ */
 export function useSongTrainer({
   notes,
   toleranceCents,
   penaltyMode,
 }: UseSongTrainerOptions): SongTrainer {
-  // The engine is created once and lives for as long as the component is
-  // mounted. useState with a lazy initialiser rather than a ref: reading a ref
-  // during render is a trap (and react-hooks rightly flags it), and the
-  // engine's identity never changes anyway.
+  // Held in state rather than a ref because the initial view below reads it during
+  // render.
   const [engine] = useState<TrainerEngine>(() =>
     createTrainerEngine(notes, { toleranceCents, penaltyMode }),
   )
@@ -64,8 +63,7 @@ export function useSongTrainer({
   const publish = useCallback((next: TrainerView) => {
     const previous = viewRef.current
 
-    // A change of note, status or counter has to be visible at once — that is
-    // what the player reacts to.
+    // These are what the player reacts to, so they skip the throttle below.
     const structural
       = next.status !== previous.status
       || next.index !== previous.index
@@ -119,8 +117,8 @@ export function useSongTrainer({
     setView(next)
   }, [engine])
 
-  // The configuration is injected into the engine rather than captured by the
-  // frame loop, so changing difficulty or penalty mode works mid-song.
+  // Pushed into the engine instead of captured by the frame loop, so difficulty and
+  // penalty changes take effect mid-song.
   useEffect(() => {
     engine.configure({ toleranceCents, penaltyMode })
   }, [engine, toleranceCents, penaltyMode])

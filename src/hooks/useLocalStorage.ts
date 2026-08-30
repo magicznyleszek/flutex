@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 
 /**
- * A setting that survives between sessions.
- *
- * `isValid` is required because a stored value can go stale — a deleted song or
- * a renamed instrument must not blow up the app on startup. localStorage access
- * sits in try/catch: in private mode some browsers throw on the read alone.
+ * Values are raw strings, so `isValid` has to narrow whatever is already in storage.
+ * The try/catch covers a missing `window` and private mode, where some browsers throw
+ * on the read alone.
  */
 export function useLocalStorage<T extends string>(
   key: string,

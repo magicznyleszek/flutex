@@ -12,13 +12,9 @@ export interface FluteDiagramProps {
 }
 
 /**
- * The number of holes drawn down the body, which is the one part of the diagram's
- * geometry that CSS cannot work out for itself. The stylesheet multiplies it up
- * into a height so that the placeholder states match the diagram exactly — see
- * `--diagram-height` in FluteDiagram.module.css.
- *
- * The cast is the usual React one for a custom property: they are valid in a style
- * object at runtime but absent from the CSSProperties type.
+ * Hole count is the one bit of the diagram's geometry CSS cannot work out for itself.
+ * The stylesheet multiplies it into `--diagram-height`, which the placeholder states
+ * reuse so the card does not jump.
  */
 function geometry(frontHoleCount: number): CSSProperties {
   return { '--hole-count': frontHoleCount } as CSSProperties
@@ -49,8 +45,8 @@ function Hole({ state, label }: { state: HoleState, label: string }): JSX.Elemen
 export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Element {
   const fingering = note === null ? null : getFingering(instrument, note)
 
-  // Derived from the instrument rather than from the fingering, so the placeholder
-  // states below can be sized before there is a fingering to draw.
+  // The placeholder states below need a height before there is a fingering to draw, so
+  // the count comes from the instrument.
   const frontHoleCount = instrument.hasThumb
     ? instrument.holeCount - 1
     : instrument.holeCount

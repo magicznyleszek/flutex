@@ -1,58 +1,35 @@
-/* Mantine paints Paper with `--mantine-color-body`, the same variable it paints
-   the page with, so out of the box a card is exactly the colour of what it sits
-   on and only its border separates the two. Pointing the variable at dark-8 and
-   giving the page its own darker background one rule down buys a real elevation
-   step instead: page → card → the raised bubble inside it.
-
-   Overriding `--mantine-color-default-border` here would look like it dresses
-   the borders, but it does nothing. Paper and Divider set `--paper-border-color`
-   and `--divider-color` to dark-4 on the element itself, and an element-level
-   declaration beats an inherited one whatever the source order — so dark-4 is
-   the only real lever, and the palette is arranged around that. */
+/* Paper is painted from `--mantine-color-body`, the same variable as the page, so dark-8
+   against the page's dark-9 is what separates a card from what it sits on. Overriding
+   `--mantine-color-default-border` does nothing, because Paper and Divider set
+   `--paper-border-color` and `--divider-color` to dark-4 on the element itself. */
 :root[data-mantine-color-scheme="dark"] {
   --mantine-color-body: var(--mantine-color-dark-8);
 
-  /* Every `variant="light"` surface — the alerts and the counter badges — is
-     computed in the dark scheme as `darken(shade 9, 0.5)`, half the darkest
-     shade of the ramp. Mantine's stock ramps bottom out around #1864ab, so
-     halving one still leaves a usable tint; this palette bottoms out at oil
-     #211a12 by design, and half of that is #110d09. The tints were coming out
-     between 1.19:1 and 1.41:1 against the card, i.e. invisible.
+  /* `variant="light"` surfaces are computed as `darken(shade 9, 0.5)` in the dark scheme,
+     which for these ramps reads between 1.04:1 and 1.52:1 against the card. Each of these
+     keeps its own tuple's hue and saturation and moves only the lightness, landing near
+     2.15:1 on the card with shade-0 text at 4.89:1 or better. Mantine emits them on
+     `:root`, so this selector outranks it. */
+  --mantine-color-accent-light: hsl(130deg 60% 26%);
+  --mantine-color-accent-light-hover: hsl(130deg 60% 33%);
+  --mantine-color-alarm-light: hsl(8deg 65% 40%);
+  --mantine-color-alarm-light-hover: hsl(8deg 65% 47%);
+  --mantine-color-signal-light: hsl(60deg 45% 26%);
+  --mantine-color-signal-light-hover: hsl(60deg 45% 33%);
+  --mantine-color-dark-light: hsl(32deg 16% 35%);
+  --mantine-color-dark-light-hover: hsl(32deg 16% 42%);
 
-     These replace the derived values with the same hues held at a luminance
-     that clears the card by 2.16:1 while still carrying shade-0 text at 5.7:1
-     or better. Overriding here works where the border variables did not,
-     because Mantine emits these on :root and this selector outranks it. */
-  --mantine-color-accent-light: #2c6c37;
-  --mantine-color-accent-light-hover: #368543;
-  --mantine-color-alarm-light: #95493d;
-  --mantine-color-alarm-light-hover: #ae5547;
-  --mantine-color-signal-light: #626230;
-  --mantine-color-signal-light-hover: #7a7a3c;
-  --mantine-color-dark-light: #785936;
-  --mantine-color-dark-light-hover: #906b41;
-
-  /* The Select chevron defaults to dark-3, which lands at 2.14:1 on a dark-6
-     input — below the 3:1 that a control affordance wants. Mantine's own dark
-     ramp fails this too; the input background here is simply warmer, so it
-     shows. dark-2 is the shade the surrounding hint text already uses. */
+  /* The Select chevron defaults to dark-3, which clears the 3:1 a control affordance wants
+     by a hair at 3.07:1 on a dark-6 input. dark-2 reaches 4.16:1 and is what the hint text
+     around it uses. */
   --combobox-chevron-color: var(--mantine-color-dark-2);
 }
 
-/* Every gap and every card padding in the app drops one step below `sm`. Doing it
-   on the scale rather than per component is the only way to reach all of them:
-   `gap` is not a style prop on Stack or Group, so `gap={{ base, sm }}` there
-   resolves to `var(--mantine-spacing-[object Object])` and silently collapses to
-   zero — no warning, no throw. Only Flex, Grid and SimpleGrid take a responsive
-   gap. Rewriting every Stack as a Flex to work around that would spread one
-   decision across a dozen call sites; this expresses it once, and `p="lg"` keeps
-   meaning "the large step" wherever it is written.
-
-   The attribute in the selector is only there for weight. MantineProvider injects
-   the theme's variables into a <style> tag at runtime, i.e. after this file in the
-   cascade, so a plain `:root` here would tie on specificity and lose on order.
-   `48em` is Mantine's `sm`, so the scale switches exactly where `visibleFrom="sm"`
-   does. */
+/* `gap` is not a style prop on Stack or Group, so `gap={{ base, sm }}` there resolves to
+   `var(--mantine-spacing-[object Object])` and silently collapses to zero. Only Flex, Grid
+   and SimpleGrid take a responsive gap, so responsive spacing has to come from the scale.
+   The attribute is in the selector for weight, since MantineProvider injects the theme
+   variables in a runtime <style> tag after this file. `48em` is Mantine's `sm`. */
 @media (width < 48em) {
   :root[data-mantine-color-scheme] {
     --mantine-spacing-xs: calc(0.375rem * var(--mantine-scale));
@@ -64,14 +41,11 @@
 }
 
 body {
-  /* `dvh`, not `vh`: on a phone `100vh` is the viewport with the browser's toolbars
-     hidden, so it exceeds what is actually on screen and gives the page ~180px it
-     cannot use. Harmless while the content overflowed anyway; now that the first
-     screen fits, `vh` would reintroduce a scrollbar on a page with nothing to
-     scroll. `dvh` tracks the toolbars as they come and go. */
+  /* `100vh` on a phone is the viewport with the browser toolbars hidden, some 180px more
+     than is on screen, so it puts a scrollbar on a page that otherwise fits. */
   min-height: 100dvh;
 
-  /* Mantine's own reset sets this from `--mantine-color-body`; this file is
-     imported after it, so the page keeps the darkest shade while cards rise. */
+  /* Mantine's reset sets this from `--mantine-color-body`; this file is imported after it,
+     so the page keeps the darkest shade. */
   background-color: var(--mantine-color-dark-9);
 }

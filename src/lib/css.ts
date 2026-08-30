@@ -1,10 +1,6 @@
 /**
- * Class name composition.
- *
- * CSS modules are typed by index signature, so with `noUncheckedIndexedAccess`
- * `classes.foo` has the type `string | undefined`. Rather than scattering
- * `?? ''` across the components, classes are joined here — the function skips
- * missing and falsy values.
+ * CSS module lookups are typed `string | undefined` under `noUncheckedIndexedAccess`,
+ * so callers pass them straight in and skip `?? ''` at every call site.
  */
 export function cx(...names: (string | false | null | undefined)[]): string {
   let result = ''

@@ -1,10 +1,4 @@
-/**
- * Stylesheet stub for Jest.
- *
- * The tests never assert on class names and `cx` skips missing values, so an
- * empty object is enough — the component receives `className=""` and renders
- * normally.
- */
+/** Stylesheet stub for Jest's module mapper. No test asserts on class names. */
 const classes: Record<string, string> = {}
 
 export default classes

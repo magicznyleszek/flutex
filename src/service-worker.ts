@@ -1,31 +1,24 @@
 import { manifest, version } from '@parcel/service-worker'
 
 /**
- * Offline cache.
- *
- * The trainer is a good candidate for it: there is no backend at all. Pitch
- * detection runs in the page, songs and fingerings are compiled into the bundle,
- * and settings live in localStorage — so once the four files are on disk the app
- * has nothing left to ask the network for, and a recorder lesson works on a train.
- *
- * `manifest` and `version` are filled in at build time by Parcel's service worker
- * runtime: the manifest is every bundle's URL, and the version changes whenever
- * any of them does. Naming the cache after the version is what makes an update
- * atomic — a new build writes a new cache and the old one is dropped whole, so
- * the page can never end up running one build's JavaScript against another's CSS.
+ * Offline cache. Nothing in the trainer talks to a backend, so a cached build needs no
+ * network at all.
  */
 
-// The service worker's `self` is not the plain `WorkerGlobalScope` that the
-// WebWorker lib declares, and there is no lib that narrows it. See
-// tsconfig.worker.json for why this file is typechecked on its own.
+// No TypeScript lib narrows a service worker's global scope, hence the redeclaration
+// and the separate tsconfig.worker.json.
 declare const self: ServiceWorkerGlobalScope
 
+/**
+ * Parcel's `version` changes whenever any bundle does, so each build fills a new cache
+ * and the old one is dropped whole. One build's JavaScript can never run against
+ * another's CSS.
+ */
 const CACHE = `flutex-${version}`
 
 /**
- * The document, resolved the same way `cache.addAll` resolved it. It is the one
- * entry whose name carries no content hash, so it has to be looked up by shape
- * rather than by URL.
+ * The one manifest entry with no content hash in its name, so it is matched by
+ * extension rather than by URL.
  */
 const DOCUMENT = manifest.find((url) => url.endsWith('.html')) ?? './index.html'
 
@@ -33,10 +26,8 @@ async function precache(): Promise<void> {
   const cache = await caches.open(CACHE)
   await cache.addAll(manifest)
 
-  // Without this the new worker waits for every tab to close, which for a page
-  // people leave open next to their sheet music can be days. Taking over early
-  // is safe here because nothing is fetched lazily: the page holds no reference
-  // to a bundle that the swap could pull out from under it.
+  // Nothing is fetched lazily, so taking over as soon as the cache is filled cannot
+  // pull a bundle out from under a page that is already open.
   await self.skipWaiting()
 }
 
@@ -58,16 +49,10 @@ async function fromNetwork(request: Request): Promise<Response | null> {
 async function respond(request: Request): Promise<Response> {
   const cache = await caches.open(CACHE)
 
-  // The document is the only file whose name never changes, so it is the only
-  // one a cache can serve stale: a deploy that edits nothing but index.html
-  // leaves every hashed asset — and therefore this worker — byte-identical, and
-  // no update is triggered at all. Asking the network first costs 600 bytes and
-  // closes that hole, while the cached copy still answers when there is no
-  // network, which is the whole point of the file.
-  //
-  // The fresh copy is deliberately not written back. It belongs to a build whose
-  // bundles are precached under a different version, and mixing the two
-  // generations in one cache is exactly the failure the versioned name prevents.
+  // index.html is the only unhashed name, so a deploy that touches nothing else leaves
+  // every hashed bundle byte-identical and no worker update fires. A 600-byte network
+  // request first closes that hole, and the cache still answers offline. The fresh copy
+  // is not written back, since it belongs to a build precached under a different version.
   if (request.mode === 'navigate') {
     return (await fromNetwork(request))
       ?? (await cache.match(DOCUMENT))
@@ -77,8 +62,8 @@ async function respond(request: Request): Promise<Response> {
       })
   }
 
-  // Everything else is content-hashed, so a hit cannot be out of date: a changed
-  // file arrives under a changed name and misses.
+  // Everything else is content-hashed, so a hit cannot be out of date. A changed file
+  // arrives under a changed name and misses.
   const hit = await cache.match(request)
   if (hit) return hit
 
@@ -95,8 +80,7 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('fetch', (event) => {
-  // Only plain reads are answerable from a cache, and with no backend there is
-  // nothing else to intercept — anything unhandled falls through to the browser.
+  // With no backend, plain reads are the only thing worth intercepting.
   if (event.request.method !== 'GET') return
 
   event.respondWith(respond(event.request))

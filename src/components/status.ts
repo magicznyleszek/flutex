@@ -7,16 +7,11 @@ export interface StatusMeta {
   hint: string
 }
 
-/**
- * The single place where an engine status gets a colour and a description.
- * Without it every component would phrase the status its own way, and they
- * would drift apart quickly.
- */
+/** Single source for status wording and colour. */
 export const STATUS_META: Record<TrainerStatus, StatusMeta> = {
   waiting: {
-    // Not dark.3: NoteSequence renders this as 14px semibold body text, which
-    // WCAG does not count as large, and dark.3 only reaches 4.19:1 on a card.
-    // dark.2 is 6.58:1 there, and reading like the hint text suits the idle state.
+    // NoteSequence renders this as 14px semibold, which WCAG does not count as large,
+    // and dark.3 only reaches 4.36:1 on a card. dark.2 is 5.91:1 there.
     color: 'dark.2',
     label: 'Waiting',
     hint: 'Play the note shown above.',

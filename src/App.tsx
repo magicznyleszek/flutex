@@ -54,10 +54,7 @@ import { useSongProgress } from './hooks/useSongProgress'
 import { useSongTrainer } from './hooks/useSongTrainer'
 import type { PenaltyMode } from './lib/trainer'
 
-/**
- * The instrument, difficulty and penalty keys keep their old names so settings
- * saved by the previous version of the app are not lost.
- */
+/** Renaming the `fluteTrainer_*` keys drops settings users have already saved. */
 const STORAGE_KEYS = {
   instrument: 'fluteTrainer_instrument',
   difficulty: 'fluteTrainer_difficulty',
@@ -110,7 +107,7 @@ export default function App(): JSX.Element {
   const { records, recordCompletion } = useSongProgress()
   const record = records[song.id]
 
-  // A completion is credited once per run, not once per render.
+  // The effect reruns for as long as the song stays finished, so credit each run once.
   const creditedRef = useRef(false)
   useEffect(() => {
     if (!view.finished) {
@@ -139,32 +136,24 @@ export default function App(): JSX.Element {
       <Stack gap="lg">
         <Group justify="space-between" align="flex-end">
           <Stack gap={4}>
-            {/* The logo is the wordmark, so it *is* the heading — the h1 takes
-                its accessible name from the image label inside. The wordmark
-                crowds the counters on a phone, so below `xs` the glyph stands
-                in for it; the hidden one is `display: none` and therefore out
-                of the accessibility tree too. */}
+            {/* The wordmark is the heading, so the h1 takes its accessible name from
+                the image label inside. Below `xs` the glyph stands in, because the
+                wordmark crowds the counters on a phone. */}
             <Title order={1} lh={1} m={0}>
               <Logo variant="icon" width={34} hiddenFrom="xs" />
               <Logo variant="logotype" width={132} visibleFrom="xs" />
             </Title>
-            {/* `visibleFrom`, not `hiddenFrom`: Mantine's breakpoint props are
-                min-width only, so the phone is the default case and the tagline is
-                something desktop adds. It is the single most expensive line above
-                the fold — 41px because it wraps at 390px, and it is also what makes
-                the header Group wrap, since it stretches the left column to full
-                width and pushes the counters onto a second row. Hiding it therefore
-                buys 81px, not 41. Nothing is lost: the same sentence is the
-                document's meta description and its <title>. */}
+            {/* `visibleFrom` rather than `hiddenFrom`: Mantine's breakpoint props are
+                min-width only. Hiding this below `sm` saves 81px rather than its own 41,
+                because it also wraps the counters onto a second row. */}
             <Text c="dimmed" size="sm" visibleFrom="sm">
               A recorder and tin whistle trainer. It waits until you play the
               right note.
             </Text>
           </Stack>
           <Group gap="xs">
-            {/* `color="dark"` rather than `dark.4`: naming an explicit shade
-                switches a light badge from a tint to an opaque fill of that
-                shade, which left saltpan text on cement at 3.60:1. */}
+            {/* `color="dark"` rather than `dark.4`: an explicit shade turns a light
+                badge from a tint into an opaque fill, which drops the text to 4.14:1. */}
             <Badge variant="light" color="dark" leftSection={<MusicNoteIcon size={12} />}>
               {view.hits} / {view.total}
             </Badge>
@@ -179,19 +168,18 @@ export default function App(): JSX.Element {
           </Group>
         </Group>
 
-        {/* Two columns from `sm` rather than `md`. The chart needs 127px at its
-            widest and the note row 280, so both fit side by side from 768px up —
-            and between 768 and 991 the old single column was both stacking the
-            cards *and* back on the desktop spacing scale, which is how a phone in
-            landscape ended up as the worst case of the two layouts. */}
+        {/* Two columns from `sm` rather than `md`: the chart and the note row both fit
+            side by side at 768px, and a single column there makes landscape phones the
+            worst case. */}
         <Grid gap="lg">
           <Grid.Col span={{ base: 12, sm: 5 }}>
+            {/* The full heights and the centring only do anything from `sm`, where the
+                two columns have to come out equal. */}
             <Paper p="lg" radius="lg" withBorder h="100%">
               <Stack gap="md" h="100%" justify="center">
-                {/* The instrument is named three times over — here, in the
-                    diagram's own aria-label, and as the value of the Instrument
-                    Select. A `display: none` child creates no flex gap either, so
-                    hiding it reclaims the Stack's 16px as well as its own 20px. */}
+                {/* Redundant with the diagram's aria-label and the Instrument select.
+                    Hiding it reclaims its own 20px plus the Stack's 16px, because a
+                    `display: none` flex child creates no gap. */}
                 <Text size="sm" fw={600} ta="center" visibleFrom="sm">
                   {instrument.shortName}
                 </Text>
@@ -212,10 +200,6 @@ export default function App(): JSX.Element {
                     status={view.status}
                   />
 
-                  {/* A rule between the notes and the feedback below them is worth
-                      13px of a desktop card and not of a phone screen — hiding it
-                      takes the gap on one side of it with it, since a
-                      `display: none` flex child creates no gap. */}
                   <Divider visibleFrom="sm" />
 
                   <Tuner
@@ -259,14 +243,9 @@ export default function App(): JSX.Element {
 
               <Paper p="lg" radius="lg" withBorder>
                 <Stack gap="sm">
-                  {/* Beside the microphone button rather than up in the header: the
-                      header is the conventional corner for this, but on a 360px
-                      phone the logo, the three counters and a 26px icon together
-                      overflow the row, and the header wrapping costs 32px — more
-                      than the control gives back. Here there is room at every
-                      width, it is on screen without scrolling (which it has to be,
-                      since the browser only grants the request from inside a tap),
-                      and it sits with the other thing you press before playing. */}
+                  {/* Fullscreen sits beside the microphone button rather than in the
+                      header, which wraps on a 360px phone. The browser only grants the
+                      request from a tap, so the button has to be on screen. */}
                   <Group gap="xs" align="flex-start" wrap="nowrap">
                     <Box flex={1}>
                       <MicButton
@@ -300,9 +279,8 @@ export default function App(): JSX.Element {
                     <Button
                       size="compact-sm"
                       variant="subtle"
-                      // `gray` is Mantine's stock cool neutral and reads blue
-                      // beside these browns; dark.2 is the shade the hint text
-                      // next to it already uses.
+                      // Mantine's `gray` is a cool neutral and reads blue beside these
+                      // browns; `dark.2` matches the hint text next to it.
                       color="dark.2"
                       leftSection={<ArrowCounterClockwiseIcon size={14} />}
                       onClick={reset}

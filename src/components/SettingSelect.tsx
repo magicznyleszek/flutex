@@ -11,10 +11,7 @@ export interface SettingSelectProps<T extends string> {
   value: T
   options: readonly SettingOption<T>[]
   onChange: (value: T) => void
-  /**
-   * The same type guard that validates the value coming out of localStorage.
-   * Select hands back `string | null`, so without it this would be a cast.
-   */
+  /** Select hands back `string | null`, so without this guard the narrowing is a cast. */
   isValid: (value: string) => value is T
   icon?: ReactNode
   description?: string

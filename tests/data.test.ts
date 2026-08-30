@@ -17,8 +17,8 @@ describe('instruments', () => {
 
     for (const [note, fingering] of entries) {
       expect(noteToMidi(note)).not.toBeNull()
-      // Every fingering for one instrument has to describe the same number of
-      // holes, or the diagram would draw a different count from note to note.
+      // Every fingering of one instrument must describe the same hole count, or the
+      // diagram changes shape from note to note.
       expect(fingering.holes).toHaveLength(instrument.holeCount)
       for (const hole of fingering.holes) {
         expect(VALID_HOLE_STATES).toContain(hole)
@@ -54,8 +54,8 @@ describe('instruments', () => {
     expect(f).toBeDefined()
     expect(fSharp).toBeDefined()
 
-    // In baroque fingering F# is F with the last finger lifted. F used to be
-    // written the German way here, which mixed the two systems.
+    // In baroque fingering F# is F with the last finger lifted. Writing F the German
+    // way instead mixes the two systems.
     const differences = (f?.holes ?? []).reduce<number[]>((acc, hole, index) => {
       if (hole !== fSharp?.holes[index]) acc.push(index)
       return acc

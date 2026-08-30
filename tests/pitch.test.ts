@@ -1,6 +1,7 @@
 import { createMedianFilter, createPitchDetector } from '../src/lib/pitch'
 import { centsBetween, noteToFreq } from '../src/lib/music'
 
+// 2048 mirrors the app's analyser fftSize; 48 kHz is a typical device rate.
 const SAMPLE_RATE = 48000
 const BUFFER_SIZE = 2048
 
@@ -34,11 +35,8 @@ const freq = (note: string): number => noteToFreq(note) as number
 const detector = () => createPitchDetector({ sampleRate: SAMPLE_RATE, bufferSize: BUFFER_SIZE })
 
 /**
- * Counts typed-array constructions during `run`.
- *
- * Reading `heapUsed` would be simpler but depends on when the GC decides to
- * run — the same code passed on one attempt and failed on the next. A Proxy on
- * the constructor gives a deterministic answer.
+ * Measuring allocations through `heapUsed` is flaky because the result depends on when
+ * the GC runs. A Proxy on the array constructors counts them deterministically.
  */
 function countTypedArrayAllocations(run: () => void): number {
   let count = 0
@@ -83,8 +81,7 @@ describe('createPitchDetector', () => {
 
   it('avoids octave errors on a harmonically rich tone', () => {
     const detect = detector()
-    // A strong second harmonic is the classic trap: naive autocorrelation can
-    // land an octave too high or too low here.
+    // A strong second harmonic is where naive autocorrelation lands an octave out.
     const harmonics = [1, 0.8, 0.5, 0.3, 0.2]
 
     for (const note of ['D5', 'G5', 'A5', 'D6']) {
@@ -150,10 +147,8 @@ describe('createPitchDetector', () => {
       maxFreq,
     })
 
-    // A tone above the range cannot be rejected outright: 3000 Hz is also
-    // periodic at 1000, 750 and 600 Hz, so any period-based method sees a valid
-    // period here. The only guarantee is that the reading stays inside the
-    // configured range and never hands the trainer a wild value.
+    // 3000 Hz is also periodic at 1000, 750 and 600 Hz, so no period-based method can
+    // reject a tone above the range. The only guarantee is a reading inside the bounds.
     for (const hz of [3000, 2350, 4400]) {
       const reading = detect(synth(hz))
       if (reading.hz > 0) {
@@ -173,8 +168,8 @@ describe('createPitchDetector', () => {
       maxFreq,
     })
 
-    // A peak at the outermost lag has no neighbour on one side. Without a
-    // margin in the NSDF table such a tone fell onto its subharmonic.
+    // A peak at the outermost lag has no neighbour on one side, so without a margin in
+    // the NSDF table the reading drops to the subharmonic.
     for (const hz of [minFreq, maxFreq]) {
       const reading = detect(synth(hz))
       expect(reading.hz).toBeGreaterThan(0)
@@ -186,15 +181,14 @@ describe('createPitchDetector', () => {
     const detect = detector()
     const buffer = synth(freq('G5'))
 
-    // 500 calls is roughly 8 seconds of playing at 60 fps. The detector should
-    // receive every array up front, not inside the analysis loop.
+    // 500 calls is roughly 8 seconds of playing at 60 fps.
     const allocations = countTypedArrayAllocations(() => {
       for (let i = 0; i < 500; i++) detect(buffer)
     })
 
     expect(allocations).toBe(0)
-    // Counter self-check: if the Proxy failed to intercept construction, the
-    // assertion above would always pass. Creating a detector must allocate.
+    // Self-check: a Proxy that intercepts nothing would make the count above pass
+    // whatever the detector does.
     expect(countTypedArrayAllocations(() => void detector())).toBeGreaterThan(0)
   })
 })
@@ -217,7 +211,7 @@ describe('createMedianFilter', () => {
     median(600)
 
     expect(median(-1)).toBe(-1)
-    // After silence the history is clear, so the next tone passes at once.
+    // Silence clears the history, so the next tone passes straight through.
     expect(median(800)).toBe(800)
   })
 })

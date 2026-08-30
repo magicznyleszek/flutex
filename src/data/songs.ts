@@ -5,6 +5,7 @@ export interface SongNote {
 }
 
 export interface Song {
+  /** Saved progress is keyed by these ids, so renaming one resets that song's history. */
   id: string
   title: string
   subtitle?: string
@@ -13,9 +14,8 @@ export interface Song {
 }
 
 /**
- * Note notation: names separated by spaces, with `|` allowed as a bar line for
- * readability. The default length is one beat; another is given after a colon —
- * `A5:2` is a half note, `E5:0.5` an eighth.
+ * `D5 A5:2 | F#5:0.5` — space-separated note names, `|` bar lines dropped, and an
+ * optional `:beats` suffix that defaults to one beat.
  */
 function parseNotes(spec: string): readonly SongNote[] {
   return spec
@@ -44,8 +44,8 @@ const defineSong = ({ id, title, subtitle, tags = [], spec }: SongInput): Song =
   notes: parseNotes(spec),
 })
 
-// Every song fits within D5-D6 and avoids C5 and F5, so they all play on both
-// the tin whistle in D and the soprano recorder.
+// Every song stays inside D5-D6 and skips C5 and F5, so it plays on both the tin
+// whistle in D and the soprano recorder.
 export const SONGS: readonly Song[] = [
   defineSong({
     id: 'd-major-scale',
@@ -147,11 +147,15 @@ if (FIRST_SONG === undefined) throw new Error('The song library is empty')
 
 export const DEFAULT_SONG: Song = findSong(DEFAULT_SONG_ID) ?? FIRST_SONG
 
-/** Like `findSong`, but never returns `null` — called from UI that must show something. */
+/** Falls back to the default song so the UI always has something to render. */
 export function getSong(id: string | null | undefined): Song {
   return findSong(id) ?? DEFAULT_SONG
 }
 
+/**
+ * The `value is string` narrowing does nothing at the type level. The guard exists to fit
+ * the `isValid` callbacks, which reject an id that is no longer in the library.
+ */
 export function isSongId(value: string): value is string {
   return findSong(value) !== null
 }
