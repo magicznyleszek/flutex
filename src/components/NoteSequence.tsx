@@ -3,7 +3,6 @@ import type { JSX } from 'react'
 
 import type { Instrument } from '../data/instruments'
 import { cx } from '../lib/css'
-import { beatsToGlyph } from '../lib/music'
 import type { TrainerStatus } from '../lib/trainer'
 import { FluteDiagram } from './FluteDiagram'
 import * as classes from './NoteSequence.module.css'
@@ -16,8 +15,6 @@ export interface NoteSequenceProps {
   target: string | null
   /** The notes after the target, oldest first. Only the first three are drawn. */
   upcoming: readonly (string | null)[]
-  /** Length of the target note in beats — a rhythmic hint, nothing more. */
-  targetBeats: number | null
   status: TrainerStatus
   /** Playback is running, so the caption describes that instead of `status`. */
   demo?: boolean
@@ -87,7 +84,6 @@ export function NoteSequence({
   previous,
   target,
   upcoming,
-  targetBeats,
   status,
   demo = false,
 }: NoteSequenceProps): JSX.Element {
@@ -130,10 +126,7 @@ export function NoteSequence({
         ))}
       </div>
 
-      <Text size="sm" c={meta.color} fw={600}>
-        {meta.label}
-        {targetBeats !== null && ` · ${beatsToGlyph(targetBeats)}`}
-      </Text>
+      <Text size="sm" c={meta.color} fw={600}>{meta.label}</Text>
       {/* A prose expansion of the status label right above it, so phones drop it. */}
       <Text size="xs" c="dimmed" ta="center" visibleFrom="sm">{meta.hint}</Text>
     </Stack>

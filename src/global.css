@@ -81,7 +81,7 @@ html:root[data-mantine-color-scheme="light"] {
 }
 
 /* A quieter card outline than Mantine's dark-4, which at 2.54:1 against the card drew the
-   eye to the edges rather than to what is inside them. dark-6 is 1.56:1 — still a visible
+   eye to the edges rather than to what is inside them. dark-6 is 1.42:1 — still a visible
    seam, no longer a frame.
 
    The class in the selector is doing real work. Mantine sets `--paper-border-color` on the

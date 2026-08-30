@@ -132,7 +132,6 @@ export default function App(): JSX.Element {
     [setSongId],
   )
 
-  const targetBeats = song.notes[view.index]?.beats ?? null
   const listening = mic.status === 'listening'
 
   // Playback owns the note row while it runs, so the charts show what is sounding rather
@@ -140,7 +139,6 @@ export default function App(): JSX.Element {
   // rows cannot disagree about which note is "next".
   const demoRow = useMemo(() => noteWindow(notes, demo.index), [notes, demo.index])
   const row = demo.playing ? demoRow : view
-  const rowBeats = demo.playing ? (song.notes[demo.index]?.beats ?? null) : targetBeats
 
   const startDemo = (): void => {
     mic.stop()
@@ -205,7 +203,6 @@ export default function App(): JSX.Element {
               previous={row.previous}
               target={row.target}
               upcoming={row.upcoming}
-              targetBeats={rowBeats}
               status={view.status}
               demo={demo.playing}
             />
