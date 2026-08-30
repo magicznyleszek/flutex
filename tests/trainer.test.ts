@@ -1,5 +1,7 @@
+import { noteToMidi } from '../src/lib/music'
 import {
   createTrainerEngine,
+  LOOKAHEAD,
   type PenaltyMode,
   type TrainerEngine,
   type TrainerOptions,
@@ -28,15 +30,30 @@ const OPTIONS: Partial<TrainerOptions> = {
 const engineWith = (penaltyMode: PenaltyMode = 'wait', song = SONG): TrainerEngine =>
   createTrainerEngine(song, { ...OPTIONS, penaltyMode })
 
-/** Feeds N frames of the same input and returns the last state. */
+/**
+ * Feeds N frames of the same note and returns the last state. `cents` is measured from
+ * whatever the target is on that frame, so leaving it out means "dead in tune for the note
+ * named" — which for a wrong note is a hundred cents per semitone away, exactly as the
+ * microphone hook would report it. Passing it explicitly detunes the note instead.
+ */
 function feed(
   engine: TrainerEngine,
   frames: number,
   note: string | null,
-  cents = 0,
+  cents?: number,
 ): TrainerSnapshot {
   let snapshot = engine.snapshot()
-  for (let i = 0; i < frames; i++) snapshot = engine.step({ note, cents })
+
+  for (let i = 0; i < frames; i++) {
+    const { target } = engine.snapshot()
+    const distance
+      = note === null || target === null
+        ? 0
+        : ((noteToMidi(note) ?? 0) - (noteToMidi(target) ?? 0)) * 100
+
+    snapshot = engine.step({ note, cents: cents ?? distance })
+  }
+
   return snapshot
 }
 
@@ -54,10 +71,19 @@ describe('initial state', () => {
     expect(snapshot.index).toBe(0)
     expect(snapshot.target).toBe('D5')
     expect(snapshot.previous).toBeNull()
-    expect(snapshot.next).toBe('E5')
+    expect(snapshot.upcoming).toEqual(['E5', 'F#5', 'G5'])
     expect(snapshot.total).toBe(SONG.length)
     expect(snapshot.finished).toBe(false)
     expect(snapshot.status).toBe('waiting')
+  })
+
+  // The UI draws a fixed number of slots off this array, so it has to keep its length at
+  // the end of a song rather than getting shorter and shifting the row sideways.
+  it('pads the lookahead with nulls near the end of the song', () => {
+    const snapshot = createTrainerEngine(['D5', 'E5'], OPTIONS).snapshot()
+
+    expect(snapshot.upcoming).toHaveLength(LOOKAHEAD)
+    expect(snapshot.upcoming).toEqual(['E5', null, null])
   })
 
   it('treats an empty song as finished right away', () => {
@@ -98,6 +124,38 @@ describe('scoring notes', () => {
 
     const snapshot = feed(engine, HOLD, 'D5', -25)
     expect(snapshot.index).toBe(1)
+  })
+
+  /*
+   * The wide tolerances only mean anything if cents alone decide the hit. A whistle a whole
+   * semitone sharp is named as the note above by the pitch detector, so a scoring rule that
+   * also asked for the right name would cap every setting at ±50 and make ±75 and ±100 inert.
+   */
+  it('scores a mistuned note the detector names as its neighbour', () => {
+    const engine = engineWith()
+    engine.configure({ toleranceCents: 100 })
+
+    expect(feed(engine, HOLD, 'D#5').index).toBe(1)
+  })
+
+  it('still calls that neighbour wrong at a narrow tolerance', () => {
+    const engine = engineWith()
+
+    const snapshot = feed(engine, HOLD, 'D#5')
+    expect(snapshot.index).toBe(0)
+    expect(snapshot.status).toBe('wrong')
+  })
+
+  // Silence arrives as zero cents, which is the same number a perfect note carries, so the
+  // only thing telling them apart is the missing note name.
+  it('never scores silence, however wide the tolerance', () => {
+    const engine = engineWith()
+    engine.configure({ toleranceCents: 100 })
+
+    const snapshot = feed(engine, 50, null, 0)
+    expect(snapshot.index).toBe(0)
+    expect(snapshot.holdProgress).toBe(0)
+    expect(snapshot.status).toBe('waiting')
   })
 
   it('finishes the song after the last note', () => {

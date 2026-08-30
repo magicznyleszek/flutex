@@ -1,17 +1,52 @@
 /* One source for the diagram's geometry, so the legend digits line up with the holes they
    label and the placeholder is exactly as tall as the diagram it stands in for.
-   `--hole-count` is the one value CSS cannot know, so FluteDiagram.tsx sets it inline. */
+   `--hole-count` is the one value CSS cannot know, so FluteDiagram.tsx sets it inline.
+
+   Phone sizes are the ones written here, and the media queries below grow them, rather than
+   the other way round. A browser too old for either query then renders the small charts,
+   which merely look cramped on a desktop — the reverse put five full-size charts in a 316px
+   card. The widths scale with the screen because four of these have to fit side by side in
+   the note row and a phone is anywhere from 320 to 430 CSS pixels wide. Measured with the
+   gaps between them included, four recorder charts come to 266px on a 320px screen, which
+   has 276px inside the card, and to 313px on a 390px one, which has 346. Fixed 14px holes
+   overhung the card by 9px a side.
+
+   The tube also has to stay vertical, because the holes map onto fingers, and 310px of
+   recorder is too much above the fold on a phone. So the gaps and the tube's head and foot
+   are cut harder than the holes themselves. */
 .wrapper,
 .placeholder {
-  --hole-size: 22px;
-  --hole-gap: 14px;
-  --head-pad: 18px;
-  --foot-pad: 26px;
-  --body-width: 54px;
-  --mouthpiece-width: 34px;
+  --hole-size: clamp(12px, 3.6vw, 16px);
+  --hole-gap: 5px;
+  --head-pad: 10px;
+  --foot-pad: 10px;
+  --body-width: clamp(30px, 9vw, 40px);
+  --mouthpiece-width: clamp(20px, 6vw, 26px);
   --mouthpiece-height: 8px;
   --mouthpiece-gap: 4px;
-  --chart-gap: var(--mantine-spacing-lg);
+  --chart-gap: clamp(3px, 1vw, 5px);
+
+  /* The tube is a picture of a wooden instrument rather than a surface of the interface, so
+     it gets its own small palette instead of borrowing Mantine's. What stays constant across
+     the two schemes is the reading, not the colour: the tube is a step away from the card,
+     an open hole is the emptiest thing on it and a covered one is filled green. That flips
+     the holes round — a void is dark on the dark scheme and bare white on the light one —
+     because it is filled-versus-empty that says where your fingers go, not light-versus-dark.
+     `light-dark()` is postcss-preset-mantine's, light value first. */
+  --tube-face: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-6));
+  --tube-edge: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-7));
+  --tube-border: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-5));
+
+  /* Rings and the mouthpiece block. On the dark tube dark-3 reads 3.07:1 where the dark-4
+     that borders everything else manages 1.79:1 and all but disappears; gray-5 is the same
+     job on the light one at 3.12:1. */
+  --tube-trim: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
+
+  /* Green stays green in both, one shade of it per scheme: bright enough to carry on a dark
+     tube, dark enough to carry on a light one. */
+  --hole-void: light-dark(var(--mantine-color-white), var(--mantine-color-dark-9));
+  --hole-fill: light-dark(var(--mantine-color-accent-8), var(--mantine-color-accent-4));
+  --hole-fill-ring: light-dark(var(--mantine-color-accent-9), var(--mantine-color-accent-6));
 
   /* Measured from the outside of `.body`: border, top padding, mouthpiece, then the
      mouthpiece's own margin and the column's flex gap. The legend and thumb columns are
@@ -30,25 +65,30 @@
   );
 }
 
-/* 274px of chart (310 on the recorder, one hole more) is too much above the fold on a
-   phone, and it has to stay vertical because the holes map onto fingers. So the gaps and
-   the tube's head and foot shrink harder than the holes: 202px on the recorder, 178px on
-   the whistle. `width < 48em` is the complement of Mantine's `visibleFrom="sm"`. */
-@media (width < 48em) {
+/* 48em is Mantine's `sm`, the width at which the note row shows five charts instead of four.
+   Holes and tube go to full size here, but the space between the tube and its numbers does
+   not: five 138px charts and their gaps come to 813px where a 768px screen has 696px inside
+   the card, which hung the outer two off the edge. A 6px gap takes a chart to 110px. */
+@media (width >= 48em) {
   .wrapper,
   .placeholder {
-    --hole-size: 18px;
-    --hole-gap: 6px;
-    --head-pad: 10px;
-    --foot-pad: 10px;
-    --body-width: 44px;
-    --mouthpiece-width: 28px;
-
-    /* Three of these sit side by side in the note row, and on a 390px phone the card has
-       only 318px to give them. The space beside the tube is the first thing to go: at 6px a
-       recorder's three charts come to 276px and still leave room for the gaps between them,
-       where 10px would overflow. */
+    --hole-size: 22px;
+    --hole-gap: 14px;
+    --head-pad: 18px;
+    --foot-pad: 26px;
+    --body-width: 54px;
+    --mouthpiece-width: 34px;
     --chart-gap: 6px;
+  }
+}
+
+/* Past 62em the card stops growing — Container `md` caps at 960 — so what the card has is
+   what it will ever have, and 5 × 138 plus four gaps of 44 is 866 inside 888. That leaves
+   room to spend on the gap between the tube and the legend again. */
+@media (width >= 62em) {
+  .wrapper,
+  .placeholder {
+    --chart-gap: var(--mantine-spacing-lg);
   }
 }
 
@@ -90,9 +130,9 @@
   padding-inline: 0;
 }
 
-/* The tube keeps the dark ramp in both colour schemes. It is a picture of a wooden
-   instrument, not a surface of the interface, and everything inside it — the rings, the
-   open holes, the covered ones — is measured against the tube rather than the card. */
+/* The rounded end of a tube, lit down the middle. Everything inside it is measured against
+   the tube rather than against the card, which is why the shades come from the little
+   palette at the top of this file and not from Mantine's surface variables. */
 .body {
   grid-column: 2;
   display: flex;
@@ -103,22 +143,19 @@
   padding: var(--head-pad) 0 var(--foot-pad);
   background: linear-gradient(
     to right,
-    var(--mantine-color-dark-7) 0%,
-    var(--mantine-color-dark-6) 45%,
-    var(--mantine-color-dark-7) 100%
+    var(--tube-edge) 0%,
+    var(--tube-face) 45%,
+    var(--tube-edge) 100%
   );
-  border: 1px solid var(--mantine-color-dark-5);
+  border: 1px solid var(--tube-border);
   border-radius: calc(var(--body-width) / 2);
 }
 
-/* dark-3 rather than the dark-4 that borders everything else, because this edge and the
-   hole rings sit on the tube rather than on a card. On dark-6 that reads 3.07:1, where
-   dark-4 manages only 1.79:1 and the rings all but disappear. */
 .mouthpiece {
   width: var(--mouthpiece-width);
   height: var(--mouthpiece-height);
   margin-bottom: var(--mouthpiece-gap);
-  background: var(--mantine-color-dark-3);
+  background: var(--tube-trim);
   border-radius: 4px;
 }
 
@@ -126,26 +163,26 @@
   position: relative;
   width: var(--hole-size);
   height: var(--hole-size);
-  background: var(--mantine-color-dark-9);
-  border: 2px solid var(--mantine-color-dark-3);
+  background: var(--hole-void);
+  border: 2px solid var(--tube-trim);
   border-radius: 50%;
   transition: background 120ms ease, border-color 120ms ease;
 }
 
 .holeCovered {
-  background: var(--mantine-color-accent-4);
-  border-color: var(--mantine-color-accent-6);
+  background: var(--hole-fill);
+  border-color: var(--hole-fill-ring);
 }
 
 .holeHalf {
   background: linear-gradient(
     to bottom,
-    var(--mantine-color-accent-4) 0%,
-    var(--mantine-color-accent-4) 50%,
-    var(--mantine-color-dark-9) 50%,
-    var(--mantine-color-dark-9) 100%
+    var(--hole-fill) 0%,
+    var(--hole-fill) 50%,
+    var(--hole-void) 50%,
+    var(--hole-void) 100%
   );
-  border-color: var(--mantine-color-accent-6);
+  border-color: var(--hole-fill-ring);
 }
 
 /* Explicit slots rather than auto-placement: the thumb column is conditional, so on a

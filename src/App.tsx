@@ -181,7 +181,7 @@ export default function App(): JSX.Element {
               instrument={instrument}
               previous={view.previous}
               target={view.target}
-              next={view.next}
+              upcoming={view.upcoming}
               targetBeats={targetBeats}
               status={view.status}
             />
@@ -300,10 +300,15 @@ export default function App(): JSX.Element {
           </Stack>
         </Paper>
 
-        <Text size="xs" c="dimmed" ta="center">
-          Pitch detection runs locally in the browser — nothing leaves your
-          machine.
-        </Text>
+        <Stack gap={2}>
+          <Text size="xs" c="dimmed" ta="center">
+            Pitch detection runs locally in the browser — nothing leaves your
+            machine.
+          </Text>
+          <Text size="xs" c="dimmed" ta="center">
+            Made by Yann &amp; Zefir
+          </Text>
+        </Stack>
       </Stack>
     </Container>
   )

@@ -1,4 +1,4 @@
-/* Three charts side by side: previous, the one to play, next.
+/* Five charts side by side: the one just played, the one to play, and three coming up.
 
    `stretch` plus `flex: 1` on `.chart` is what puts the note names on one line. The
    neighbours are half the height of the middle chart, so laying the columns out by their
@@ -11,10 +11,9 @@
   align-items: stretch;
   justify-content: center;
 
-  /* Scales with the viewport rather than sitting at one spacing token. The ceiling stops the
-     three charts drifting apart on a desktop; the floor is what is left on a 390px phone
-     once a recorder's three full-size charts have taken their 270px. */
-  gap: clamp(var(--mantine-spacing-xs), 5vw, 64px);
+  /* Phone spacing, opened up from 48em. Four charts and these three gaps come to 266px on a
+     320px screen, which has 276 inside the card. */
+  gap: clamp(6px, 2.5vw, 12px);
 }
 
 .column {
@@ -33,7 +32,36 @@
 
 /* The neighbours are context, not the thing to read. Dimming the whole column covers the
    tube and its holes too, which no `c="dimmed"` on the text could reach — and since the dots
-   are now the same size as the ones you are playing, this is what separates them. */
+   are the same size as the ones you are playing, this is what separates them. */
 .quiet {
   opacity: 0.5;
+}
+
+/* Two and three notes out. Fading further with distance is what makes the row read as a
+   queue rather than as five equally important charts. Written after `.quiet` because both
+   are single classes and a tie goes to whichever comes last. */
+.distant {
+  opacity: 0.32;
+}
+
+/* A phone gets four charts, not five: on a 360px screen the card has 316px inside it and four
+   recorder charts plus their gaps already come to 289. The note behind you is the one to drop
+   — you have just played it. Hidden by default and brought back at 48em, so a browser that
+   cannot read the query shows the four that always fit rather than five that may not. */
+.phoneHidden {
+  display: none;
+}
+
+@media (width >= 48em) {
+  .phoneHidden {
+    display: flex;
+  }
+
+  /* Room for five charts, and the row spreads across the card instead of huddling in the
+     middle of it. Capped at 44px because the card stops growing at 888px inside: five 138px
+     charts and four 44px gaps come to 866, and 4vw put the outer two into the card's own
+     padding on a wide screen. */
+  .row {
+    gap: clamp(var(--mantine-spacing-xs), 3vw, 44px);
+  }
 }

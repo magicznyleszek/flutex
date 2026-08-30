@@ -13,18 +13,25 @@ export interface TunerProps {
   active: boolean
 }
 
-/** Half the scale's span in cents. A semitone end to end, past which it is another note. */
-const DISPLAY_RANGE = 50
+/**
+ * How far past the green zone each end of the track reaches, in cents. Added rather than
+ * multiplied on purpose: a multiplier makes the zone the same fraction of the track at every
+ * setting, so ±50, ±75 and ±100 all drew the same two thirds of it and only the number
+ * underneath changed. A fixed margin keeps the zone's own width meaningful — a fifth of the
+ * track at ±10, two thirds at ±100 — while still leaving the needle somewhere to go, which
+ * the old flat ±50 scale did not at anything above ±50.
+ */
+const RANGE_MARGIN = 50
 
 const clamp = (value: number, limit: number): number =>
   Math.max(-limit, Math.min(limit, value))
 
 export function Tuner({ cents, toleranceCents, active }: TunerProps): JSX.Element {
+  const displayRange = toleranceCents + RANGE_MARGIN
+
   // The tolerance is one-sided, so the green zone is twice the tolerance wide.
-  // DISPLAY_RANGE cents map onto 50% of the track, and the cap keeps a wide tolerance
-  // from overrunning it.
-  const halfWidth = Math.min(50, (toleranceCents / DISPLAY_RANGE) * 50)
-  const needleLeft = 50 + (clamp(cents, DISPLAY_RANGE) / DISPLAY_RANGE) * 50
+  const halfWidth = (toleranceCents / displayRange) * 50
+  const needleLeft = 50 + (clamp(cents, displayRange) / displayRange) * 50
   const inTune = active && Math.abs(cents) <= toleranceCents
 
   return (
@@ -45,8 +52,13 @@ export function Tuner({ cents, toleranceCents, active }: TunerProps): JSX.Elemen
 
       <Group justify="space-between" className={classes.scale}>
         <Text size="xs" c="dimmed">flat</Text>
+        {/* Idle, it states the window you are aiming for; playing, how far off you are. The
+            zone's width says the same thing, but the track carries no numbers, so this is
+            what tells you whether you are on the ±25 setting or the ±100 one. */}
         <Text size="xs" c={inTune ? 'var(--flutex-accent-ink)' : 'dimmed'} ff="monospace">
-          {active ? `${cents > 0 ? '+' : ''}${Math.round(cents)}¢` : '—'}
+          {active
+            ? `${cents > 0 ? '+' : ''}${Math.round(cents)}¢`
+            : `±${toleranceCents}¢`}
         </Text>
         <Text size="xs" c="dimmed">sharp</Text>
       </Group>

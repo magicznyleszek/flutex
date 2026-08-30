@@ -1,7 +1,7 @@
 import type { PenaltyMode } from '../lib/trainer'
 
 /** Persisted in localStorage, so renaming a member drops the saved difficulty. */
-export type DifficultyId = 'loose' | 'normal' | 'strict'
+export type DifficultyId = 'beginner' | 'forgiving' | 'loose' | 'normal' | 'strict'
 
 export interface DifficultyLevel {
   id: DifficultyId
@@ -12,6 +12,18 @@ export interface DifficultyLevel {
 }
 
 export const DIFFICULTIES: Record<DifficultyId, DifficultyLevel> = {
+  beginner: {
+    id: 'beginner',
+    label: 'Beginner (±100 cents)',
+    description: 'A whole semitone either way, so a badly tuned instrument still counts.',
+    toleranceCents: 100,
+  },
+  forgiving: {
+    id: 'forgiving',
+    label: 'Forgiving (±75 cents)',
+    description: 'For a whistle or a cheap recorder that plays sharp or flat all over.',
+    toleranceCents: 75,
+  },
   loose: {
     id: 'loose',
     label: 'Easy (±50 cents)',
@@ -32,7 +44,10 @@ export const DIFFICULTIES: Record<DifficultyId, DifficultyLevel> = {
   },
 }
 
+/** Widest window first, so the list reads as one ladder from easiest to hardest. */
 export const DIFFICULTY_LIST: readonly DifficultyLevel[] = [
+  DIFFICULTIES.beginner,
+  DIFFICULTIES.forgiving,
   DIFFICULTIES.loose,
   DIFFICULTIES.normal,
   DIFFICULTIES.strict,
@@ -40,8 +55,18 @@ export const DIFFICULTY_LIST: readonly DifficultyLevel[] = [
 
 export const DEFAULT_DIFFICULTY_ID: DifficultyId = 'normal'
 
+/*
+ * `Object.hasOwn` reads better and is what this used, but it is a 2022 built-in that Safari
+ * only shipped in 15.4, and Parcel transpiles syntax for old browsers without polyfilling
+ * built-ins. On a phone a version behind that, this throws a TypeError the moment the select
+ * changes, while the song picker beside it goes on working because it looks its value up in
+ * an array — which is a symptom that has been reported and is not explained yet.
+ * `hasOwnProperty.call` is the same check and has always been there. Plain `in` is not a
+ * substitute: it would accept inherited keys like "toString" out of localStorage and hand
+ * back a function as a difficulty.
+ */
 export function isDifficultyId(value: string): value is DifficultyId {
-  return Object.hasOwn(DIFFICULTIES, value)
+  return Object.prototype.hasOwnProperty.call(DIFFICULTIES, value)
 }
 
 export interface PenaltyOption {
@@ -76,6 +101,7 @@ export const PENALTY_LIST: readonly PenaltyOption[] = [
 
 export const DEFAULT_PENALTY_MODE: PenaltyMode = 'wait'
 
+/** Not `Object.hasOwn`, for the Safari reason spelled out above `isDifficultyId`. */
 export function isPenaltyMode(value: string): value is PenaltyMode {
-  return Object.hasOwn(PENALTIES, value)
+  return Object.prototype.hasOwnProperty.call(PENALTIES, value)
 }

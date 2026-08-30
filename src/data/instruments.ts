@@ -177,8 +177,10 @@ export const INSTRUMENT_LIST: readonly Instrument[] = Object.values(INSTRUMENTS)
 
 export const DEFAULT_INSTRUMENT_ID: InstrumentId = 'whistle_d'
 
+/** `in` would also answer yes to inherited keys, so a saved "toString" would pass. */
 export function isInstrumentId(value: unknown): value is InstrumentId {
-  return typeof value === 'string' && value in INSTRUMENTS
+  return typeof value === 'string'
+    && Object.prototype.hasOwnProperty.call(INSTRUMENTS, value)
 }
 
 export function getFingering(instrument: Instrument, note: string): Fingering | null {

@@ -44,6 +44,12 @@ html:root[data-mantine-color-scheme="dark"] {
   --flutex-accent-ink: var(--mantine-color-accent-4);
   --flutex-signal-ink: var(--mantine-color-signal-4);
   --flutex-alarm-ink: var(--mantine-color-alarm-4);
+
+  /* Text on a filled button, which in this scheme is a light green or a light red, so the
+     ink has to be the dark end of the ramp: 10.37:1 on the green Start button and 6.04:1 on
+     the red Stop, where Mantine's own white managed 1.71:1. `theme.ts` points filled
+     variants at this. */
+  --flutex-filled-ink: var(--mantine-color-dark-9);
 }
 
 html:root[data-mantine-color-scheme="light"] {
@@ -67,6 +73,11 @@ html:root[data-mantine-color-scheme="light"] {
   --flutex-accent-ink: var(--mantine-color-accent-9);
   --flutex-signal-ink: var(--mantine-color-signal-9);
   --flutex-alarm-ink: var(--mantine-color-alarm-9);
+
+  /* Here a filled button is shade 8 of its ramp, dark enough to keep the white ink Mantine
+     would have used anyway. Named all the same, so `theme.ts` has one variable to point at
+     instead of a rule per scheme. */
+  --flutex-filled-ink: var(--mantine-color-white);
 }
 
 /* `gap` is not a style prop on Stack or Group, so `gap={{ base, sm }}` there resolves to

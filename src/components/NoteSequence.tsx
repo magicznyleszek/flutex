@@ -14,7 +14,8 @@ export interface NoteSequenceProps {
   instrument: Instrument
   previous: string | null
   target: string | null
-  next: string | null
+  /** The notes after the target, oldest first. Only the first three are drawn. */
+  upcoming: readonly (string | null)[]
   /** Length of the target note in beats — a rhythmic hint, nothing more. */
   targetBeats: number | null
   status: TrainerStatus
@@ -26,6 +27,10 @@ interface NoteColumnProps {
   caption: string
   /** A neighbour: same-size chart with no chrome, dimmed, and a smaller name. */
   quiet?: boolean
+  /** Two or three notes away. Dimmer again, so the row reads as a queue. */
+  distant?: boolean
+  /** Dropped on a phone, where five charts do not fit. */
+  phoneHidden?: boolean
   /** A CSS colour for the name, or undefined to leave it at the card's own text colour. */
   nameColor?: string
 }
@@ -35,10 +40,19 @@ function NoteColumn({
   note,
   caption,
   quiet = false,
+  distant = false,
+  phoneHidden = false,
   nameColor,
 }: NoteColumnProps): JSX.Element {
   return (
-    <div className={cx(classes.column, quiet && classes.quiet)}>
+    <div
+      className={cx(
+        classes.column,
+        quiet && classes.quiet,
+        distant && classes.distant,
+        phoneHidden && classes.phoneHidden,
+      )}
+    >
       <div className={classes.chart}>
         <FluteDiagram instrument={instrument} note={note} bare={quiet} />
       </div>
@@ -59,11 +73,18 @@ function NoteColumn({
   )
 }
 
+/**
+ * One caption per lookahead column, and mapping over it is what decides how many get drawn.
+ * Keep the length at `LOOKAHEAD` in `trainer.ts`: a fourth entry would draw an empty chart
+ * for a note the engine never reports.
+ */
+const UPCOMING_CAPTIONS = ['next', '+2', '+3']
+
 export function NoteSequence({
   instrument,
   previous,
   target,
-  next,
+  upcoming,
   targetBeats,
   status,
 }: NoteSequenceProps): JSX.Element {
@@ -77,15 +98,33 @@ export function NoteSequence({
 
   return (
     <Stack align="center" gap="xs">
+      {/* Three notes of lookahead rather than one, because a fingering you see coming is one
+          you can start moving towards. The note you have just played earns its place too, but
+          it is the first thing to go when the row runs out of phone. */}
       <div className={classes.row}>
-        <NoteColumn instrument={instrument} note={previous} caption="previous" quiet />
+        <NoteColumn
+          instrument={instrument}
+          note={previous}
+          caption="previous"
+          quiet
+          phoneHidden
+        />
         <NoteColumn
           instrument={instrument}
           note={target}
           caption="now"
           nameColor={nameColor}
         />
-        <NoteColumn instrument={instrument} note={next} caption="next" quiet />
+        {UPCOMING_CAPTIONS.map((caption, step) => (
+          <NoteColumn
+            key={caption}
+            instrument={instrument}
+            note={upcoming[step] ?? null}
+            caption={caption}
+            quiet
+            distant={step > 0}
+          />
+        ))}
       </div>
 
       <Text size="sm" c={meta.color} fw={600}>

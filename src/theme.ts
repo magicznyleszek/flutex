@@ -1,4 +1,8 @@
-import { createTheme, type MantineColorsTuple } from '@mantine/core'
+import {
+  createTheme,
+  defaultVariantColorsResolver,
+  type MantineColorsTuple,
+} from '@mantine/core'
 
 /** Ten lightness values in percent, one per tuple index. */
 type Ladder = readonly [
@@ -88,6 +92,25 @@ export const theme = createTheme({
   white: 'hsl(32, 16%, 99%)',
 
   primaryColor: 'accent',
+
+  /**
+   * Puts the ink on a filled button under the colour scheme's control. Mantine writes
+   * `--mantine-color-white` there, and the fill is `primaryShade` — shade 8 in the light
+   * scheme but shade 4 in the dark one, a light green that left the Start button's white
+   * label at 1.71:1. `--flutex-filled-ink` is dark in the dark scheme and white in the light
+   * one, which measures 10.37:1 and 3.51:1 on that button.
+   *
+   * `autoContrast: true` is the documented cure and does not work here: Mantine reads
+   * `parsed.isLight` off the theme once, not per scheme, so both schemes get whatever the
+   * light one deserves. Everything but the fill colour still comes from Mantine's resolver.
+   */
+  variantColorResolver: (input) => {
+    const resolved = defaultVariantColorsResolver(input)
+
+    return input.variant === 'filled'
+      ? { ...resolved, color: 'var(--flutex-filled-ink)' }
+      : resolved
+  },
   /**
    * Shade 8 in light rather than the usual 6: this drives the focus ring, and green at
    * shade 6 only reaches 2.4:1 on a white card where a focus indicator wants 3:1. Shade 8

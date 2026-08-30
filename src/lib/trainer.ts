@@ -19,9 +19,12 @@ export type TrainerStatus =
 
 /** One frame of microphone input, already translated into musical terms. */
 export interface TrainerFrame {
-  /** The recognised note, or null on silence. */
+  /**
+   * The recognised note, or null on silence. Only the null-ness decides anything — see
+   * `isOnTarget` for why the name itself is not what a note is scored against.
+   */
   note: string | null
-  /** Deviation from the target note in cents. */
+  /** Deviation from the *target* note in cents, however far away that is. */
   cents: number
 }
 
@@ -39,11 +42,18 @@ export interface TrainerOptions {
   backSteps: number
 }
 
+/** How far ahead the snapshot reads, so the UI can show what is coming, not just what is next. */
+export const LOOKAHEAD = 3
+
 export interface TrainerSnapshot {
   index: number
   target: string | null
   previous: string | null
-  next: string | null
+  /**
+   * The next `LOOKAHEAD` notes, oldest first, padded with nulls at the end of the song so
+   * the caller can lay out a fixed number of slots without them shifting about.
+   */
+  upcoming: readonly (string | null)[]
   /** 0-1, fill level of the hold bar. */
   holdProgress: number
   /** 0-1, fill level of the mistake bar. */
@@ -97,11 +107,24 @@ export function createTrainerEngine(
 
   const noteAt = (position: number): string | null => song[position] ?? null
 
+  /**
+   * A note counts when it is within the tolerance of the target in cents — not when the
+   * pitch happens to be nearest to the target's own semitone. Past ±50 cents those two
+   * disagree, and the wide tolerances exist for exactly that case: a whistle that plays 70
+   * cents sharp is named as the semitone above, and the player fingering it correctly should
+   * not be told they are wrong. `note` is asked only whether anything is sounding at all,
+   * because silence arrives as 0 cents and would otherwise score as a perfect hit.
+   */
+  const isOnTarget = (frame: TrainerFrame): boolean =>
+    noteAt(index) !== null
+    && frame.note !== null
+    && Math.abs(frame.cents) <= config.toleranceCents
+
   const snapshot = (): TrainerSnapshot => ({
     index,
     target: finished ? null : noteAt(index),
     previous: noteAt(index - 1),
-    next: noteAt(index + 1),
+    upcoming: Array.from({ length: LOOKAHEAD }, (_, step) => noteAt(index + step + 1)),
     holdProgress: clamp01(holdFrames / config.holdFrames),
     mistakeProgress: clamp01(mistakeFrames / config.mistakeLimitFrames),
     status,
@@ -184,23 +207,17 @@ export function createTrainerEngine(
     }
 
     if (awaitingRelease) {
-      // The frame that breaks the sound is not discarded, it still counts below.
-      const target = noteAt(index)
-      if (frame.note === null || frame.note !== target) {
-        awaitingRelease = false
-      } else {
+      // The frame that breaks the sound is not discarded, it still counts below. The same
+      // test as scoring, or a wide tolerance would call a sustained note released and then
+      // score it again on the very next frame.
+      if (isOnTarget(frame)) {
         status = 'release'
         return snapshot()
       }
+      awaitingRelease = false
     }
 
-    const target = noteAt(index)
-    const onTarget
-      = target !== null
-      && frame.note === target
-      && Math.abs(frame.cents) <= config.toleranceCents
-
-    if (onTarget) {
+    if (isOnTarget(frame)) {
       holdFrames += 1
       mistakeFrames = Math.max(0, mistakeFrames - 1)
       status = 'holding'
