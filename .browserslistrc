@@ -1,0 +1,7 @@
+# Browsers that we support:
+# https://browsersl.ist/#q=last+2+major+versions%2C%3E+1%25%2Cnot+dead%2CFirefox+ESR
+
+last 2 major versions
+> 1%
+not dead
+Firefox ESR
