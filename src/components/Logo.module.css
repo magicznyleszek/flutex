@@ -1,23 +1,30 @@
-/* Neither asset carries a fill of its own, so both would paint black. Masking a
-   coloured box with the artwork lets the theme decide the colour instead of the
-   file — one SVG each, correct in any colour scheme.
+/* Both files bake in `fill="#191612"`, and they have to keep it: flutex-icon.svg
+   is also the favicon, where there is no stylesheet to ask. Referencing such a
+   file from `background` or `mask` gives the page no way in, so Logo.tsx inlines
+   the markup instead and the fill becomes an ordinary cascade problem — a
+   stylesheet rule outranks a presentation attribute, so the rule below wins
+   without the asset being edited.
+
+   `currentColor` rather than a colour: the caller can then retheme the mark with
+   `c=` or any rule that sets `color`, and the default tracks the colour scheme on
+   its own, `-filled` being accent-6 in light and accent-4 in dark.
 
    The box is a span, not a div, because the logotype sits inside the page's h1
    and an h1 only accepts phrasing content. */
 .mark {
   display: block;
   flex: none;
-  background-color: var(--mantine-color-accent-4);
+  color: var(--mantine-color-accent-filled);
 }
 
-.logotype {
-  mask: url("../flutex-logotype.svg") no-repeat center / contain;
-
-  /* 400x200 in the source, so the height always follows the width. */
-  aspect-ratio: 2 / 1;
+/* Both viewBoxes are intrinsic, so `height: auto` derives the aspect ratio from
+   the artwork and no declared ratio can fall out of step with it. */
+.mark > svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
-.icon {
-  mask: url("../flutex-icon.svg") no-repeat center / contain;
-  aspect-ratio: 1 / 1;
+.mark path {
+  fill: currentColor;
 }

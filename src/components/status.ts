@@ -14,7 +14,10 @@ export interface StatusMeta {
  */
 export const STATUS_META: Record<TrainerStatus, StatusMeta> = {
   waiting: {
-    color: 'dark.3',
+    // Not dark.3: NoteSequence renders this as 14px semibold body text, which
+    // WCAG does not count as large, and dark.3 only reaches 4.19:1 on a card.
+    // dark.2 is 6.58:1 there, and reading like the hint text suits the idle state.
+    color: 'dark.2',
     label: 'Waiting',
     hint: 'Play the note shown above.',
   },

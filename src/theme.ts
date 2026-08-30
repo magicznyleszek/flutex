@@ -73,6 +73,11 @@ const alarm: MantineColorsTuple = [
  * expects the ramp to fall monotonically. That ordering also puts the quiet
  * near-neutral on slot 4, which every card border, input outline and divider
  * reads — a tan there would outline the entire interface.
+ *
+ * Slot 3 is busier than "placeholder" suggests: it also drives the Select
+ * chevron and disabled text, and anything the app asks for by name. Contrast
+ * for it has to be judged against a card (dark-8), not the page, because that
+ * is where the text using it actually sits — see `status.ts`.
  */
 const dark: MantineColorsTuple = [
   '#f4f6f4', // saltpan

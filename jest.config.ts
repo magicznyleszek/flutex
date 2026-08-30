@@ -7,6 +7,8 @@ const config: Config = {
   moduleNameMapper: {
     // Jest cannot execute CSS. A style import in a component is a no-op here.
     '\\.css$': '<rootDir>/tests/support/cssStub.ts',
+    // `bundle-text:` is a Parcel pipeline, not a path Node can resolve.
+    '^bundle-text:': '<rootDir>/tests/support/svgStub.ts',
   },
   transform: {
     // The base tsconfig targets a bundler (ESM); Jest needs CommonJS.

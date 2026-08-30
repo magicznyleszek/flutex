@@ -1,0 +1,19 @@
+{
+  // The service worker cannot share the application's program. Its globals come
+  // from the WebWorker lib, which redeclares dozens of the names the DOM lib
+  // already owns — `self`, `fetch`, `Response`, every event type — so a single
+  // program containing both fails to compile. Two programs is the supported way
+  // round it, and it costs one more `tsc` in the `typecheck` script.
+  "extends": "./tsconfig.json",
+
+  "compilerOptions": {
+    "lib": ["ES2022", "WebWorker"],
+    // Jest and Node types would pull DOM in again through their own references.
+    "types": []
+  },
+
+  "include": ["src/service-worker.ts"],
+  // The base config excludes this file; without resetting that, the config would
+  // exclude the only file it includes.
+  "exclude": []
+}

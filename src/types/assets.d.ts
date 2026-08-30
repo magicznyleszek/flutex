@@ -9,3 +9,13 @@ declare module '*.module.css' {
 }
 
 declare module '*.css'
+
+/**
+ * Parcel's `bundle-text:` pipeline builds a file as usual and then hands the
+ * result back as a string instead of emitting it. The Logo uses it to put the
+ * SVG markup in the document, where CSS can reach its fill.
+ */
+declare module 'bundle-text:*' {
+  const content: string
+  export default content
+}

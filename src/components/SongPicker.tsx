@@ -27,7 +27,10 @@ export function SongPicker({ song, instrument, onSongChange }: SongPickerProps):
       />
 
       <Group gap="xs">
-        <Badge variant="light" color="dark.4" size="sm">{song.notes.length} notes</Badge>
+        {/* `color="dark"` and not `dark.4`: naming an explicit shade makes
+            Mantine fill a light badge with that shade opaquely instead of
+            tinting it, which put saltpan text on cement at 3.60:1. */}
+        <Badge variant="light" color="dark" size="sm">{song.notes.length} notes</Badge>
         {song.tags.map((tag) => (
           <Badge key={tag} variant="light" color="accent" size="sm">{tag}</Badge>
         ))}

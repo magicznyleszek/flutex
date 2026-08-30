@@ -7,7 +7,7 @@
   "scripts": {
     "start": "parcel",
     "build": "parcel build --public-url ./",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint .",
@@ -19,12 +19,16 @@
   "dependencies": {
     "@mantine/core": "^9.5.2",
     "@mantine/hooks": "^9.5.2",
+    "@parcel/service-worker": "^2.16.4",
     "@phosphor-icons/react": "^2.1.10",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@parcel/packager-raw-url": "^2.16.4",
+    "@parcel/transformer-inline-string": "^2.16.4",
+    "@parcel/transformer-webmanifest": "^2.16.4",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.4.0",

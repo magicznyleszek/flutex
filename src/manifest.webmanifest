@@ -1,0 +1,19 @@
+{
+  "name": "Flutex — recorder and tin whistle trainer",
+  "short_name": "Flutex",
+  "description": "Listens through your microphone and waits until you play the right note.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#211a12",
+  "theme_color": "#211a12",
+  "categories": ["education", "music"],
+  "icons": [
+    {
+      "src": "flutex-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}

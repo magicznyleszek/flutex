@@ -1,3 +1,69 @@
+/* The diagram's geometry lives in these custom properties and nowhere else.
+   Before, six numbers were hand-derived from each other across four rules —
+   `.legend`'s padding-top mirrored `.body`'s padding plus the mouthpiece,
+   `.legendRow`'s height mirrored `.hole`'s — and they had already drifted apart:
+   the legend started 30px down while the first hole started 45px down, so the
+   digits 1..6 labelled the gaps between the holes rather than the holes. Deriving
+   both columns from one source makes that class of bug unrepresentable, and it is
+   what lets the whole diagram shrink on a phone by changing four values.
+
+   `--hole-count` is the one value CSS cannot know: it comes from the instrument,
+   so FluteDiagram.tsx sets it inline. */
+.wrapper,
+.placeholder {
+  --hole-size: 22px;
+  --hole-gap: 14px;
+  --head-pad: 18px;
+  --foot-pad: 26px;
+  --body-width: 54px;
+  --mouthpiece-width: 34px;
+  --mouthpiece-height: 8px;
+  --mouthpiece-gap: 4px;
+
+  /* Where the first hole starts, measured from the outside of `.body`: its border,
+     then its top padding, then the mouthpiece and the two things that separate the
+     mouthpiece from hole one — its own margin and the column's flex gap. The legend
+     and thumb columns are pushed down by exactly this, which is what aligns them
+     with the holes they label. */
+  --first-hole-offset: calc(
+    1px + var(--head-pad) + var(--mouthpiece-height) + var(--mouthpiece-gap) + var(--hole-gap)
+  );
+
+  /* The diagram's own height. `.placeholder` uses it so that the "Song finished"
+     and no-fingering states are exactly as tall as the diagram they replace —
+     previously both hardcoded 280px against a real 274 (whistle) or 310 (recorder),
+     so the card jumped at the end of every song. Each hole contributes its own
+     height plus the gap above it, including the gap below the mouthpiece. */
+  --diagram-height: calc(
+    2px + var(--head-pad) + var(--mouthpiece-height) + var(--mouthpiece-gap)
+    + (var(--hole-count, 6) * (var(--hole-size) + var(--hole-gap)))
+    + var(--foot-pad)
+  );
+}
+
+/* A phone cannot afford 274px of fingering chart above the fold — on the recorder,
+   which has one hole more, it was 310. The chart stays vertical: that is how whistle
+   and recorder charts are drawn, because that is how the instrument is held and how
+   the holes map onto fingers. So it shrinks instead, and the cuts are ranked by what
+   they cost to read — the holes themselves only drop 22px to 18px, while the gaps
+   and the tube's head and foot, which carry no information, give up proportionally
+   more. That takes the recorder to 202px and the whistle to 178px.
+
+   `width < 48em` is the exact complement of Mantine's `visibleFrom="sm"`
+   (min-width: 48em), so the CSS here and the props in the components switch at the
+   same point. */
+@media (width < 48em) {
+  .wrapper,
+  .placeholder {
+    --hole-size: 18px;
+    --hole-gap: 6px;
+    --head-pad: 10px;
+    --foot-pad: 10px;
+    --body-width: 44px;
+    --mouthpiece-width: 28px;
+  }
+}
+
 .wrapper {
   display: flex;
   align-items: flex-start;
@@ -5,13 +71,23 @@
   gap: var(--mantine-spacing-lg);
 }
 
+/* Stands in for `.wrapper` when there is no fingering to draw, at the same height.
+   The inline padding keeps the out-of-range Alert off the card's edge. */
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--diagram-height);
+  padding-inline: var(--mantine-spacing-md);
+}
+
 .body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  width: 54px;
-  padding: 18px 0 26px;
+  gap: var(--hole-gap);
+  width: var(--body-width);
+  padding: var(--head-pad) 0 var(--foot-pad);
   background: linear-gradient(
     to right,
     var(--mantine-color-dark-7) 0%,
@@ -19,7 +95,7 @@
     var(--mantine-color-dark-7) 100%
   );
   border: 1px solid var(--mantine-color-dark-5);
-  border-radius: 27px;
+  border-radius: calc(var(--body-width) / 2);
 }
 
 /* dark-3 rather than the dark-4 that borders everything else: on a body this
@@ -27,17 +103,17 @@
    have to stand off a brown rather than off a dark surface. What actually
    distinguishes a covered hole from an open one is the fill, not this ring. */
 .mouthpiece {
-  width: 34px;
-  height: 8px;
-  margin-bottom: 4px;
+  width: var(--mouthpiece-width);
+  height: var(--mouthpiece-height);
+  margin-bottom: var(--mouthpiece-gap);
   background: var(--mantine-color-dark-3);
   border-radius: 4px;
 }
 
 .hole {
   position: relative;
-  width: 22px;
-  height: 22px;
+  width: var(--hole-size);
+  height: var(--hole-size);
   background: var(--mantine-color-dark-9);
   border: 2px solid var(--mantine-color-dark-3);
   border-radius: 50%;
@@ -63,14 +139,14 @@
 .legend {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-top: 30px;
+  gap: var(--hole-gap);
+  padding-top: var(--first-hole-offset);
 }
 
 .legendRow {
   display: flex;
   align-items: center;
-  height: 22px;
+  height: var(--hole-size);
 }
 
 .thumb {
@@ -78,5 +154,5 @@
   flex-direction: column;
   align-items: center;
   gap: var(--mantine-spacing-xs);
-  padding-top: 30px;
+  padding-top: var(--first-hole-offset);
 }

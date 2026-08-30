@@ -14,15 +14,39 @@ export interface NoteSequenceProps {
   status: TrainerStatus
 }
 
+/**
+ * Diameter in px, phone first. The bubbles are the tallest thing in the card.
+ *
+ * The index signature is what makes this assignable to Mantine's `StyleProp`: a
+ * breakpoint object there is a `Partial<Record<MantineBreakpoint, …>>` and
+ * `MantineBreakpoint` ends in `string & {}`, so a closed two-key interface is not
+ * enough. The two named keys keep `size.base` and `size.sm` from widening to
+ * `number | undefined` under `noUncheckedIndexedAccess`.
+ */
+interface BubbleSize extends Record<string, number> {
+  base: number
+  sm: number
+}
+
 interface BubbleProps {
   note: string | null
   caption: string
-  size: number
+  size: BubbleSize
   color: string
   dimmed: boolean
 }
 
+/**
+ * `w`, `h` and `fz` are three of the Box style props that do accept a breakpoint
+ * object — unlike `gap`, which is not a style prop at all. They compile to
+ * min-width media queries in a generated class rather than staying in the `style`
+ * attribute, so anything set inline below would outrank them; the inline styles
+ * here deliberately touch nothing that these three set.
+ */
 function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Element {
+  // 3.4 keeps the note name at the proportion it was tuned to at 112px.
+  const fz = { base: Math.round(size.base / 3.4), sm: Math.round(size.sm / 3.4) }
+
   return (
     <Stack align="center" gap={6}>
       <Box
@@ -38,15 +62,26 @@ function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Elemen
         }}
       >
         <Center h="100%">
-          <Text fw={700} fz={size / 3.4} c={dimmed ? 'dimmed' : undefined}>
+          <Text fw={700} fz={fz} c={dimmed ? 'dimmed' : undefined}>
             {note ?? '–'}
           </Text>
         </Center>
       </Box>
-      <Text size="xs" c="dimmed">{caption}</Text>
+      {/* The captions are the row's cheapest 23px on a phone: which bubble is
+          which is already said three times over by left-to-right order, by size,
+          and by the target being the only one that is not dimmed. Only the tallest
+          column's caption actually costs height, but hiding one and not the others
+          would leave the row lopsided. */}
+      <Text size="xs" c="dimmed" visibleFrom="sm">{caption}</Text>
     </Stack>
   )
 }
+
+/* The row is exactly as tall as the target bubble, so the neighbours are free
+   vertically and only the target buys anything back. 96px still carries the note
+   name at 28px, which is larger than any other type on the screen. */
+const TARGET: BubbleSize = { base: 96, sm: 112 }
+const NEIGHBOUR: BubbleSize = { base: 56, sm: 64 }
 
 export function NoteSequence({
   previous,
@@ -60,16 +95,19 @@ export function NoteSequence({
   return (
     <Stack align="center" gap="xs">
       <Group align="flex-start" gap="lg" justify="center">
-        <Bubble note={previous} caption="previous" size={64} color="dark.5" dimmed />
-        <Bubble note={target} caption="now" size={112} color={meta.color} dimmed={false} />
-        <Bubble note={next} caption="next" size={64} color="dark.5" dimmed />
+        <Bubble note={previous} caption="previous" size={NEIGHBOUR} color="dark.5" dimmed />
+        <Bubble note={target} caption="now" size={TARGET} color={meta.color} dimmed={false} />
+        <Bubble note={next} caption="next" size={NEIGHBOUR} color="dark.5" dimmed />
       </Group>
 
       <Text size="sm" c={meta.color} fw={600}>
         {meta.label}
         {targetBeats !== null && ` · ${beatsToGlyph(targetBeats)}`}
       </Text>
-      <Text size="xs" c="dimmed" ta="center">{meta.hint}</Text>
+      {/* The hint is a prose expansion of the status label directly above it, and
+          on a phone "the note shown above" is not much of a direction when
+          everything is above everything. The label stays, so no state is lost. */}
+      <Text size="xs" c="dimmed" ta="center" visibleFrom="sm">{meta.hint}</Text>
     </Stack>
   )
 }

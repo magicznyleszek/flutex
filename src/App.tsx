@@ -1,6 +1,8 @@
 import {
+  ActionIcon,
   Alert,
   Badge,
+  Box,
   Button,
   Container,
   Divider,
@@ -10,9 +12,12 @@ import {
   Stack,
   Text,
   Title,
+  Tooltip,
 } from '@mantine/core'
 import {
   ArrowCounterClockwiseIcon,
+  ArrowsInIcon,
+  ArrowsOutIcon,
   CheckCircleIcon,
   MusicNoteIcon,
 } from '@phosphor-icons/react'
@@ -42,6 +47,7 @@ import {
   type DifficultyId,
 } from './data/settings'
 import { DEFAULT_SONG_ID, getSong, isSongId, songNoteNames } from './data/songs'
+import { useFullscreen } from './hooks/useFullscreen'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { usePitchDetection } from './hooks/usePitchDetection'
 import { useSongProgress } from './hooks/useSongProgress'
@@ -100,6 +106,7 @@ export default function App(): JSX.Element {
     onFrame: handleFrame,
   })
 
+  const fullscreen = useFullscreen()
   const { records, recordCompletion } = useSongProgress()
   const record = records[song.id]
 
@@ -141,16 +148,27 @@ export default function App(): JSX.Element {
               <Logo variant="icon" width={34} hiddenFrom="xs" />
               <Logo variant="logotype" width={132} visibleFrom="xs" />
             </Title>
-            <Text c="dimmed" size="sm">
+            {/* `visibleFrom`, not `hiddenFrom`: Mantine's breakpoint props are
+                min-width only, so the phone is the default case and the tagline is
+                something desktop adds. It is the single most expensive line above
+                the fold — 41px because it wraps at 390px, and it is also what makes
+                the header Group wrap, since it stretches the left column to full
+                width and pushes the counters onto a second row. Hiding it therefore
+                buys 81px, not 41. Nothing is lost: the same sentence is the
+                document's meta description and its <title>. */}
+            <Text c="dimmed" size="sm" visibleFrom="sm">
               A recorder and tin whistle trainer. It waits until you play the
               right note.
             </Text>
           </Stack>
           <Group gap="xs">
-            <Badge variant="light" color="dark.4" leftSection={<MusicNoteIcon size={12} />}>
+            {/* `color="dark"` rather than `dark.4`: naming an explicit shade
+                switches a light badge from a tint to an opaque fill of that
+                shade, which left saltpan text on cement at 3.60:1. */}
+            <Badge variant="light" color="dark" leftSection={<MusicNoteIcon size={12} />}>
               {view.hits} / {view.total}
             </Badge>
-            <Badge variant="light" color={view.mistakes > 0 ? 'alarm' : 'dark.4'}>
+            <Badge variant="light" color={view.mistakes > 0 ? 'alarm' : 'dark'}>
               mistakes: {view.mistakes}
             </Badge>
             {record !== undefined && (
@@ -161,17 +179,28 @@ export default function App(): JSX.Element {
           </Group>
         </Group>
 
+        {/* Two columns from `sm` rather than `md`. The chart needs 127px at its
+            widest and the note row 280, so both fit side by side from 768px up —
+            and between 768 and 991 the old single column was both stacking the
+            cards *and* back on the desktop spacing scale, which is how a phone in
+            landscape ended up as the worst case of the two layouts. */}
         <Grid gap="lg">
-          <Grid.Col span={{ base: 12, md: 5 }}>
+          <Grid.Col span={{ base: 12, sm: 5 }}>
             <Paper p="lg" radius="lg" withBorder h="100%">
               <Stack gap="md" h="100%" justify="center">
-                <Text size="sm" fw={600} ta="center">{instrument.shortName}</Text>
+                {/* The instrument is named three times over — here, in the
+                    diagram's own aria-label, and as the value of the Instrument
+                    Select. A `display: none` child creates no flex gap either, so
+                    hiding it reclaims the Stack's 16px as well as its own 20px. */}
+                <Text size="sm" fw={600} ta="center" visibleFrom="sm">
+                  {instrument.shortName}
+                </Text>
                 <FluteDiagram instrument={instrument} note={view.target} />
               </Stack>
             </Paper>
           </Grid.Col>
 
-          <Grid.Col span={{ base: 12, md: 7 }}>
+          <Grid.Col span={{ base: 12, sm: 7 }}>
             <Stack gap="lg">
               <Paper p="lg" radius="lg" withBorder>
                 <Stack gap="lg">
@@ -183,7 +212,11 @@ export default function App(): JSX.Element {
                     status={view.status}
                   />
 
-                  <Divider />
+                  {/* A rule between the notes and the feedback below them is worth
+                      13px of a desktop card and not of a phone screen — hiding it
+                      takes the gap on one side of it with it, since a
+                      `display: none` flex child creates no gap. */}
+                  <Divider visibleFrom="sm" />
 
                   <Tuner
                     cents={view.cents}
@@ -226,12 +259,38 @@ export default function App(): JSX.Element {
 
               <Paper p="lg" radius="lg" withBorder>
                 <Stack gap="sm">
-                  <MicButton
-                    status={mic.status}
-                    error={mic.error}
-                    onStart={() => void mic.start()}
-                    onStop={mic.stop}
-                  />
+                  {/* Beside the microphone button rather than up in the header: the
+                      header is the conventional corner for this, but on a 360px
+                      phone the logo, the three counters and a 26px icon together
+                      overflow the row, and the header wrapping costs 32px — more
+                      than the control gives back. Here there is room at every
+                      width, it is on screen without scrolling (which it has to be,
+                      since the browser only grants the request from inside a tap),
+                      and it sits with the other thing you press before playing. */}
+                  <Group gap="xs" align="flex-start" wrap="nowrap">
+                    <Box flex={1}>
+                      <MicButton
+                        status={mic.status}
+                        error={mic.error}
+                        onStart={() => void mic.start()}
+                        onStop={mic.stop}
+                      />
+                    </Box>
+                    {fullscreen.available && (
+                      <Tooltip label={fullscreen.active ? 'Leave fullscreen' : 'Fullscreen'}>
+                        <ActionIcon
+                          variant="default"
+                          size={42}
+                          onClick={fullscreen.toggle}
+                          aria-label={fullscreen.active ? 'Leave fullscreen' : 'Go fullscreen'}
+                        >
+                          {fullscreen.active
+                            ? <ArrowsInIcon size={20} />
+                            : <ArrowsOutIcon size={20} />}
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                  </Group>
                   <Group justify="space-between">
                     <Text size="xs" c="dimmed">
                       {listening
