@@ -1,28 +1,36 @@
-/* The card is dark-8, so dropping to the page shade reads as a groove cut into the panel. */
+/* A groove cut into the panel: one step away from the card in whichever scheme is on, so
+   the needle and the tolerance zone both have something to sit in. `light-dark()` is
+   postcss-preset-mantine's — light value first. */
 .track {
   position: relative;
   height: 44px;
   overflow: hidden;
-  background: var(--mantine-color-dark-9);
-  border: 1px solid var(--mantine-color-dark-6);
+  background: var(--flutex-sunken);
+  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-6));
   border-radius: var(--mantine-radius-md);
 }
 
+/* The zone marks "close enough", so it has to read as green rather than merely as a
+   lighter patch. On the dark track that means the bottom of the ramp at 3.19:1; on the
+   light one a midtone, where accent-9 would be a bar darker than the needle crossing it. */
 .zone {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: var(--mantine-color-accent-9);
-  border-inline: 1px solid var(--mantine-color-accent-7);
+  background: light-dark(var(--mantine-color-accent-3), var(--mantine-color-accent-9));
+  border-inline: 1px solid
+    light-dark(var(--mantine-color-accent-6), var(--mantine-color-accent-7));
 }
 
+/* Mantine's placeholder shade, the quietest thing it still calls legible: 5.52:1 on the
+   dark track and 3.95:1 on the light one. */
 .center {
   position: absolute;
   top: 6px;
   bottom: 6px;
   left: 50%;
   width: 2px;
-  background: var(--mantine-color-dark-3);
+  background: var(--mantine-color-placeholder);
   transform: translateX(-50%);
 }
 
@@ -31,14 +39,14 @@
   top: 4px;
   bottom: 4px;
   width: 4px;
-  background: var(--mantine-color-signal-4);
+  background: var(--flutex-signal-ink);
   border-radius: 2px;
   transform: translateX(-50%);
   transition: left 60ms linear, background-color 120ms ease;
 }
 
 .needleInTune {
-  background: var(--mantine-color-accent-4);
+  background: var(--flutex-accent-ink);
 }
 
 .scale {

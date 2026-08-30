@@ -7,10 +7,13 @@ type Ladder = readonly [
 ]
 
 /**
- * Median lightness of the twelve chromatic tuples in Mantine's `DEFAULT_THEME`, so shades
- * land where its own components expect them.
+ * Starts from the median lightness of the twelve chromatic tuples in Mantine's
+ * `DEFAULT_THEME`, so shades land where its own components expect them. The tail is
+ * darker than Mantine's: in the light scheme shade 9 is the text on a `variant="light"`
+ * surface, and green and yellow at Mantine's 39% only reach 3.3:1 on a white card. At 29%
+ * they read 5.6:1 and 5.5:1, and shade 9 lands on the designer's forestgreen.
  */
-const CHROMATIC: Ladder = [95, 90, 83, 73, 64, 58, 53, 49, 46, 39]
+const CHROMATIC: Ladder = [95, 91, 83, 73, 64, 58, 53, 47, 38, 29]
 
 /**
  * Mantine's `dark` tuple, which runs the other way round: 0 is text and 9 is the page.
@@ -18,6 +21,15 @@ const CHROMATIC: Ladder = [95, 90, 83, 73, 64, 58, 53, 49, 46, 39]
  * sits on 1.11:1 apart. At 16% and 8% they read 1.27:1.
  */
 const NEUTRAL: Ladder = [86, 75, 64, 54, 39, 31, 25, 20, 16, 8]
+
+/**
+ * The light scheme's neutral, so 0 is the lightest. Mantine reads fixed meanings off
+ * these indices too: 0 hover surfaces, 1 light tints, 2 disabled fills and the page,
+ * 3 Paper and Divider borders, 4 input borders, 5 placeholder, 6 dimmed text, 7-9 dark
+ * text and fills. The 72 → 44 step is the seam between the surfaces and the type;
+ * nothing reads a gradient across it.
+ */
+const GRAY: Ladder = [98, 96, 92, 80, 72, 44, 37, 27, 21, 13]
 
 /**
  * One hue and one saturation for the whole tuple, with lightness doing the work.
@@ -49,20 +61,39 @@ const signal = ramp(60, 45, CHROMATIC)
 const alarm = ramp(8, 65, CHROMATIC)
 
 /**
- * Warm near-neutral in place of Mantine's cool greys. The indices carry fixed meanings:
- * 0 body text, 2 dimmed text, 3 placeholder, 4 every border and divider, 6 input
- * backgrounds, 7-9 successive surface layers.
+ * Warm near-neutral in place of Mantine's cool greys, for the dark scheme. The indices
+ * carry fixed meanings: 0 body text, 2 dimmed text, 3 placeholder, 4 every border and
+ * divider, 6 input backgrounds, 7-9 successive surface layers.
  *
  * Saturation stops at 16% so slot 4 does not tint every border orange, which still leaves
- * the midtones reading brown. Body text measures 13.35:1 on the page and dimmed text
- * 5.91:1 on a card, where a border is 2.54:1.
+ * the midtones reading brown. Body text measures 10.55:1 on a card and dimmed text
+ * 5.91:1, where a border is 2.54:1.
  */
 const dark = ramp(32, 16, NEUTRAL)
 
+/**
+ * The same warm family as `dark`, laid out for the light scheme. Overriding Mantine's
+ * `gray` is what keeps light mode warm: its light-scheme variables read dimmed text off
+ * gray-6, placeholders off gray-5 and every border off gray-3 and gray-4, so a cool grey
+ * ramp there would outline the whole interface in blue.
+ */
+const gray = ramp(32, 16, GRAY)
+
 export const theme = createTheme({
-  colors: { accent, signal, alarm, dark },
+  colors: { accent, signal, alarm, dark, gray },
+
+  /** `--mantine-color-text` in the light scheme, and Tooltip's text in the dark one. */
+  black: 'hsl(32, 16%, 8%)',
+  /** Cards and inputs in the light scheme. Warm enough to sit on the gray-2 page. */
+  white: 'hsl(32, 16%, 99%)',
+
   primaryColor: 'accent',
-  primaryShade: { light: 6, dark: 4 },
+  /**
+   * Shade 8 in light rather than the usual 6: this drives the focus ring, and green at
+   * shade 6 only reaches 2.4:1 on a white card where a focus indicator wants 3:1. Shade 8
+   * is 3.5:1. Shade 4 does the same job in the dark scheme at 8.2:1.
+   */
+  primaryShade: { light: 8, dark: 4 },
 
   fontFamily:
     'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',

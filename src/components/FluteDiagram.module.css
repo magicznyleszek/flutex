@@ -62,6 +62,9 @@
   padding-inline: var(--mantine-spacing-md);
 }
 
+/* The tube keeps the dark ramp in both colour schemes. It is a picture of a wooden
+   instrument, not a surface of the interface, and everything inside it — the rings, the
+   open holes, the covered ones — is measured against the tube rather than the card. */
 .body {
   display: flex;
   flex-direction: column;

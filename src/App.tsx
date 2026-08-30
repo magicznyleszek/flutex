@@ -23,6 +23,7 @@ import {
 } from '@phosphor-icons/react'
 import { type JSX, useCallback, useEffect, useMemo, useRef } from 'react'
 
+import { ColorSchemeToggle } from './components/ColorSchemeToggle'
 import { FluteDiagram } from './components/FluteDiagram'
 import { Logo } from './components/Logo'
 import { MicButton } from './components/MicButton'
@@ -243,9 +244,9 @@ export default function App(): JSX.Element {
 
               <Paper p="lg" radius="lg" withBorder>
                 <Stack gap="sm">
-                  {/* Fullscreen sits beside the microphone button rather than in the
-                      header, which wraps on a 360px phone. The browser only grants the
-                      request from a tap, so the button has to be on screen. */}
+                  {/* The two icon controls sit beside the microphone button rather than in
+                      the header, which wraps on a 360px phone. Fullscreen has to be on
+                      screen anyway: the browser only grants the request from a tap. */}
                   <Group gap="xs" align="flex-start" wrap="nowrap">
                     <Box flex={1}>
                       <MicButton
@@ -255,6 +256,7 @@ export default function App(): JSX.Element {
                         onStop={mic.stop}
                       />
                     </Box>
+                    <ColorSchemeToggle />
                     {fullscreen.available && (
                       <Tooltip label={fullscreen.active ? 'Leave fullscreen' : 'Fullscreen'}>
                         <ActionIcon
@@ -279,9 +281,10 @@ export default function App(): JSX.Element {
                     <Button
                       size="compact-sm"
                       variant="subtle"
-                      // Mantine's `gray` is a cool neutral and reads blue beside these
-                      // browns; `dark.2` matches the hint text next to it.
-                      color="dark.2"
+                      // Not a palette key: `gray` would resolve to the primary shade,
+                      // which is brighter than the hint text this sits next to. The
+                      // dimmed variable is that hint text, in either scheme.
+                      color="var(--mantine-color-dimmed)"
                       leftSection={<ArrowCounterClockwiseIcon size={14} />}
                       onClick={reset}
                     >

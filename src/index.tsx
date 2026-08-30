@@ -11,10 +11,11 @@ import { theme } from './theme'
 const container = document.getElementById('root')
 if (!container) throw new Error('No #root element in the document')
 
-// The palette and global.css define a dark scheme only.
+// `defaultColorScheme` only applies until the user picks one; after that Mantine reads
+// its own localStorage key. color-scheme-boot.ts applies the stored value before paint.
 createRoot(container).render(
   <StrictMode>
-    <MantineProvider theme={theme} forceColorScheme="dark">
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <App />
     </MantineProvider>
   </StrictMode>,

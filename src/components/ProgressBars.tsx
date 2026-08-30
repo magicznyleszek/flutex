@@ -32,14 +32,13 @@ export function ProgressBars({
           <Text size="xs" c="dimmed">Note hold</Text>
           <Text size="xs" c="dimmed" ff="monospace">{percent(holdProgress)}%</Text>
         </Group>
-        {/* Mantine's dark Progress track is dark-4, which reads lighter than the card it
-            sits on, so an empty bar looks like a filled one. dark.9 makes it a groove
-            instead, matching the tuner track above, and takes the fill from 3.22:1 to
-            10.37:1. */}
+        {/* Mantine's stock track reads lighter than the card it sits on, so an empty bar
+            looks like a filled one. The groove shade matches the tuner track above and
+            keeps the fill at 10.37:1 in the dark scheme and 4.80:1 in the light one. */}
         <Progress
           value={percent(holdProgress)}
-          color="accent.4"
-          bg="dark.9"
+          color="var(--flutex-accent-ink)"
+          bg="var(--flutex-sunken)"
           size="lg"
           radius="sm"
           transitionDuration={80}
@@ -60,8 +59,8 @@ export function ProgressBars({
         </Group>
         <Progress
           value={percent(mistakeProgress)}
-          color="alarm.5"
-          bg="dark.9"
+          color="var(--flutex-alarm-ink)"
+          bg="var(--flutex-sunken)"
           size="xs"
           radius="sm"
           transitionDuration={80}

@@ -29,6 +29,7 @@ interface BubbleProps {
   note: string | null
   caption: string
   size: BubbleSize
+  /** A CSS colour for the ring, as `STATUS_META` supplies it. */
   color: string
   dimmed: boolean
 }
@@ -47,11 +48,12 @@ function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Elemen
       <Box
         w={size}
         h={size}
-        // The card is dark-8, so the neighbours sink below it and the target rises.
-        bg={dimmed ? 'dark.9' : 'dark.7'}
+        // The neighbours sink below the card and the target rises off it, which
+        // `global.css` spells out per colour scheme.
+        bg={dimmed ? 'var(--flutex-sunken)' : 'var(--flutex-raised)'}
         style={{
           borderRadius: '50%',
-          border: `2px solid var(--mantine-color-${color.replace('.', '-')})`,
+          border: `2px solid ${color}`,
           opacity: dimmed ? 0.55 : 1,
         }}
       >
@@ -74,6 +76,9 @@ function Bubble({ note, caption, size, color, dimmed }: BubbleProps): JSX.Elemen
 const TARGET: BubbleSize = { base: 96, sm: 112 }
 const NEIGHBOUR: BubbleSize = { base: 56, sm: 64 }
 
+/** Only the target carries a status, so the neighbours take the border shade of a card. */
+const QUIET_RING = 'var(--mantine-color-default-border)'
+
 export function NoteSequence({
   previous,
   target,
@@ -86,9 +91,9 @@ export function NoteSequence({
   return (
     <Stack align="center" gap="xs">
       <Group align="flex-start" gap="lg" justify="center">
-        <Bubble note={previous} caption="previous" size={NEIGHBOUR} color="dark.5" dimmed />
+        <Bubble note={previous} caption="previous" size={NEIGHBOUR} color={QUIET_RING} dimmed />
         <Bubble note={target} caption="now" size={TARGET} color={meta.color} dimmed={false} />
-        <Bubble note={next} caption="next" size={NEIGHBOUR} color="dark.5" dimmed />
+        <Bubble note={next} caption="next" size={NEIGHBOUR} color={QUIET_RING} dimmed />
       </Group>
 
       <Text size="sm" c={meta.color} fw={600}>

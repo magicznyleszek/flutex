@@ -5,7 +5,11 @@
 .mark {
   display: block;
   flex: none;
-  color: var(--mantine-color-accent-filled);
+
+  /* Not `--mantine-color-accent-filled`: the mark sits straight on the page rather than on
+     a card, and the filled shade is picked for focus rings. The ink shades read 10.37:1 on
+     the dark page and 4.80:1 on the light one. */
+  color: var(--flutex-accent-ink);
 }
 
 /* Both viewBoxes are intrinsic, so `height: auto` takes the aspect ratio from the artwork

@@ -45,7 +45,7 @@ export function Tuner({ cents, toleranceCents, active }: TunerProps): JSX.Elemen
 
       <Group justify="space-between" className={classes.scale}>
         <Text size="xs" c="dimmed">flat</Text>
-        <Text size="xs" c={inTune ? 'accent.4' : 'dimmed'} ff="monospace">
+        <Text size="xs" c={inTune ? 'var(--flutex-accent-ink)' : 'dimmed'} ff="monospace">
           {active ? `${cents > 0 ? '+' : ''}${Math.round(cents)}¢` : '—'}
         </Text>
         <Text size="xs" c="dimmed">sharp</Text>

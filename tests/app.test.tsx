@@ -12,7 +12,7 @@ import { theme } from '../src/theme'
  */
 const render = (): string =>
   renderToStaticMarkup(
-    <MantineProvider theme={theme} forceColorScheme="dark">
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <App />
     </MantineProvider>,
   )
