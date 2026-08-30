@@ -33,10 +33,12 @@ describe('App', () => {
     expect(markup).toContain(`>${firstNote}<`)
   })
 
-  it('invites the user to enable the microphone rather than showing it live', () => {
+  // Asserting on the aria-label rather than the visible "Start", which is also a substring
+  // of the "Start over" button sitting right next to it.
+  it('invites the user to start listening rather than showing it live', () => {
     const markup = render()
 
-    expect(markup).toContain('Enable microphone')
-    expect(markup).not.toContain('Stop listening')
+    expect(markup).toContain('Start listening through the microphone')
+    expect(markup).not.toContain('Stop listening through the microphone')
   })
 })

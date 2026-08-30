@@ -9,15 +9,28 @@ import * as classes from './FluteDiagram.module.css'
 export interface FluteDiagramProps {
   instrument: Instrument
   note: string | null
+  /**
+   * Drops everything around the tube: the legend digits, the fingering hint, and the prose
+   * that stands in for a missing note. The tube and its holes stay exactly the size they
+   * are — the two neighbours in the note row are dimmed rather than shrunk, so this chrome
+   * is what marks out the note you are actually being asked to play.
+   */
+  bare?: boolean
 }
 
 /**
- * Hole count is the one bit of the diagram's geometry CSS cannot work out for itself.
- * The stylesheet multiplies it into `--diagram-height`, which the placeholder states
- * reuse so the card does not jump.
+ * The two bits of the diagram's geometry CSS cannot work out for itself. Hole count gets
+ * multiplied into `--diagram-height`, which the placeholder states reuse so the card does
+ * not jump. `--side-slot` is the width of the two columns flanking the tube, which have to
+ * match for the tube to end up centred: wide enough for a thumb hole on a recorder, and
+ * otherwise only as wide as a legend digit, so a whistle chart stays narrow enough for
+ * three of them to fit a phone.
  */
-function geometry(frontHoleCount: number): CSSProperties {
-  return { '--hole-count': frontHoleCount } as CSSProperties
+function geometry(frontHoleCount: number, hasThumb: boolean): CSSProperties {
+  return {
+    '--hole-count': frontHoleCount,
+    '--side-slot': hasThumb ? 'var(--hole-size)' : '1ch',
+  } as CSSProperties
 }
 
 const STATE_LABELS: Record<string, string> = {
@@ -42,7 +55,11 @@ function Hole({ state, label }: { state: HoleState, label: string }): JSX.Elemen
   return <div className={holeClass(state)} aria-label={`${label}: ${describe(state)}`} />
 }
 
-export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Element {
+export function FluteDiagram({
+  instrument,
+  note,
+  bare = false,
+}: FluteDiagramProps): JSX.Element {
   const fingering = note === null ? null : getFingering(instrument, note)
 
   // The placeholder states below need a height before there is a fingering to draw, so
@@ -51,9 +68,21 @@ export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Eleme
     ? instrument.holeCount - 1
     : instrument.holeCount
 
+  // A neighbour with nothing to show says so with an empty slot. Either message below
+  // would be wider than the whole three-chart row, and neither is about the note you are
+  // being asked to play.
+  if (bare && (note === null || fingering === null)) {
+    return (
+      <div
+        className={cx(classes.placeholder, classes.barePlaceholder)}
+        style={geometry(frontHoleCount, instrument.hasThumb)}
+      />
+    )
+  }
+
   if (note === null) {
     return (
-      <div className={classes.placeholder} style={geometry(frontHoleCount)}>
+      <div className={classes.placeholder} style={geometry(frontHoleCount, instrument.hasThumb)}>
         <Text c="dimmed" size="sm">Song finished</Text>
       </div>
     )
@@ -61,10 +90,13 @@ export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Eleme
 
   if (fingering === null) {
     return (
-      <div className={classes.placeholder} style={geometry(frontHoleCount)}>
+      <div className={classes.placeholder} style={geometry(frontHoleCount, instrument.hasThumb)}>
+        {/* Capped, because this sits in a flex row between the two neighbours and an
+            unconstrained Alert would stretch it past the card. */}
         <Alert
           color="alarm"
           variant="light"
+          maw={300}
           icon={<WarningIcon size={20} />}
           title={`No fingering for ${note}`}
         >
@@ -82,14 +114,13 @@ export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Eleme
     <Stack align="center" gap="sm">
       <div
         className={classes.wrapper}
-        style={geometry(frontHoles.length)}
+        style={geometry(frontHoles.length, instrument.hasThumb)}
         role="img"
         aria-label={`Fingering for ${note} on the ${instrument.shortName}`}
       >
         {thumbState !== null && (
           <div className={classes.thumb}>
             <Hole state={thumbState} label="Thumb" />
-            <Text size="xs" c="dimmed">thumb</Text>
           </div>
         )}
 
@@ -105,8 +136,12 @@ export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Eleme
           ))}
         </div>
 
+        {/* Rendered even when empty, because it is what claims the grid slot on the far side
+            of the tube. Dropping it on the neighbours would leave them a slot narrower than
+            the note being played, and the three tubes in the row would no longer be evenly
+            spaced. */}
         <div className={classes.legend}>
-          {frontHoles.map((_, position) => (
+          {!bare && frontHoles.map((_, position) => (
             <div key={position} className={classes.legendRow}>
               <Text size="xs" c="dimmed" ff="monospace">{position + 1}</Text>
             </div>
@@ -114,7 +149,7 @@ export function FluteDiagram({ instrument, note }: FluteDiagramProps): JSX.Eleme
         </div>
       </div>
 
-      {fingering.hint !== undefined && (
+      {!bare && fingering.hint !== undefined && (
         <Text size="xs" c="dimmed" ta="center" maw={260}>
           {fingering.hint}
         </Text>

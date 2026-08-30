@@ -6,7 +6,6 @@ import {
   Button,
   Container,
   Divider,
-  Grid,
   Group,
   Paper,
   Stack,
@@ -24,7 +23,6 @@ import {
 import { type JSX, useCallback, useEffect, useMemo, useRef } from 'react'
 
 import { ColorSchemeToggle } from './components/ColorSchemeToggle'
-import { FluteDiagram } from './components/FluteDiagram'
 import { Logo } from './components/Logo'
 import { MicButton } from './components/MicButton'
 import { NoteSequence } from './components/NoteSequence'
@@ -132,8 +130,12 @@ export default function App(): JSX.Element {
   const targetBeats = song.notes[view.index]?.beats ?? null
   const listening = mic.status === 'listening'
 
+  // Container `md` rather than `lg`: the trainer used to be a two-column grid and needed the
+  // width. It is one centred column now, and at 1140px everything in it floated in its own
+  // empty half of the card. Not `sm` either — that drops the three settings selects to 205px
+  // each, which cuts "Soprano recorder (baroque)" off mid-word.
   return (
-    <Container size="lg" py="xl">
+    <Container size="md" py="xl">
       <Stack gap="lg">
         <Group justify="space-between" align="flex-end">
           <Stack gap={4}>
@@ -169,135 +171,117 @@ export default function App(): JSX.Element {
           </Group>
         </Group>
 
-        {/* Two columns from `sm` rather than `md`: the chart and the note row both fit
-            side by side at 768px, and a single column there makes landscape phones the
-            worst case. */}
-        <Grid gap="lg">
-          <Grid.Col span={{ base: 12, sm: 5 }}>
-            {/* The full heights and the centring only do anything from `sm`, where the
-                two columns have to come out equal. */}
-            <Paper p="lg" radius="lg" withBorder h="100%">
-              <Stack gap="md" h="100%" justify="center">
-                {/* Redundant with the diagram's aria-label and the Instrument select.
-                    Hiding it reclaims its own 20px plus the Stack's 16px, because a
-                    `display: none` flex child creates no gap. */}
-                <Text size="sm" fw={600} ta="center" visibleFrom="sm">
-                  {instrument.shortName}
-                </Text>
-                <FluteDiagram instrument={instrument} note={view.target} />
-              </Stack>
-            </Paper>
-          </Grid.Col>
+        {/* Everything about the note being played, in one card: the fingering for the
+            previous, current and next note with their names, then the two meters that
+            describe the middle one. The instrument's own chart used to sit in a second
+            column, which is now the middle of this row. */}
+        <Paper p="lg" radius="lg" withBorder>
+          <Stack gap="lg">
+            <NoteSequence
+              instrument={instrument}
+              previous={view.previous}
+              target={view.target}
+              next={view.next}
+              targetBeats={targetBeats}
+              status={view.status}
+            />
 
-          <Grid.Col span={{ base: 12, sm: 7 }}>
-            <Stack gap="lg">
-              <Paper p="lg" radius="lg" withBorder>
-                <Stack gap="lg">
-                  <NoteSequence
-                    previous={view.previous}
-                    target={view.target}
-                    next={view.next}
-                    targetBeats={targetBeats}
-                    status={view.status}
-                  />
+            <Divider visibleFrom="sm" />
 
-                  <Divider visibleFrom="sm" />
+            <Tuner
+              cents={view.cents}
+              toleranceCents={toleranceCents}
+              active={listening && view.detectedNote !== null}
+            />
 
-                  <Tuner
-                    cents={view.cents}
-                    toleranceCents={toleranceCents}
-                    active={listening && view.detectedNote !== null}
-                  />
+            <ProgressBars
+              holdProgress={view.holdProgress}
+              mistakeProgress={view.mistakeProgress}
+              penaltyMode={penaltyMode}
+            />
+          </Stack>
+        </Paper>
 
-                  <ProgressBars
-                    holdProgress={view.holdProgress}
-                    mistakeProgress={view.mistakeProgress}
-                    penaltyMode={penaltyMode}
-                  />
-                </Stack>
-              </Paper>
-
-              {view.finished && (
-                <Alert
-                  color="accent"
-                  variant="light"
-                  icon={<CheckCircleIcon size={20} />}
-                  title={`${song.title} — played all the way through`}
-                >
-                  <Stack gap="sm" align="flex-start">
-                    <Text size="sm">
-                      Mistakes this run: {view.mistakes}
-                      {record !== undefined && `, personal best: ${record.bestMistakes}`}.
-                    </Text>
-                    <Button
-                      size="sm"
-                      variant="light"
-                      color="accent"
-                      leftSection={<ArrowCounterClockwiseIcon size={16} />}
-                      onClick={reset}
-                    >
-                      Play it again
-                    </Button>
-                  </Stack>
-                </Alert>
-              )}
-
-              <Paper p="lg" radius="lg" withBorder>
-                <Stack gap="sm">
-                  {/* The two icon controls sit beside the microphone button rather than in
-                      the header, which wraps on a 360px phone. Fullscreen has to be on
-                      screen anyway: the browser only grants the request from a tap. */}
-                  <Group gap="xs" align="flex-start" wrap="nowrap">
-                    <Box flex={1}>
-                      <MicButton
-                        status={mic.status}
-                        error={mic.error}
-                        onStart={() => void mic.start()}
-                        onStop={mic.stop}
-                      />
-                    </Box>
-                    <ColorSchemeToggle />
-                    {fullscreen.available && (
-                      <Tooltip label={fullscreen.active ? 'Leave fullscreen' : 'Fullscreen'}>
-                        <ActionIcon
-                          variant="default"
-                          size={42}
-                          onClick={fullscreen.toggle}
-                          aria-label={fullscreen.active ? 'Leave fullscreen' : 'Go fullscreen'}
-                        >
-                          {fullscreen.active
-                            ? <ArrowsInIcon size={20} />
-                            : <ArrowsOutIcon size={20} />}
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </Group>
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      {listening
-                        ? 'Listening. Hold each note for a moment for it to count.'
-                        : 'Without a microphone the trainer only shows fingerings.'}
-                    </Text>
-                    <Button
-                      size="compact-sm"
-                      variant="subtle"
-                      // Not a palette key: `gray` would resolve to the primary shade,
-                      // which is brighter than the hint text this sits next to. The
-                      // dimmed variable is that hint text, in either scheme.
-                      color="var(--mantine-color-dimmed)"
-                      leftSection={<ArrowCounterClockwiseIcon size={14} />}
-                      onClick={reset}
-                    >
-                      Start over
-                    </Button>
-                  </Group>
-                </Stack>
-              </Paper>
+        {view.finished && (
+          <Alert
+            color="accent"
+            variant="light"
+            icon={<CheckCircleIcon size={20} />}
+            title={`${song.title} — played all the way through`}
+          >
+            <Stack gap="sm" align="flex-start">
+              <Text size="sm">
+                Mistakes this run: {view.mistakes}
+                {record !== undefined && `, personal best: ${record.bestMistakes}`}.
+              </Text>
+              <Button
+                size="sm"
+                variant="light"
+                color="accent"
+                leftSection={<ArrowCounterClockwiseIcon size={16} />}
+                onClick={reset}
+              >
+                Play it again
+              </Button>
             </Stack>
-          </Grid.Col>
-        </Grid>
+          </Alert>
+        )}
 
         <Paper p="lg" radius="lg" withBorder>
+          <Stack gap="sm">
+            {/* The two icon controls sit beside the microphone button rather than in
+                the header, which wraps on a 360px phone. Fullscreen has to be on
+                screen anyway: the browser only grants the request from a tap. */}
+            <Group gap="xs" align="flex-start" wrap="nowrap">
+              <Box flex={1}>
+                <MicButton
+                  status={mic.status}
+                  error={mic.error}
+                  onStart={() => void mic.start()}
+                  onStop={mic.stop}
+                />
+              </Box>
+              <ColorSchemeToggle />
+              {fullscreen.available && (
+                <Tooltip label={fullscreen.active ? 'Leave fullscreen' : 'Fullscreen'}>
+                  <ActionIcon
+                    variant="default"
+                    size={42}
+                    onClick={fullscreen.toggle}
+                    aria-label={fullscreen.active ? 'Leave fullscreen' : 'Go fullscreen'}
+                  >
+                    {fullscreen.active
+                      ? <ArrowsInIcon size={20} />
+                      : <ArrowsOutIcon size={20} />}
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </Group>
+            <Group justify="space-between" gap="sm">
+              <Text size="xs" c="dimmed" flex={1}>
+                {listening
+                  ? 'Listening. Hold each note for a moment for it to count.'
+                  : 'Without a microphone the trainer only shows fingerings.'}
+              </Text>
+              {/* Restarting the song is a real action, not an aside, so it gets a bordered
+                  button at the same size as Start rather than the dimmed text link it was.
+                  `default` and not a colour: it discards your progress, but red would read
+                  as a warning about something that has already gone wrong. */}
+              <Button
+                size="md"
+                variant="default"
+                leftSection={<ArrowCounterClockwiseIcon size={18} />}
+                onClick={reset}
+              >
+                Start over
+              </Button>
+            </Group>
+          </Stack>
+        </Paper>
+
+        {/* The settings are the one card you are not looking at while playing, so it gets
+            `xl` on top of the stack's own `lg` to break it away from the trainer. */}
+        <Paper p="lg" radius="lg" withBorder mt="xl">
           <Stack gap="lg">
             <SongPicker
               song={song}

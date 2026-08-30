@@ -1,0 +1,39 @@
+/* Three charts side by side: previous, the one to play, next.
+
+   `stretch` plus `flex: 1` on `.chart` is what puts the note names on one line. The
+   neighbours are half the height of the middle chart, so laying the columns out by their
+   content would leave each name hanging under its own tube at a different height. Instead
+   every column grows to the tallest and the chart slot absorbs the difference, which
+   aligns the names along the bottom while the tubes still line up at the mouthpiece — the
+   end you actually put in your mouth. */
+.row {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+
+  /* Scales with the viewport rather than sitting at one spacing token. The ceiling stops the
+     three charts drifting apart on a desktop; the floor is what is left on a 390px phone
+     once a recorder's three full-size charts have taken their 270px. */
+  gap: clamp(var(--mantine-spacing-xs), 5vw, 64px);
+}
+
+.column {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+}
+
+/* The neighbours are context, not the thing to read. Dimming the whole column covers the
+   tube and its holes too, which no `c="dimmed"` on the text could reach — and since the dots
+   are now the same size as the ones you are playing, this is what separates them. */
+.quiet {
+  opacity: 0.5;
+}

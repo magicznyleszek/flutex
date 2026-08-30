@@ -25,8 +25,13 @@ export function MicButton({ status, error, onStart, onStop }: MicButtonProps): J
           listening ? <MicrophoneSlashIcon size={20} /> : <MicrophoneIcon size={20} />
         }
         onClick={listening ? onStop : onStart}
+        // One word on the face, the whole story for a screen reader — on its own, "Start"
+        // does not say what starts.
+        aria-label={listening
+          ? 'Stop listening through the microphone'
+          : 'Start listening through the microphone'}
       >
-        {listening ? 'Stop listening' : 'Enable microphone'}
+        {listening ? 'Stop' : 'Start'}
       </Button>
 
       {error !== null && (

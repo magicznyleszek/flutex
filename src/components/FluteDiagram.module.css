@@ -11,6 +11,7 @@
   --mouthpiece-width: 34px;
   --mouthpiece-height: 8px;
   --mouthpiece-gap: 4px;
+  --chart-gap: var(--mantine-spacing-lg);
 
   /* Measured from the outside of `.body`: border, top padding, mouthpiece, then the
      mouthpiece's own margin and the column's flex gap. The legend and thumb columns are
@@ -42,14 +43,28 @@
     --foot-pad: 10px;
     --body-width: 44px;
     --mouthpiece-width: 28px;
+
+    /* Three of these sit side by side in the note row, and on a 390px phone the card has
+       only 318px to give them. The space beside the tube is the first thing to go: at 6px a
+       recorder's three charts come to 276px and still leave room for the gaps between them,
+       where 10px would overflow. */
+    --chart-gap: 6px;
   }
 }
 
+/* Three slots — something beside the tube, the tube, something beside the tube — with the
+   two outer ones the same width. That is what puts the tube in the exact middle of the
+   chart, and the middle is where the note name below it has to line up. Sizing the slots to
+   their contents instead would hang the legend digits off one side only, so every name in
+   the note row would sit a slot's width to the right of its own tube.
+
+   `--side-slot` comes in inline, because only the component knows whether the instrument
+   has a thumb hole to make room for. */
 .wrapper {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: var(--mantine-spacing-lg);
+  display: grid;
+  grid-template-columns: var(--side-slot, 1ch) auto var(--side-slot, 1ch);
+  align-items: start;
+  gap: var(--chart-gap);
 }
 
 /* Stands in for `.wrapper` at the same height when there is no fingering to draw. The
@@ -62,10 +77,24 @@
   padding-inline: var(--mantine-spacing-md);
 }
 
+/* An empty neighbour still has to hold its slot open. Without a width the column collapses
+   to the width of its `–`, which pulls the whole row off centre at the start of a song and
+   then makes it jump sideways the moment `previous` stops being null. The inline padding
+   `.placeholder` uses to keep the out-of-range Alert off the card edge is not wanted here,
+   so it goes. It comes after `.placeholder` because both are single classes and the winner
+   on a tie is whichever is written last. */
+.barePlaceholder {
+  min-width: calc(
+    var(--body-width) + (2 * var(--side-slot, 1ch)) + (2 * var(--chart-gap))
+  );
+  padding-inline: 0;
+}
+
 /* The tube keeps the dark ramp in both colour schemes. It is a picture of a wooden
    instrument, not a surface of the interface, and everything inside it — the rings, the
    open holes, the covered ones — is measured against the tube rather than the card. */
 .body {
+  grid-column: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -119,7 +148,13 @@
   border-color: var(--mantine-color-accent-6);
 }
 
+/* Explicit slots rather than auto-placement: the thumb column is conditional, so on a
+   whistle the tube would otherwise fall into slot 1 and the whole grid would be pointless.
+   `start`/`end` keep both of these tucked against the tube instead of floating in the
+   middle of a slot that may be wider than they are. */
 .legend {
+  grid-column: 3;
+  justify-self: start;
   display: flex;
   flex-direction: column;
   gap: var(--hole-gap);
@@ -132,10 +167,9 @@
   height: var(--hole-size);
 }
 
+/* The offset drops the thumb hole level with the first front hole. */
 .thumb {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--mantine-spacing-xs);
+  grid-column: 1;
+  justify-self: end;
   padding-top: var(--first-hole-offset);
 }

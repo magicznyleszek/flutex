@@ -10,7 +10,7 @@ export interface Fingering {
 }
 
 /** Persisted in localStorage, so renaming a member drops the saved instrument choice. */
-export type InstrumentId = 'whistle_d' | 'recorder'
+export type InstrumentId = 'whistle_d' | 'recorder' | 'recorder_german'
 
 interface InstrumentDefinition {
   name: string
@@ -28,6 +28,16 @@ export interface Instrument extends InstrumentDefinition {
 }
 
 const OVERBLOWN = 'Second register — same fingering, stronger breath.'
+
+/*
+ * The recorder changes register with the thumb rather than with breath alone, and it does it in
+ * two steps: C#6, D6 and D#6 want the thumb right off the hole, and from E6 up it goes back on
+ * as a narrow slit. Every chart consulted puts the line in the same place, and half-covering
+ * down at D6 sends players after a note that will not sound. Both fingering systems below share
+ * these two sentences, so they live up here rather than being retyped twenty times.
+ */
+const THUMB_OFF = 'Second register. The thumb comes right off the hole — from E6 up it is only cracked open.'
+const PINCHED = 'Second register. Crack the thumb hole open into a narrow slit, not half uncovered.'
 
 const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
   whistle_d: {
@@ -57,27 +67,87 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
     },
   },
 
+  // Baroque (also sold as English) fingering — what nearly every soprano outside the
+  // German-speaking countries uses. The tell on the instrument itself is which hole is bored
+  // wider: hole 5 here, hole 4 on the German one below.
   recorder: {
     name: 'Soprano recorder (baroque fingering)',
-    shortName: 'Recorder',
+    shortName: 'Baroque recorder',
     hasThumb: true,
     fingering: {
       C5: { holes: [1, 1, 1, 1, 1, 1, 1, 1] },
       D5: { holes: [1, 1, 1, 1, 1, 1, 1, 0] },
       E5: { holes: [1, 1, 1, 1, 1, 1, 0, 0] },
-      // Baroque F5 is forked: hole 4 open, 5, 6, 7 closed. German recorders finger this
-      // note differently, so the whole table stays baroque.
-      F5: { holes: [1, 1, 1, 1, 0, 1, 1, 1] },
+      // Baroque F5 is forked: hole 4 closed, hole 5 open, 6 and 7 closed. That break in the
+      // sequence is the whole difference between baroque and German fingering, so getting it
+      // backwards silently turns the table into a German one — `[1,1,1,1,0,1,1,1]` is in fact
+      // the German F#5. Verified against Mollenhauer, Moeck, Yamaha, the American Recorder
+      // Society and Dolmetsch, which agree without dissent.
+      F5: { holes: [1, 1, 1, 1, 1, 0, 1, 1] },
       'F#5': { holes: [1, 1, 1, 1, 0, 1, 1, 0] },
       G5: { holes: [1, 1, 1, 1, 0, 0, 0, 0] },
       A5: { holes: [1, 1, 1, 0, 0, 0, 0, 0] },
       B5: { holes: [1, 1, 0, 0, 0, 0, 0, 0] },
       C6: { holes: [1, 0, 1, 0, 0, 0, 0, 0] },
       'C#6': { holes: [0, 1, 1, 0, 0, 0, 0, 0] },
-      D6: {
-        holes: [0, 0, 1, 0, 0, 0, 0, 0],
-        hint: 'Second register. The thumb usually cracks the hole halfway rather than lifting off.',
-      },
+      D6: { holes: [0, 0, 1, 0, 0, 0, 0, 0], hint: THUMB_OFF },
+      // The rest of the second register, as printed by Mollenhauer, Moeck, Prescott and
+      // Dolmetsch, which agree on all of these without dissent. A#6 is left out on purpose:
+      // those same charts give four different grips for it, so there is nothing to teach.
+      // C7 is the last one worth having — C#7 needs the bell closed against your knee.
+      'D#6': { holes: [0, 0, 1, 1, 1, 1, 1, 0], hint: THUMB_OFF },
+      E6: { holes: [0.5, 1, 1, 1, 1, 1, 0, 0], hint: PINCHED },
+      F6: { holes: [0.5, 1, 1, 1, 1, 0, 1, 0], hint: PINCHED },
+      'F#6': { holes: [0.5, 1, 1, 1, 0, 1, 0, 0], hint: PINCHED },
+      G6: { holes: [0.5, 1, 1, 1, 0, 0, 0, 0], hint: PINCHED },
+      'G#6': { holes: [0.5, 1, 1, 0, 1, 0, 0, 0], hint: PINCHED },
+      A6: { holes: [0.5, 1, 1, 0, 0, 0, 0, 0], hint: PINCHED },
+      B6: { holes: [0.5, 1, 1, 0, 1, 1, 0, 0], hint: PINCHED },
+      C7: { holes: [0.5, 1, 0, 0, 1, 1, 0, 0], hint: PINCHED },
+    },
+  },
+
+  /*
+   * German fingering, Peter Harlan's 1920s redesign. Widening hole 4 lets F play straight down
+   * the scale with no fork, which is easier for a beginner's first tune and harder for every
+   * accidental above it — the fork it saves on F comes back on F#. Worth having because it is
+   * still roughly a third of the sopranos sold in Europe, and the two look identical in the
+   * hand, so a player following a baroque chart on a German recorder just hears wrong notes.
+   *
+   * Written out in full rather than spread from the baroque table above. A chart you can read
+   * top to bottom against its published source is worth more here than the shorter diff, and
+   * `tests/data.test.ts` pins the divergences so the two cannot drift apart quietly.
+   */
+  recorder_german: {
+    name: 'Soprano recorder (German fingering)',
+    shortName: 'German recorder',
+    hasThumb: true,
+    fingering: {
+      C5: { holes: [1, 1, 1, 1, 1, 1, 1, 1] },
+      D5: { holes: [1, 1, 1, 1, 1, 1, 1, 0] },
+      E5: { holes: [1, 1, 1, 1, 1, 1, 0, 0] },
+      // The unforked F the whole system is built around, and the F# that pays for it.
+      F5: { holes: [1, 1, 1, 1, 1, 0, 0, 0] },
+      'F#5': { holes: [1, 1, 1, 1, 0, 1, 1, 1] },
+      G5: { holes: [1, 1, 1, 1, 0, 0, 0, 0] },
+      A5: { holes: [1, 1, 1, 0, 0, 0, 0, 0] },
+      B5: { holes: [1, 1, 0, 0, 0, 0, 0, 0] },
+      C6: { holes: [1, 0, 1, 0, 0, 0, 0, 0] },
+      'C#6': { holes: [0, 1, 1, 0, 0, 0, 0, 0] },
+      D6: { holes: [0, 0, 1, 0, 0, 0, 0, 0], hint: THUMB_OFF },
+      'D#6': { holes: [0, 0, 1, 1, 1, 1, 1, 0], hint: THUMB_OFF },
+      E6: { holes: [0.5, 1, 1, 1, 1, 1, 0, 0], hint: PINCHED },
+      // Where the wider hole 4 shows up again: F6, F#6 and G#6 are the three second-register
+      // notes German plays differently, per Mollenhauer's and Yamaha's German charts.
+      F6: { holes: [0.5, 1, 1, 1, 1, 0, 0, 0], hint: PINCHED },
+      'F#6': { holes: [0.5, 1, 1, 1, 0, 1, 0, 1], hint: PINCHED },
+      G6: { holes: [0.5, 1, 1, 1, 0, 0, 0, 0], hint: PINCHED },
+      'G#6': { holes: [0.5, 1, 1, 1, 0, 1, 1, 1], hint: PINCHED },
+      A6: { holes: [0.5, 1, 1, 0, 0, 0, 0, 0], hint: PINCHED },
+      // Stops a note short of the baroque chart. The German charts consulted end at B6, and a
+      // C7 guessed from the baroque grip is exactly the kind of invention this table cannot
+      // afford — hole sizes differ, so the same fingers do not give the same pitch.
+      B6: { holes: [0.5, 1, 1, 0, 1, 1, 0, 0], hint: PINCHED },
     },
   },
 }
@@ -100,6 +170,7 @@ function buildInstrument(id: InstrumentId, definition: InstrumentDefinition): In
 export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
   whistle_d: buildInstrument('whistle_d', DEFINITIONS.whistle_d),
   recorder: buildInstrument('recorder', DEFINITIONS.recorder),
+  recorder_german: buildInstrument('recorder_german', DEFINITIONS.recorder_german),
 }
 
 export const INSTRUMENT_LIST: readonly Instrument[] = Object.values(INSTRUMENTS)
