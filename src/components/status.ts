@@ -47,3 +47,13 @@ export const STATUS_META: Record<TrainerStatus, StatusMeta> = {
     hint: 'The song was played all the way through.',
   },
 }
+
+/**
+ * Playback is not a trainer state — nothing is being scored — so it stays out of
+ * `TrainerStatus` and lives here instead, in the same shape, for the note row to swap in.
+ */
+export const DEMO_META: StatusMeta = {
+  color: 'var(--flutex-signal-ink)',
+  label: 'Playing it for you',
+  hint: 'Follow the fingerings. Nothing is being scored.',
+}

@@ -80,6 +80,20 @@ html:root[data-mantine-color-scheme="light"] {
   --flutex-filled-ink: var(--mantine-color-white);
 }
 
+/* A quieter card outline than Mantine's dark-4, which at 2.54:1 against the card drew the
+   eye to the edges rather than to what is inside them. dark-6 is 1.56:1 — still a visible
+   seam, no longer a frame.
+
+   The class in the selector is doing real work. Mantine sets `--paper-border-color` on the
+   Paper element itself, from `[data-mantine-color-scheme='dark'] .m_1b7284a3`, and a
+   declaration on the element beats an inherited one no matter how specific the `:root` rule
+   that carried it — which is why this cannot live in the block above. Matching the same
+   element through `html[…] .mantine-Paper-root` scores one point higher and wins. Light
+   scheme is left alone: gray-3 on a white card is already faint. */
+html[data-mantine-color-scheme="dark"] .mantine-Paper-root {
+  --paper-border-color: var(--mantine-color-dark-6);
+}
+
 /* `gap` is not a style prop on Stack or Group, so `gap={{ base, sm }}` there resolves to
    `var(--mantine-spacing-[object Object])` and silently collapses to zero. Only Flex, Grid
    and SimpleGrid take a responsive gap, so responsive spacing has to come from the scale.

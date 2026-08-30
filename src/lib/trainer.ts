@@ -45,15 +45,33 @@ export interface TrainerOptions {
 /** How far ahead the snapshot reads, so the UI can show what is coming, not just what is next. */
 export const LOOKAHEAD = 3
 
-export interface TrainerSnapshot {
-  index: number
-  target: string | null
+export interface NoteWindow {
   previous: string | null
+  target: string | null
   /**
    * The next `LOOKAHEAD` notes, oldest first, padded with nulls at the end of the song so
    * the caller can lay out a fixed number of slots without them shifting about.
    */
   upcoming: readonly (string | null)[]
+}
+
+/**
+ * The stretch of the song the note row draws: one behind, the one to play, and the lookahead.
+ * Exported because playback lays out that same row from its own position, and two ideas of
+ * what "next" means would drift apart by a note sooner or later.
+ */
+export function noteWindow(song: readonly string[], index: number): NoteWindow {
+  const at = (position: number): string | null => song[position] ?? null
+
+  return {
+    previous: at(index - 1),
+    target: at(index),
+    upcoming: Array.from({ length: LOOKAHEAD }, (_, step) => at(index + step + 1)),
+  }
+}
+
+export interface TrainerSnapshot extends NoteWindow {
+  index: number
   /** 0-1, fill level of the hold bar. */
   holdProgress: number
   /** 0-1, fill level of the mistake bar. */
@@ -120,19 +138,24 @@ export function createTrainerEngine(
     && frame.note !== null
     && Math.abs(frame.cents) <= config.toleranceCents
 
-  const snapshot = (): TrainerSnapshot => ({
-    index,
-    target: finished ? null : noteAt(index),
-    previous: noteAt(index - 1),
-    upcoming: Array.from({ length: LOOKAHEAD }, (_, step) => noteAt(index + step + 1)),
-    holdProgress: clamp01(holdFrames / config.holdFrames),
-    mistakeProgress: clamp01(mistakeFrames / config.mistakeLimitFrames),
-    status,
-    finished,
-    mistakes,
-    hits,
-    total: song.length,
-  })
+  const snapshot = (): TrainerSnapshot => {
+    const around = noteWindow(song, index)
+
+    return {
+      ...around,
+      index,
+      // A finished song has nothing left to play, though the row still shows the note it
+      // ended on.
+      target: finished ? null : around.target,
+      holdProgress: clamp01(holdFrames / config.holdFrames),
+      mistakeProgress: clamp01(mistakeFrames / config.mistakeLimitFrames),
+      status,
+      finished,
+      mistakes,
+      hits,
+      total: song.length,
+    }
+  }
 
   const clearCounters = (): void => {
     holdFrames = 0

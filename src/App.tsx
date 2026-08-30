@@ -1,6 +1,7 @@
 import {
   ActionIcon,
   Alert,
+  Anchor,
   Badge,
   Box,
   Button,
@@ -19,6 +20,8 @@ import {
   ArrowsOutIcon,
   CheckCircleIcon,
   MusicNoteIcon,
+  PlayIcon,
+  StopIcon,
 } from '@phosphor-icons/react'
 import { type JSX, useCallback, useEffect, useMemo, useRef } from 'react'
 
@@ -49,9 +52,10 @@ import { DEFAULT_SONG_ID, getSong, isSongId, songNoteNames } from './data/songs'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { usePitchDetection } from './hooks/usePitchDetection'
+import { useSongDemo } from './hooks/useSongDemo'
 import { useSongProgress } from './hooks/useSongProgress'
 import { useSongTrainer } from './hooks/useSongTrainer'
-import type { PenaltyMode } from './lib/trainer'
+import { noteWindow, type PenaltyMode } from './lib/trainer'
 
 /** Renaming the `fluteTrainer_*` keys drops settings users have already saved. */
 const STORAGE_KEYS = {
@@ -102,6 +106,7 @@ export default function App(): JSX.Element {
     onFrame: handleFrame,
   })
 
+  const demo = useSongDemo(song.notes)
   const fullscreen = useFullscreen()
   const { records, recordCompletion } = useSongProgress()
   const record = records[song.id]
@@ -129,6 +134,24 @@ export default function App(): JSX.Element {
 
   const targetBeats = song.notes[view.index]?.beats ?? null
   const listening = mic.status === 'listening'
+
+  // Playback owns the note row while it runs, so the charts show what is sounding rather
+  // than the note the trainer is still waiting for. Same helper the engine uses, so the two
+  // rows cannot disagree about which note is "next".
+  const demoRow = useMemo(() => noteWindow(notes, demo.index), [notes, demo.index])
+  const row = demo.playing ? demoRow : view
+  const rowBeats = demo.playing ? (song.notes[demo.index]?.beats ?? null) : targetBeats
+
+  const startDemo = (): void => {
+    mic.stop()
+    demo.start()
+  }
+
+  const demoHint = demo.playing
+    ? 'Playing the song. The microphone stays off until it stops.'
+    : listening
+      ? 'Listening. Hold each note for a moment for it to count.'
+      : 'Without a microphone the trainer only shows fingerings.'
 
   // Container `md` rather than `lg`: the trainer used to be a two-column grid and needed the
   // width. It is one centred column now, and at 1140px everything in it floated in its own
@@ -179,11 +202,12 @@ export default function App(): JSX.Element {
           <Stack gap="lg">
             <NoteSequence
               instrument={instrument}
-              previous={view.previous}
-              target={view.target}
-              upcoming={view.upcoming}
-              targetBeats={targetBeats}
+              previous={row.previous}
+              target={row.target}
+              upcoming={row.upcoming}
+              targetBeats={rowBeats}
               status={view.status}
+              demo={demo.playing}
             />
 
             <Divider visibleFrom="sm" />
@@ -237,7 +261,12 @@ export default function App(): JSX.Element {
                 <MicButton
                   status={mic.status}
                   error={mic.error}
-                  onStart={() => void mic.start()}
+                  // Playback comes out of the speakers, which the microphone would hear and
+                  // score as your playing. Whichever button you press wins.
+                  onStart={() => {
+                    demo.stop()
+                    void mic.start()
+                  }}
                   onStop={mic.stop}
                 />
               </Box>
@@ -257,24 +286,44 @@ export default function App(): JSX.Element {
                 </Tooltip>
               )}
             </Group>
+            {/* `miw` on the text is what wraps the two buttons onto their own line on a
+                phone. Without it `flex={1}` lets the sentence squeeze down to a word a line
+                and the buttons stay wedged beside it. */}
             <Group justify="space-between" gap="sm">
-              <Text size="xs" c="dimmed" flex={1}>
-                {listening
-                  ? 'Listening. Hold each note for a moment for it to count.'
-                  : 'Without a microphone the trainer only shows fingerings.'}
+              <Text size="xs" c="dimmed" flex={1} miw={180}>
+                {demoHint}
               </Text>
-              {/* Restarting the song is a real action, not an aside, so it gets a bordered
-                  button at the same size as Start rather than the dimmed text link it was.
-                  `default` and not a colour: it discards your progress, but red would read
-                  as a warning about something that has already gone wrong. */}
-              <Button
-                size="md"
-                variant="default"
-                leftSection={<ArrowCounterClockwiseIcon size={18} />}
-                onClick={reset}
-              >
-                Start over
-              </Button>
+              <Group gap="sm" wrap="nowrap">
+                {/* `signal` is the colour of the note you are being asked to play, which is
+                    what playback is doing — and it keeps this off the green of Start and the
+                    neutral of Start over. */}
+                <Button
+                  size="md"
+                  variant="light"
+                  color="signal"
+                  leftSection={
+                    demo.playing ? <StopIcon size={18} /> : <PlayIcon size={18} />
+                  }
+                  onClick={demo.playing ? demo.stop : startDemo}
+                  aria-label={demo.playing
+                    ? 'Stop playing the song'
+                    : 'Play the song through the speakers'}
+                >
+                  {demo.playing ? 'Stop' : 'Hear it'}
+                </Button>
+                {/* Restarting the song is a real action, not an aside, so it gets a bordered
+                    button at the same size as Start rather than the dimmed text link it was.
+                    `default` and not a colour: it discards your progress, but red would read
+                    as a warning about something that has already gone wrong. */}
+                <Button
+                  size="md"
+                  variant="default"
+                  leftSection={<ArrowCounterClockwiseIcon size={18} />}
+                  onClick={reset}
+                >
+                  Start over
+                </Button>
+              </Group>
             </Group>
           </Stack>
         </Paper>
@@ -304,6 +353,22 @@ export default function App(): JSX.Element {
           <Text size="xs" c="dimmed" ta="center">
             Pitch detection runs locally in the browser — nothing leaves your
             machine.
+          </Text>
+          {/* A takedown route in the footer rather than buried in the README, so a rights
+              holder who lands here can find it without asking. `--flutex-accent-ink` and not
+              Mantine's own anchor colour: that one is the filled primary, accent-8, which at
+              12px reads 3.51:1 on a light card. */}
+          <Text size="xs" c="dimmed" ta="center">
+            Melodies are transcriptions written out for practice. To have one taken
+            down, write to{' '}
+            <Anchor
+              inherit
+              c="var(--flutex-accent-ink)"
+              href="mailto:zefirefemara@proton.me"
+            >
+              zefirefemara@proton.me
+            </Anchor>
+            .
           </Text>
           <Text size="xs" c="dimmed" ta="center">
             Made by Yann &amp; Zefir

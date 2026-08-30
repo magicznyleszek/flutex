@@ -7,7 +7,7 @@ import { beatsToGlyph } from '../lib/music'
 import type { TrainerStatus } from '../lib/trainer'
 import { FluteDiagram } from './FluteDiagram'
 import * as classes from './NoteSequence.module.css'
-import { STATUS_META } from './status'
+import { DEMO_META, STATUS_META } from './status'
 
 export interface NoteSequenceProps {
   /** Needed here rather than passed through, because each column draws its own fingering. */
@@ -19,6 +19,8 @@ export interface NoteSequenceProps {
   /** Length of the target note in beats — a rhythmic hint, nothing more. */
   targetBeats: number | null
   status: TrainerStatus
+  /** Playback is running, so the caption describes that instead of `status`. */
+  demo?: boolean
 }
 
 interface NoteColumnProps {
@@ -87,14 +89,15 @@ export function NoteSequence({
   upcoming,
   targetBeats,
   status,
+  demo = false,
 }: NoteSequenceProps): JSX.Element {
-  const meta = STATUS_META[status]
+  const meta = demo ? DEMO_META : STATUS_META[status]
 
   // `waiting` is a deliberately quiet grey, which is the wrong colour for the largest type
   // on the screen — so while waiting the name stays at the card's text colour. Every other
   // status is something that just happened, and colouring the name is the fastest way to
   // catch it without reading the label.
-  const nameColor = status === 'waiting' ? undefined : meta.color
+  const nameColor = !demo && status === 'waiting' ? undefined : meta.color
 
   return (
     <Stack align="center" gap="xs">

@@ -2,6 +2,7 @@ import { noteToMidi } from '../src/lib/music'
 import {
   createTrainerEngine,
   LOOKAHEAD,
+  noteWindow,
   type PenaltyMode,
   type TrainerEngine,
   type TrainerOptions,
@@ -84,6 +85,21 @@ describe('initial state', () => {
 
     expect(snapshot.upcoming).toHaveLength(LOOKAHEAD)
     expect(snapshot.upcoming).toEqual(['E5', null, null])
+  })
+
+  // Playback lays out the note row from `noteWindow` while the engine lays out the same row
+  // from its snapshot. If those two ever disagreed, "next" would mean one note during the
+  // demo and another one while playing.
+  it('reads the same window the engine puts in its snapshot', () => {
+    const engine = engineWith()
+    playNote(engine)
+    const snapshot = engine.snapshot()
+
+    expect(noteWindow(SONG, snapshot.index)).toEqual({
+      previous: snapshot.previous,
+      target: snapshot.target,
+      upcoming: snapshot.upcoming,
+    })
   })
 
   it('treats an empty song as finished right away', () => {
