@@ -1,0 +1,22 @@
+/* Mantine paints Paper with `--mantine-color-body`, the same variable it paints
+   the page with, so out of the box a card is exactly the colour of what it sits
+   on and only its border separates the two. Pointing the variable at dark-8 and
+   giving the page its own darker background one rule down buys a real elevation
+   step instead: page → card → the raised bubble inside it.
+
+   Overriding `--mantine-color-default-border` here would look like it dresses
+   the borders, but it does nothing. Paper and Divider set `--paper-border-color`
+   and `--divider-color` to dark-4 on the element itself, and an element-level
+   declaration beats an inherited one whatever the source order — so dark-4 is
+   the only real lever, and the palette is arranged around that. */
+:root[data-mantine-color-scheme="dark"] {
+  --mantine-color-body: var(--mantine-color-dark-8);
+}
+
+body {
+  min-height: 100vh;
+
+  /* Mantine's own reset sets this from `--mantine-color-body`; this file is
+     imported after it, so the page keeps the darkest shade while cards rise. */
+  background-color: var(--mantine-color-dark-9);
+}

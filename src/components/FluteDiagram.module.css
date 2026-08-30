@@ -1,0 +1,82 @@
+.wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--mantine-spacing-lg);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 54px;
+  padding: 18px 0 26px;
+  background: linear-gradient(
+    to right,
+    var(--mantine-color-dark-7) 0%,
+    var(--mantine-color-dark-6) 45%,
+    var(--mantine-color-dark-7) 100%
+  );
+  border: 1px solid var(--mantine-color-dark-5);
+  border-radius: 27px;
+}
+
+/* dark-3 rather than the dark-4 that borders everything else: on a body this
+   warm the near-neutral read as dusty, and these two are the only edges that
+   have to stand off a brown rather than off a dark surface. What actually
+   distinguishes a covered hole from an open one is the fill, not this ring. */
+.mouthpiece {
+  width: 34px;
+  height: 8px;
+  margin-bottom: 4px;
+  background: var(--mantine-color-dark-3);
+  border-radius: 4px;
+}
+
+.hole {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  background: var(--mantine-color-dark-9);
+  border: 2px solid var(--mantine-color-dark-3);
+  border-radius: 50%;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.holeCovered {
+  background: var(--mantine-color-accent-4);
+  border-color: var(--mantine-color-accent-6);
+}
+
+.holeHalf {
+  background: linear-gradient(
+    to bottom,
+    var(--mantine-color-accent-4) 0%,
+    var(--mantine-color-accent-4) 50%,
+    var(--mantine-color-dark-9) 50%,
+    var(--mantine-color-dark-9) 100%
+  );
+  border-color: var(--mantine-color-accent-6);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 30px;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  height: 22px;
+}
+
+.thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  padding-top: 30px;
+}

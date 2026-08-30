@@ -1,0 +1,23 @@
+/* Neither asset carries a fill of its own, so both would paint black. Masking a
+   coloured box with the artwork lets the theme decide the colour instead of the
+   file — one SVG each, correct in any colour scheme.
+
+   The box is a span, not a div, because the logotype sits inside the page's h1
+   and an h1 only accepts phrasing content. */
+.mark {
+  display: block;
+  flex: none;
+  background-color: var(--mantine-color-accent-4);
+}
+
+.logotype {
+  mask: url("../flutex-logotype.svg") no-repeat center / contain;
+
+  /* 400x200 in the source, so the height always follows the width. */
+  aspect-ratio: 2 / 1;
+}
+
+.icon {
+  mask: url("../flutex-icon.svg") no-repeat center / contain;
+  aspect-ratio: 1 / 1;
+}

@@ -1,0 +1,49 @@
+/* dark-8 is the card colour, so the track drops to the page shade to read as a
+   groove cut into the panel rather than a rectangle painted on it. */
+.track {
+  position: relative;
+  height: 44px;
+  overflow: hidden;
+  background: var(--mantine-color-dark-9);
+  border: 1px solid var(--mantine-color-dark-6);
+  border-radius: var(--mantine-radius-md);
+}
+
+.zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--mantine-color-accent-9);
+  border-inline: 1px solid var(--mantine-color-accent-7);
+}
+
+.center {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 2px;
+  background: var(--mantine-color-dark-3);
+  transform: translateX(-50%);
+}
+
+.needle {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  background: var(--mantine-color-signal-4);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: left 60ms linear, background-color 120ms ease;
+}
+
+.needleInTune {
+  background: var(--mantine-color-accent-4);
+}
+
+.scale {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px;
+}
