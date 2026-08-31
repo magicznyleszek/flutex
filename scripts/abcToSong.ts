@@ -116,12 +116,12 @@ function main(): void {
     }
   }
 
-  // `parseAbc` treats every repeat mark as a plain bar line, so a tune with an AABB shape comes out
-  // as AB. Worth saying, since the fix is manual and the output looks complete either way.
-  const repeats = text.match(/\|:|:\||::|\[[12]/g) ?? []
+  // Repeats are played out into the notes rather than marked, so the spec is longer than the source
+  // it came from. Worth saying, since the note count is the first thing you would check against it.
+  const repeats = text.match(/\|:|:\||::/g) ?? []
   if (repeats.length > 0) {
-    say('Repeats', `${repeats.length} repeat marks in the source, read as plain bar lines — every `
-      + 'section appears once below. Duplicate the bars by hand if you want them played twice.')
+    say('Repeats', `${repeats.length} repeat marks, played out — the ${song.notes.length} notes `
+      + 'below are the tune end to end, not its sections once each.')
   }
 
   if (SONGS.some((entry) => entry.id === definition.id)) {

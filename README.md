@@ -13,7 +13,7 @@ Live at [flutex.zefirefemera.xyz](https://flutex.zefirefemera.xyz).
   German fingering, and 6-hole and 12-hole ocarinas. Each has its own fingering
   chart and its own drawing, and the previous, current and next note are all
   shown at once.
-- **Thirty songs** — two exercises, tunes most people already know, carols, and
+- **Thirty-one songs** — two exercises, tunes most people already know, carols, and
   traditional dance tunes and airs, all of them out of copyright — plus one song
   you write yourself in [either of two formats](#writing-your-own-song).
 - **Hear it** plays the melody through the speakers with an oscillator, so you
@@ -137,24 +137,40 @@ defineSong({
 The test suite checks every song against every instrument, and also checks that
 each one plays *as written* — a song that needs transposing on a whistle is a
 song to rewrite, not a transposer to fix, and a song that needs a note
-approximated is one too. One song is exempt by name: *Concerning Hobbits* is
-transcribed from the film rather than written to fit, and its high section climbs
-past both ocarinas, which play it in D anyway and lean on their top notes up
-there. The test pins those swaps exactly, so anything else that leaves the shared
-range still fails.
+approximated is one too. Two songs are exempt by name, each with a test of its
+own pinning what every instrument makes of it:
 
-That test passes by construction rather than by luck. Every song but that one is
-written inside D5–E6 on the ten notes all five charts have in common — the D major
-scale plus C natural, which is what a tin whistle in D and a 6-hole ocarina share
-— so a tune that did not fit was transposed until it did, or left out.
+- *Concerning Hobbits* is transcribed from the film rather than written to fit,
+  and its high section climbs past both ocarinas, which play it in D anyway and
+  lean on their top notes up there.
+- *A Blast Of Wind* is too wide for any shift to fit — A4 to E6, nineteen
+  semitones against a window of fourteen — and it is in A, whose G# the whistle is
+  the one chart to lack. So each instrument takes its own shift: the whistle a
+  fourth up into D, both recorders and the 6-hole ocarina a minor third up into C,
+  and the 12-hole ocarina in A as printed, being the only chart that reaches A4.
+
+Squeezing that one into the shared range would cost a strain either way — up, and
+its top notes push past both ocarinas; down, and most of it falls below D5 — so
+letting each chart find its own key keeps the tune whole on four of the five. The
+6-hole ocarina is the exception, and its shift is chosen to make the loss small
+rather than to avoid it: in C it flattens the top of the high strain, nine notes of
+a hundred and twenty, where staying in A would flatten the bottom of the low one
+and cost fourteen.
+
+Apart from those two the test passes by construction rather than by luck: every
+song is written inside D5–E6 on the ten notes all five charts have in common — the
+D major scale plus C natural, which is what a tin whistle in D and a 6-hole
+ocarina share — so a tune that did not fit was transposed until it did, or left
+out.
 
 The tunes are public domain: traditional, or printed long enough ago that the
 melody is out of copyright — Arbeau's *Orchésographie* (1589), Playford's *English
-Dancing Master* (1651), Thompson's country dances (1779), Stephen Foster, Weber.
-Most were read off ABC transcriptions in the [Nottingham Music
-Database](https://ifdo.ca/~seymour/nottingham/nottingham.html) and re-encoded here
-as bare note lists in a key the charts can reach; each song's subtitle names where
-it came from.
+Dancing Master* (1651), Thompson's country dances (1779), O'Neill's *Music of
+Ireland* (1903), Stephen Foster, Weber. Most were read off ABC transcriptions in
+the [Nottingham Music
+Database](https://ifdo.ca/~seymour/nottingham/nottingham.html) or
+[abcnotation.com](https://abcnotation.com), and re-encoded here as bare note lists
+in a key the charts can reach; each song's subtitle names where it came from.
 
 ### From an ABC tune
 
@@ -177,12 +193,12 @@ move you would guess: a tune written an octave low usually wants a fifth rather
 than an octave, because an octave clears the bottom of the range but pushes the
 top past both ocarinas — and that also pulls the tune into the whistle's D.
 
-Two things it will not do for you. It reads a repeat mark as a plain bar line, the
-same as the trainer does, so a tune with an `AABB` shape comes out as `AB` and the
-bars have to be duplicated by hand; the report counts the marks it ignored so you
-know to look. And a tune that does not fit those ten notes at any shift is
-reported rather than forced — it needs editing, an `overrides` entry and an
-exemption, or leaving out.
+Repeats are written out rather than marked, because the trainer walks a melody from
+one end to the other and has nowhere to put a jump: an `AABB` tune arrives as all
+four strains, first and second endings in their right places. The one thing the
+tool will not do for you is force a fit — a tune that lands outside those
+ten notes at every shift is reported instead, and it needs editing, an `overrides`
+entry and an exemption, or leaving out.
 
 ## Writing your own song
 
@@ -228,11 +244,17 @@ Read: pitches with their accidentals and octave marks, `K:` including modes
 end of their bar, broken rhythm (`a>b`), inline key changes (`[K:D]`), and the
 `T:` title, which becomes the song's title.
 
+Repeats are played out into the notes they stand for, since the trainer has
+nowhere to put a jump. `|: … :|` twice, `::` between two strains, `:|` on its own
+back to the top of the tune, and variant endings either way round — `|1 … :|2 …`
+or the `[1` the standard prefers — so a two-part reel arrives as `AABB` rather
+than `AB`. What is not read is a repeat *count*: `:|3` plays twice like any other.
+
 Ignored, because a melody trainer has nothing to do with them: rests, grace
-notes, decorations (`!trill!`, `~`), chord symbols, lyrics and repeat marks.
-Chords collapse to their top note, ties become two notes, and a tuplet's notes
-keep their written lengths. Several voices are read as one line, so an
-arrangement for two instruments comes out interleaved.
+notes, decorations (`!trill!`, `~`), chord symbols and lyrics. Chords collapse to
+their top note, ties become two notes, and a tuplet's notes keep their written
+lengths. Several voices are read as one line, so an arrangement for two
+instruments comes out interleaved.
 
 In ABC, `C` is middle C — the same `C4` as above — so a whistle tune written from
 `D` to `d'` sounds an octave below the whistle. Flutex moves it up for you and

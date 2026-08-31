@@ -57,10 +57,65 @@ describe('ABC notation', () => {
   it('drops everything that is not a note to play', () => {
     // Rests leave no fingering behind, and a chord collapses to its top note — the melody.
     expect(tune(`${HEADER}C z2 [CEG] D`)).toEqual(['C4', 'G4', 'D4'])
-    // Chord symbols, decorations, grace notes, slurs, ties, tuplets and repeat bars.
-    expect(tune(`${HEADER}|:"Am"!trill!{g}(3C-C.D:|`)).toEqual(['C4', 'C4', 'D4'])
+    // Chord symbols, decorations, grace notes, slurs, ties and tuplets.
+    expect(tune(`${HEADER}|"Am"!trill!{g}(3C-C.D|`)).toEqual(['C4', 'C4', 'D4'])
     // A length written after the bracket stretches the whole chord.
     expect(beats(`${HEADER}[CE]2`)).toEqual([2])
+  })
+
+  /*
+   * The trainer walks a melody from one end to the other, so there is nowhere to put a jump: a
+   * repeat has to become the notes it stands for. Getting this wrong is quiet — a two-part reel
+   * still plays, just half of it, and only someone who knows the tune would notice.
+   */
+  describe('repeats', () => {
+    it('plays a repeated section twice', () => {
+      expect(tune(`${HEADER}|:C D|E F:|`)).toEqual(['C4', 'D4', 'E4', 'F4', 'C4', 'D4', 'E4', 'F4'])
+    })
+
+    it('repeats each section of an AABB tune in turn', () => {
+      // Both spellings of the middle: two sections back to back, and the `::` that is both marks
+      // written as one.
+      const aabb = ['C4', 'C4', 'D4', 'D4']
+      expect(tune(`${HEADER}|:C:|:D:|`)).toEqual(aabb)
+      expect(tune(`${HEADER}|:C::D:|`)).toEqual(aabb)
+    })
+
+    it('takes the tune from the top when nothing says where to repeat from', () => {
+      expect(tune(`${HEADER}C D:|`)).toEqual(['C4', 'D4', 'C4', 'D4'])
+    })
+
+    it('plays a first ending once and a second in its place on the way back', () => {
+      // `|: A |1 B :|2 C |` is A B A C: the jump back skips the ending it just played. Both the
+      // `|1` shorthand and the `[1` the standard prefers, and either side of the `:|`.
+      const variant = ['C4', 'D4', 'E4', 'C4', 'D4', 'F4']
+      expect(tune(`${HEADER}|:C D|1 E:|2 F|`)).toEqual(variant)
+      expect(tune(`${HEADER}|:C D|[1 E:|[2 F|`)).toEqual(variant)
+      expect(tune(`${HEADER}|:C D|1 E:||2 F|`)).toEqual(variant)
+    })
+
+    it('goes round once more for a third ending', () => {
+      expect(tune(`${HEADER}|:C|1 D:|2 E:|3 F|`))
+        .toEqual(['C4', 'D4', 'C4', 'E4', 'C4', 'F4'])
+    })
+
+    it('leaves what is outside the repeat alone', () => {
+      expect(tune(`${HEADER}A|:C:|E`)).toEqual(['A4', 'C4', 'C4', 'E4'])
+    })
+
+    it('re-applies an accidental to the repeat, bar by bar', () => {
+      // The copy is of notes already read, not of the text, so `^F` cannot leak past the bar line
+      // it was written in — on the way through or on the way round again.
+      expect(tune(`${HEADER}|:^F F|F:|`)).toEqual(['F#4', 'F#4', 'F4', 'F#4', 'F#4', 'F4'])
+    })
+
+    it('counts the bars it played out', () => {
+      const result = parseAbc(`${HEADER}|:C D|E:|F G|`)
+      expect(result.ok ? result.tune.bars : null).toEqual([2, 1, 2, 1, 2])
+      // The one invariant every consumer leans on: the bars account for all of the notes.
+      expect(result.ok ? result.tune.bars.reduce((sum, count) => sum + count, 0) : -1)
+        .toBe(result.ok ? result.tune.notes.length : -2)
+    })
   })
 
   it('keeps a mid-tune key change', () => {

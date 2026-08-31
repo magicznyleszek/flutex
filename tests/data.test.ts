@@ -13,13 +13,15 @@ import { noteToMidi } from '../src/lib/music'
 const VALID_HOLE_STATES: readonly HoleState[] = [0, 0.5, 1]
 
 /**
- * The library is written to fit every chart, with one song deliberately outside that: the
- * transcription of "Concerning Hobbits" climbs to A6, which the ocarinas do not have. Named here
- * rather than worked out, so a song that drifts out of the shared range by accident still fails
- * the two tests below instead of quietly joining the exception.
+ * The library is written to fit every chart, with two songs deliberately outside that — one too high
+ * for the ocarinas, one too wide for anything. Each has a test of its own further down pinning what
+ * every instrument makes of it.
+ *
+ * Named here rather than worked out, so a song that drifts out of the shared range by accident still
+ * fails the two tests below instead of quietly joining the exceptions.
  */
-const WIDE_RANGE = 'concerning-hobbits'
-const SHARED_RANGE = SONGS.filter((song) => song.id !== WIDE_RANGE)
+const WIDE_RANGE: ReadonlySet<string> = new Set(['concerning-hobbits', 'a-blast-of-wind'])
+const SHARED_RANGE = SONGS.filter((song) => !WIDE_RANGE.has(song.id))
 
 describe('instruments', () => {
   it.each(INSTRUMENT_LIST)('$id has a consistent fingering chart', (instrument) => {
@@ -242,10 +244,10 @@ describe('songs', () => {
     }
   })
 
-  // And the exception, pinned note for note rather than waved through. If a chart later gains
+  // And the exceptions, pinned note for note rather than waved through. If a chart later gains
   // the notes it is missing, or the override stops holding, that is worth being told about.
   it('keeps the one transcribed song in its own key everywhere', () => {
-    const song = findSong(WIDE_RANGE)
+    const song = findSong('concerning-hobbits')
     expect(song).not.toBeNull()
     if (song === null) return
 
@@ -279,6 +281,53 @@ describe('songs', () => {
       // Nothing left without a grip, which is the point of the swap: every note in the
       // arrangement is one the player can be shown and the trainer can hear.
       expect(unplayableNotes(INSTRUMENTS[id], songNoteNames(arrangement))).toEqual([])
+    }
+  })
+
+  /*
+   * The other exception, and a different problem. This one is not too high but too wide: A4 to E6 is
+   * nineteen semitones against a shared window of fourteen, and it is in A, whose G# the whistle is
+   * the one chart to lack. So there is no key all five could hold it in, and each takes its own shift
+   * instead — which is exactly what the two tests above forbid, hence the exemption.
+   */
+  it('lets every instrument take its own shift for the widest song', () => {
+    const song = findSong('a-blast-of-wind')
+    expect(song).not.toBeNull()
+    if (song === null) return
+
+    // Four of the five play the tune complete, just not in the same key: the whistle a fourth up into
+    // D, both recorders a minor third up into C, and the 12-hole ocarina in A as printed, being the
+    // only chart that reaches down to the A4 the first bar ends on.
+    const fits = [
+      ['whistle_d', 5, 'D'],
+      ['recorder', 3, 'C'],
+      ['recorder_german', 3, 'C'],
+      ['ocarina_12', 0, 'A'],
+    ] as const
+
+    for (const [id, semitones, key] of fits) {
+      const arrangement = songForInstrument(song, INSTRUMENTS[id])
+
+      expect(arrangement.semitones).toBe(semitones)
+      expect(arrangement.key).toBe(key)
+      expect(arrangement.approximations).toEqual([])
+    }
+
+    // The 6-hole ocarina is the one that gives something up, and it takes the recorders' shift to
+    // give up as little as possible: in C it loses the top of the high strain, nine notes of a
+    // hundred and twenty, where staying in A would lose the bottom of the low one and cost fourteen.
+    const ocarina = songForInstrument(song, INSTRUMENTS.ocarina_6)
+    expect(ocarina.semitones).toBe(3)
+    expect(ocarina.key).toBe('C')
+    expect(ocarina.approximations).toEqual([
+      { written: 'F6', played: 'E6' },
+      { written: 'G6', played: 'E6' },
+    ])
+
+    // Whichever shift each one took, nothing is left without a fingering to show for it.
+    for (const instrument of INSTRUMENT_LIST) {
+      const arrangement = songForInstrument(song, instrument)
+      expect(unplayableNotes(instrument, songNoteNames(arrangement))).toEqual([])
     }
   })
 

@@ -15,7 +15,13 @@ export interface AbcTune {
   title: string | null
   /** The tonic of `K:` as a pitch-class name. C when there is no readable key field. */
   key: string
+  /** The melody with its repeats played out, so what is here is what you play, in order. */
   notes: readonly AbcNote[]
+  /**
+   * How many notes each bar holds, in order, summing to `notes.length`. The trainer has no use for
+   * bars, but `songDefinition` writes them back out so a generated spec reads like its source.
+   */
+  bars: readonly number[]
 }
 
 export type AbcResult =
@@ -127,6 +133,9 @@ function stripComment(line: string): string {
  * about printing or accompaniment is dropped, so rests vanish, chords collapse to their top note,
  * and several voices come out interleaved as one line.
  *
+ * Repeats are played out rather than marked, because the trainer walks a melody from one end to the
+ * other and has nowhere to put a jump: a tune written `|: A :|: B :|` comes back as `A A B B`.
+ *
  * Anything it cannot place is an error naming the character: a pasted tune that half works is
  * harder to fix than one that says what is wrong.
  */
@@ -164,9 +173,20 @@ export function parseAbc(text: string): AbcResult {
   let carried = 1
   /** Where the current chord's notes start in `notes`, or -1 when not inside one. */
   let chordAt = -1
+  /** Where the section a `:|` would send you back to begins. The tune itself, until a `|:` says so. */
+  let sectionAt = 0
+  /** Where the first variant ending of the current section begins, or -1 when it has none. */
+  let endingAt = -1
+  /** Where each bar begins, the first at nothing, so the last entry is the bar being filled. */
+  const barsAt: number[] = [0]
   let at = 0
 
   const fail = (message: string): AbcResult => ({ ok: false, error: message })
+
+  /** Ends the bar being filled, if it holds anything. Two bar lines in a row make one bar, not two. */
+  const closeBar = (): void => {
+    if (notes.length > (barsAt[barsAt.length - 1] ?? 0)) barsAt.push(notes.length)
+  }
 
   const readDigits = (): number | null => {
     const start = at
@@ -222,14 +242,72 @@ export function parseAbc(text: string): AbcResult {
       continue
     }
 
-    // Bar lines in all their forms — `|`, `||`, `|]`, `[|`, `:|`, `|:`, `::` — and the one
-    // thing they do here: an accidental only holds until the next one.
-    if (ch === '|' || ch === ':' || (ch === '[' && body[at + 1] === '|')) {
-      at += 1
-      // The bounds check is not decoration: `includes('')` is true, so without it a tune ending
-      // in a bar line runs off the end of the string and never comes back.
-      while (at < body.length && '|:]'.includes(body[at] ?? '')) at += 1
+    // Bar lines in all their forms — `|`, `||`, `|]`, `[|`, `:|`, `|:`, `::` — and the variant
+    // endings that hang off them, `|1` and `[2`. Three things happen here: an accidental stops
+    // holding, a bar ends, and a repeat is played out into the notes it stands for.
+    if (
+      ch === '|'
+      || ch === ':'
+      || (ch === '[' && (body[at + 1] === '|' || /[0-9]/.test(body[at + 1] ?? '')))
+    ) {
+      // `[|` is a bar line of its own; in `[1` the bracket belongs to the number after it.
+      if (ch === '[' && body[at + 1] === '|') at += 1
+
+      const glyph = /^[:|\]]*/.exec(body.slice(at))?.[0] ?? ''
+      at += glyph.length
+
+      // Which ending this is does not matter — only where the endings start, that being the point
+      // a repeat sends you back from. So `[1,3` and `[2` are read the same way.
+      const ending = /^\s*\[?\s*[0-9][0-9,-]*/.exec(body.slice(at))?.[0] ?? null
+      if (ending !== null) at += ending.length
+
+      // Colons before the pipes close a repeat and colons after it open one. `::` does both and has
+      // no pipes for them to sit either side of.
+      const pipes = /[|\]]/.test(glyph)
+      const closes = pipes ? glyph.startsWith(':') : glyph.length > 1
+      const opens = pipes ? glyph.endsWith(':') : glyph.length > 1
+
+      closeBar()
       accidentals.clear()
+
+      if (closes) {
+        // The section again, up to its first variant ending — with no endings that is all of it,
+        // and with them ending 1 is exactly what the jump back skips over.
+        const upTo = endingAt === -1 ? notes.length : endingAt
+        const offset = notes.length - sectionAt
+
+        // Fresh objects, since broken rhythm stretches the note before it in place.
+        for (let index = sectionAt; index < upTo; index += 1) {
+          const note = notes[index]
+          if (note !== undefined) notes.push({ ...note })
+        }
+        // The bar lines inside the section come with it. Its own start needs no copy: `closeBar`
+        // above already opened a bar at the point the copy lands on.
+        for (const start of [...barsAt]) {
+          if (start > sectionAt && start < upTo) barsAt.push(start + offset)
+        }
+        closeBar()
+
+        if (notes.length > MAX_NOTES) {
+          return fail(`That comes to over ${MAX_NOTES} notes with the repeats played out.`)
+        }
+
+        // A section with no variant endings is finished here. One with them is not: the next ending
+        // repeats the same section again, so both marks stay where they are.
+        if (endingAt === -1) sectionAt = notes.length
+      }
+
+      if (opens) {
+        sectionAt = notes.length
+        endingAt = -1
+      }
+
+      // Only a mark that is not itself closing a repeat can open an ending group. `:|2` after a
+      // `|1` is the second ending of a group already open, and after nothing at all it is a repeat
+      // count we do not read — taking it for an ending would leave the group open over the section
+      // after it, whose own `:|` would then repeat nothing.
+      if (ending !== null && endingAt === -1 && !closes) endingAt = notes.length
+
       continue
     }
 
@@ -367,9 +445,12 @@ export function parseAbc(text: string): AbcResult {
   }
 
   const title = fields.get('T') ?? ''
+  const bars = barsAt
+    .map((start, index) => (barsAt[index + 1] ?? notes.length) - start)
+    .filter((count) => count > 0)
 
   return {
     ok: true,
-    tune: { title: title === '' ? null : title, key: tuneKey.tonic, notes },
+    tune: { title: title === '' ? null : title, key: tuneKey.tonic, notes, bars },
   }
 }

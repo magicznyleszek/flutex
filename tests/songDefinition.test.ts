@@ -21,13 +21,15 @@ function reparse(block: string): Song {
   return defineSong({ id: 'x', title: 'x', key, spec: spec?.[1] ?? spec?.[2] ?? '' })
 }
 
+/** The tune as Playford printed it in 1651: two eight-bar strains, each played twice. */
 const NONESUCH = `
 X:1
 T:Nonesuch
 M:4/4
 L:1/4
 K:Em
-|:B B G A|B G F/G/ E|B B G A|B G2 G:|
+|:B B G A|B G F/G/ E|B B G A|1 B G2 G:|2 B G2 E|
+|:F F D E|F G F/G/ E|F F D E|F G2 E:|
 `
 
 describe('the shared note set', () => {
@@ -46,9 +48,10 @@ describe('the shared note set', () => {
 
 describe('reading a tune into a definition', () => {
   /*
-   * The tune is in the library already, entered by hand from the same 1651 source. Matching it
-   * exactly is the strongest check there is that the whole chain agrees — the octave the shift
-   * lands on, the key it reports, the bar lines it puts back and the `:beats` it writes out.
+   * The tune is in the library already, entered by hand from the same 1651 source. Reproducing it
+   * note for note is the strongest check there is that the whole chain agrees — the octave the shift
+   * lands on, the key it reports, the repeats it plays out, the two endings it picks between, the
+   * bar lines it puts back and the `:beats` it writes out.
    */
   it('reproduces the library entry for a tune already in it', () => {
     const nonesuch = SONGS.find((song) => song.id === 'nonesuch')
@@ -56,8 +59,7 @@ describe('reading a tune into a definition', () => {
 
     expect(definition.key).toBe('E')
     expect(definition.semitones).toBe(12)
-    // The source above is the first half; the library entry plays each section twice.
-    expect(reparse(definition.block).notes).toEqual(nonesuch?.notes.slice(0, 16))
+    expect(reparse(definition.block).notes).toEqual(nonesuch?.notes)
   })
 
   /*

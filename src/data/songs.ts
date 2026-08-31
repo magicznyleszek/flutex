@@ -444,6 +444,35 @@ export const SONGS: readonly Song[] = [
     `,
   }),
 
+  // A fifth above the printed D, which is the only placement that keeps the tune whole: an octave up
+  // pushes its high strain past both ocarinas, and as printed most of it falls under a whistle. The
+  // G naturals are the source's own — O'Neill's writes `=c` against a D key signature.
+  defineSong({
+    id: 'a-blast-of-wind',
+    title: 'A Blast Of Wind',
+    subtitle: "Irish slip jig, O'Neill's Music of Ireland, 1903 — A major",
+    tags: ['dance', 'hard'],
+    key: 'A',
+    spec: `
+      A5:1.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 B4:0.5 A4:0.5
+      A5 A5:0.5 A5:0.5 E5:0.5 C#5:0.5 D5 B4:0.5
+      E5:0.5 F#5:0.5 G#5:0.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 D5:0.5 E5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
+      A5:1.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 B4:0.5 A4:0.5
+      A5 A5:0.5 A5:0.5 E5:0.5 C#5:0.5 D5 B4:0.5
+      E5:0.5 F#5:0.5 G#5:0.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 D5:0.5 E5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 D6 B5:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 D6 B5:0.5
+      E6:0.5 C#6:0.5 A5:0.5 D6:0.5 B5:0.5 G#5:0.5 A5 F#5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
+    `,
+  }),
+
   // --- American old-time
 
   defineSong({
@@ -478,29 +507,6 @@ export const SONGS: readonly Song[] = [
     `,
   }),
 
-  // -- Custom misc songs
-
-  defineSong({
-    id: 'a-blast-of-wind',
-    title: 'A Blast Of Wind',
-    subtitle: 'Source - A major',
-    tags: ['hard'],
-    key: 'A',
-    spec: `
-      A5:1.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 B4:0.5 A4:0.5
-      A5 A5:0.5 A5:0.5 E5:0.5 C#5:0.5 D5 B4:0.5
-      E5:0.5 F#5:0.5 G#5:0.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 D5:0.5 E5:0.5
-      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
-      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
-      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 D6 B5:0.5
-      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
-      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
-      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
-      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 D6 B5:0.5
-      E6:0.5 C#6:0.5 A5:0.5 D6:0.5 B5:0.5 G#5:0.5 A5 F#5:0.5
-      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
-    `,
-  }),
 ]
 
 export const DEFAULT_SONG_ID = 'd-major-scale'

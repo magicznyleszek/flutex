@@ -17,10 +17,6 @@ import { transposeKey, transposeNote } from '../lib/transpose'
 /** Three octaves either way, well past any tune a chart could be made to reach. */
 const SEARCH = 36
 
-/** Bar lines in every spelling ABC allows, longest first so `|]` is not read as `|` then `]`. */
-const BAR_SPLIT = /\|\]|\[\||\|:|:\||::|\|\||\|/
-
-const FIELD_LINE = /^[A-Za-z]:/
 const KEY_MODE = /^K:\s*[A-Ga-g][#b]?\s*([A-Za-z]*)/m
 
 const MODE_NAMES: Record<string, string> = {
@@ -96,50 +92,19 @@ function bestFit(notes: readonly SongNote[]): { semitones: number, strays: reado
 }
 
 /**
- * How many notes are in each bar of the source. `parseAbc` throws bar lines away — it returns one
- * flat melody, the trainer having no use for bars — so they are counted back here.
- *
- * Each bar is parsed on its own *only to be counted*; the pitches always come from the whole-tune
- * parse the caller already has. So an inline key change or anything else spanning bars cannot be
- * mis-read here. The worst a bad split can do is group notes wrongly, and a count that does not add
- * up to the whole tune is discarded by `groupIntoBars`. Accidentals are safe either way, since ABC
- * clears them at every bar line anyway.
+ * How many notes are in each bar of the source, so a generated spec can be broken where the tune
+ * was. An ABC tune arrives counted — `parseAbc` plays the repeats out and reports the bars that came
+ * of it — and a note list needs no parser at all, its tokens already being note names.
  */
 function barCounts(text: string): readonly number[] {
-  const header: string[] = []
-  const body: string[] = []
-  const seen = new Set<string>()
-
-  for (const raw of text.split('\n')) {
-    const line = raw.replace(/%.*$/, '').trim()
-    if (line === '') continue
-
-    // First one wins, matching the parser: that is what keeps a second `T:` and any `w:` lyric line
-    // out of the melody.
-    if (FIELD_LINE.test(line)) {
-      const name = line.slice(0, 1)
-      if (!seen.has(name)) {
-        seen.add(name)
-        header.push(line)
-      }
-      continue
-    }
-
-    body.push(line)
+  if (isAbc(text)) {
+    const result = parseAbc(text)
+    return result.ok ? result.tune.bars : []
   }
 
-  const bars = body.join(' ').split(BAR_SPLIT)
-
-  // A note list needs no parser: its tokens are already note names, and `|` is one of them.
-  if (!isAbc(text)) {
-    return bars.map((bar) => bar.trim().split(/\s+/).filter((token) => token !== '').length)
-  }
-
-  return bars.map((bar) => {
-    if (bar.trim() === '') return 0
-    const result = parseAbc(`${header.join('\n')}\n${bar}`)
-    return result.ok ? result.tune.notes.length : 0
-  })
+  return text
+    .split('|')
+    .map((bar) => bar.trim().split(/\s+/).filter((token) => token !== '').length)
 }
 
 /** Bars as the source wrote them, or the whole melody in one when the split does not add up. */
