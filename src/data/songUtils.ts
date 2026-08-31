@@ -1,10 +1,10 @@
 /**
  * What a song *is* — the shape, the spec-string reader, and how a song is fitted to one
- * instrument. The songs themselves live in `songs.ts`, which imports `defineSong` from here.
+ * instrument. The songs themselves live under `songs/`, whose files import `defineSong` from here.
  *
- * Keep the dependency one-way. Nothing here may reach for `SONGS`, or the two files would import
- * each other, and since `songs.ts` calls `defineSong` at its top level that is a crash on load
- * rather than a warning.
+ * Keep the dependency one-way. Nothing here may reach for `SONGS`, or the two would import each
+ * other, and since every file under `songs/` calls `defineSong` at its top level that is a crash on
+ * load rather than a warning.
  */
 import { type Instrument, type InstrumentId, nearestFingered } from './instruments'
 import { bestShift, keyShift, transposeKey, transposeNote } from '../lib/transpose'
@@ -15,11 +15,37 @@ export interface SongNote {
   beats: number
 }
 
+/**
+ * The sections the library is written in, which are also the groups the song picker draws. The order
+ * here is the order they appear in, and it runs roughly from the easiest thing to play to the
+ * hardest, so working down the list is a course of a kind.
+ *
+ * One file under `songs/` per entry, and `songs/index.ts` walks this list to build `SONGS` — so this
+ * is the only place the order lives, and a song cannot end up under the wrong heading.
+ */
+export const SONG_CATEGORIES = [
+  { slug: 'exercises', label: 'Exercises' },
+  { slug: 'first-tunes', label: 'First tunes' },
+  { slug: 'songs-and-airs', label: 'Songs and airs' },
+  { slug: 'carols', label: 'Carols' },
+  { slug: 'english-dance', label: 'English dance tunes' },
+  { slug: 'irish-scottish', label: 'Irish and Scottish' },
+  { slug: 'old-time', label: 'American old-time' },
+] as const
+
+export type SongCategory = typeof SONG_CATEGORIES[number]['slug']
+
 export interface Song {
   /** Saved progress is keyed by these ids, so renaming one resets that song's history. */
   id: string
   title: string
   subtitle?: string
+  /**
+   * Which section of the library it belongs to, stamped on by `songs/index.ts` from the file the song
+   * was written in. Optional because the custom song belongs to none of them — it is not in `SONGS`
+   * at all, and the picker lists it above the groups.
+   */
+  category?: SongCategory
   tags: readonly string[]
   /**
    * The key the melody is written in, as a pitch-class name. Notes themselves are stored at

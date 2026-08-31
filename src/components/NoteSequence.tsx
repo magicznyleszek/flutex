@@ -1,7 +1,7 @@
 import { Stack, Text } from '@mantine/core'
 import type { JSX } from 'react'
 
-import type { Instrument } from '../data/instruments'
+import { getFingering, type Instrument } from '../data/instruments'
 import { cx } from '../lib/css'
 import type { TrainerStatus } from '../lib/trainer'
 import { FluteDiagram } from './FluteDiagram'
@@ -94,6 +94,10 @@ export function NoteSequence({
   // label does.
   const nameColor = !demo && status === 'waiting' ? undefined : meta.color
 
+  // What the chart cannot draw: which register the note is in, or that a hole is half covered. Only
+  // the note being played has one, and only some notes have one at all.
+  const hint = target === null ? undefined : getFingering(instrument, target)?.hint
+
   return (
     <Stack align="center" gap="xs">
       {/* Three notes of lookahead rather than one, because a fingering you see coming is one
@@ -124,6 +128,12 @@ export function NoteSequence({
           />
         ))}
       </div>
+
+      {/* Under the whole row, not under the chart it belongs to. Inside the column it widened that
+          column, and a centred flex row answers that by shoving every other chart sideways — so a
+          note with a hint moved the fingerings you were reading. The slot is always here and always
+          the same height, so it fills and empties without anything else moving. */}
+      <Text size="xs" c="dimmed" ta="center" className={classes.hint}>{hint}</Text>
 
       <Text size="sm" c={meta.color} fw={600}>{meta.label}</Text>
       {/* A prose expansion of the status label right above it, so phones drop it. */}

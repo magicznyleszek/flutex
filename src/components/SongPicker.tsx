@@ -5,9 +5,28 @@ import type { JSX } from 'react'
 import { CUSTOM_SONG_TITLE } from '../data/customSong'
 import { type Instrument, unplayableNotes } from '../data/instruments'
 import { isSongId, SONGS } from '../data/songs'
-import { type Arrangement, CUSTOM_SONG_ID, type Song, songNoteNames } from '../data/songUtils'
+import {
+  type Arrangement,
+  CUSTOM_SONG_ID,
+  SONG_CATEGORIES,
+  type Song,
+  songNoteNames,
+} from '../data/songUtils'
 import { CustomSongEditor } from './CustomSongEditor'
 import { SettingSelect } from './SettingSelect'
+
+/**
+ * The library as the picker's headed groups, built once because `SONGS` never changes. A category
+ * with nothing in it is dropped rather than drawn as a heading over an empty list.
+ */
+const SONG_GROUPS = SONG_CATEGORIES
+  .map((category) => ({
+    group: category.label,
+    items: SONGS
+      .filter((entry) => entry.category === category.slug)
+      .map((entry) => ({ value: entry.id, label: entry.title })),
+  }))
+  .filter((group) => group.items.length > 0)
 
 /**
  * What the shift did to the melody, in words. A whole number of octaves is deliberately a
@@ -64,12 +83,9 @@ export function SongPicker({
         onChange={onSongChange}
         // Thirty-odd entries is past the point of scrolling to find one by eye.
         searchable
-        // Yours first, because it is the only entry whose contents you decide, and it would
-        // otherwise be the one option nobody scrolls to.
-        options={[
-          { value: CUSTOM_SONG_ID, label: CUSTOM_SONG_TITLE },
-          ...SONGS.map((entry) => ({ value: entry.id, label: entry.title })),
-        ]}
+        // Yours first, ahead of every heading, because it is the only entry whose contents you
+        // decide and it would otherwise be the one option nobody scrolls to.
+        options={[{ value: CUSTOM_SONG_ID, label: CUSTOM_SONG_TITLE }, ...SONG_GROUPS]}
       />
 
       {song.id === CUSTOM_SONG_ID && (

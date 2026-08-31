@@ -15,7 +15,7 @@ import { parseCustomSong } from '../src/data/customSong'
 import { INSTRUMENT_LIST, nearestFingered } from '../src/data/instruments'
 import { SHARED_NOTES, songDefinition } from '../src/data/songDefinition'
 import { SONGS } from '../src/data/songs'
-import { songForInstrument } from '../src/data/songUtils'
+import { SONG_CATEGORIES, songForInstrument } from '../src/data/songUtils'
 import { noteToMidi } from '../src/lib/music'
 import { transposeNote } from '../src/lib/transpose'
 
@@ -130,9 +130,11 @@ function main(): void {
   }
 
   say('Tags', `in use: ${[...new Set(SONGS.flatMap((entry) => entry.tags))].sort().join(', ')}.`)
+  say('Sections', `one file each under src/data/songs/, and the file decides the category: `
+    + `${SONG_CATEGORIES.map((category) => category.label).join(', ')}.`)
 
   const fill = definition.needsTitle ? 'title, subtitle and tags' : 'subtitle and tags'
-  console.log(`\nPaste into src/data/songs.ts, then fill in the ${fill}:\n`)
+  console.log(`\nPaste into the file for its section, then fill in the ${fill}:\n`)
   console.log(definition.block)
   console.log()
 }

@@ -50,7 +50,7 @@ function ramp(hue: number, saturation: number, ladder: Ladder): MantineColorsTup
 }
 
 /** Green for progress bars, action buttons and a correct note. */
-const accent = ramp(130, 60, CHROMATIC)
+const accent = ramp(140, 60, CHROMATIC)
 
 /** Pale olive-yellow for the target note and the tuner needle. */
 const signal = ramp(60, 45, CHROMATIC)
@@ -69,22 +69,22 @@ const alarm = ramp(8, 65, CHROMATIC)
  * Saturation stops at 16% so slot 4 does not tint every border orange, and the midtones still read
  * brown. On a card, body text is 10.55:1, dimmed text 5.91:1, a border 2.54:1.
  */
-const dark = ramp(32, 16, NEUTRAL)
+const dark = ramp(20, 16, NEUTRAL)
 
 /**
  * The same warm family as `dark`, for the light scheme. Overriding Mantine's `gray` is what keeps
  * light mode warm: its light-scheme variables read dimmed text, placeholders and every border off
  * gray-3 to gray-6, so a cool ramp there would outline the whole interface in blue.
  */
-const gray = ramp(32, 16, GRAY)
+const gray = ramp(20, 16, GRAY)
 
 export const theme = createTheme({
   colors: { accent, signal, alarm, dark, gray },
 
   /** `--mantine-color-text` in the light scheme, and Tooltip's text in the dark one. */
-  black: 'hsl(32, 16%, 8%)',
+  black: 'hsl(20, 16%, 8%)',
   /** Cards and inputs in the light scheme. Warm enough to sit on the gray-2 page. */
-  white: 'hsl(32, 16%, 99%)',
+  white: 'hsl(20, 16%, 99%)',
 
   primaryColor: 'accent',
 

@@ -1,11 +1,11 @@
 /**
- * Turns a pasted melody back into the source of a library entry: the `defineSong` block that would
- * put it in `songs.ts`.
+ * Turns a pasted melody back into the source of a library entry: the `defineSong` block to drop into
+ * whichever file under `songs/` holds its section.
  *
- * The part worth automating is the arrangement, not the typing. Every library song bar one is
+ * The part worth automating is the arrangement, not the typing. Every library song bar two is
  * written on the ten notes all five charts share, so that `songForInstrument` leaves it exactly as
- * written — see the header of `songs.ts`. Finding the transposition that lands a tune there is a
- * search, and getting it wrong is a test failure rather than something anyone spots by eye.
+ * written — see the header of `songs/index.ts`. Finding the transposition that lands a tune there is
+ * a search, and getting it wrong is a test failure rather than something anyone spots by eye.
  */
 import { CUSTOM_SONG_TITLE, isAbc } from './customSong'
 import { INSTRUMENT_LIST } from './instruments'

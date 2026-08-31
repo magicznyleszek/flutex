@@ -6,10 +6,17 @@ export interface SettingOption<T extends string> {
   label: string
 }
 
+/** A headed run of options. Mantine draws the heading and keeps searching across all groups. */
+export interface SettingOptionGroup<T extends string> {
+  group: string
+  items: readonly SettingOption<T>[]
+}
+
 export interface SettingSelectProps<T extends string> {
   label: string
   value: T
-  options: readonly SettingOption<T>[]
+  /** Groups and bare options may be mixed; Mantine lists the bare ones first, above every heading. */
+  options: readonly (SettingOption<T> | SettingOptionGroup<T>)[]
   onChange: (value: T) => void
   /** Select hands back `string | null`, so without this guard the narrowing is a cast. */
   isValid: (value: string) => value is T
@@ -34,7 +41,9 @@ export function SettingSelect<T extends string>({
       label={label}
       description={description}
       leftSection={icon}
-      data={options}
+      // Copied group by group because Mantine types a group's `items` as mutable, while everything
+      // handed in here is readonly.
+      data={options.map((option) => ('group' in option ? { ...option, items: [...option.items] } : option))}
       value={value}
       searchable={searchable}
       nothingFoundMessage={searchable ? 'Nothing by that name' : undefined}

@@ -7,7 +7,7 @@ import {
   type HoleState,
 } from '../src/data/instruments'
 import { DEFAULT_SONG_ID, SONGS, findSong } from '../src/data/songs'
-import { songForInstrument, songNoteNames } from '../src/data/songUtils'
+import { SONG_CATEGORIES, songForInstrument, songNoteNames } from '../src/data/songUtils'
 import { noteToMidi } from '../src/lib/music'
 
 const VALID_HOLE_STATES: readonly HoleState[] = [0, 0.5, 1]
@@ -212,6 +212,13 @@ describe('songs', () => {
     expect(findSong(DEFAULT_SONG_ID)).not.toBeNull()
     expect(findSong('no-such-song')).toBeNull()
     expect(findSong(null)).toBeNull()
+  })
+
+  // The order and the grouping need no test: `songs/index.ts` walks `SONG_CATEGORIES` over one file
+  // per category, so both follow from that list. What it cannot know is that a file has anything in
+  // it, and an empty category is a heading the picker would silently drop.
+  it.each(SONG_CATEGORIES)('$label has songs in it', (category) => {
+    expect(SONGS.some((song) => song.category === category.slug)).toBe(true)
   })
 
   it.each(SONGS)('$title has valid notes and durations', (song) => {

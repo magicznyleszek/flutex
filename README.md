@@ -104,7 +104,8 @@ to GitHub Pages.
 ```
 src/
   lib/          pitch detection, music theory, transposition, ABC, the state machine
-  data/         instruments, fingering charts, the song library, the custom song, settings
+  data/         instruments, fingering charts, the custom song, settings
+  data/songs/   the library, a file per section and the index that joins them in order
   hooks/        microphone session, trainer wiring, demo playback, persistence
   components/   presentational components, a CSS module each where they need one
   theme.ts      Mantine theme: colours, fonts, radii
@@ -116,8 +117,8 @@ scripts/        abcToSong.ts, which prints a library entry for an ABC tune
 
 ## Adding a song to the library
 
-The songs are in [src/data/songs.ts](src/data/songs.ts) and nothing else is: what
-a song *is*, and how one is fitted to an instrument, lives in
+The songs are in [src/data/songs/](src/data/songs/) and nothing else is: what a
+song *is*, and how one is fitted to an instrument, lives in
 [src/data/songUtils.ts](src/data/songUtils.ts), which the library imports and
 never the other way round. In a spec string a note is `D5` for one beat and
 `D5:2` for two; `|` marks a bar line and is stripped before the note list reaches
@@ -133,6 +134,14 @@ defineSong({
   spec: 'D5 E5 F#5:2 | G5 A5 B5:2',
 }),
 ```
+
+One file per section — `exercises.ts`, `firstTunes.ts`, `carols.ts` and so on — so
+a song goes in the file for the section it belongs to and there is no category to
+write out. [songs/index.ts](src/data/songs/index.ts) walks the `SONG_CATEGORIES`
+list of [songUtils.ts](src/data/songUtils.ts) over those files to build `SONGS`,
+stamping each song with its file's category on the way past. That list is
+therefore the only place the order of the sections lives, and it is the order the
+song picker groups them in.
 
 The test suite checks every song against every instrument, and also checks that
 each one plays *as written* — a song that needs transposing on a whistle is a
@@ -177,7 +186,8 @@ in a key the charts can reach; each song's subtitle names where it came from.
 That re-encoding is not done by hand. Paste the tune into **My own song** and a
 **Copy song definition** button appears under the box, giving you the block with
 the transposition already worked out, plus a line saying whether it would pass the
-test above. Fill in the subtitle, which names the source, and pick its tags.
+test above. Paste it into the file for its section, then fill in the subtitle,
+which names the source, and pick its tags.
 
 The same for a tune in a file, with the longer report the app has no room for —
 which instrument would struggle, what each would put in place of a note it cannot
@@ -271,8 +281,8 @@ lengths only feed the beat counts and **Hear it**.
 
 Whichever format you pasted, a **Copy song definition** button appears under the
 box once the melody parses. It gives you the tune as a library entry, ready to
-paste into `songs.ts` — see [Adding a song to the
-library](#adding-a-song-to-the-library).
+paste into whichever file under `src/data/songs/` holds its section — see [Adding a
+song to the library](#adding-a-song-to-the-library).
 
 ## Fingering charts
 

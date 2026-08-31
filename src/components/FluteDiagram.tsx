@@ -1,4 +1,4 @@
-import { Alert, Stack, Text } from '@mantine/core'
+import { Alert, Text } from '@mantine/core'
 import { WarningIcon } from '@phosphor-icons/react'
 import type { CSSProperties, JSX } from 'react'
 
@@ -18,9 +18,9 @@ export interface FluteDiagramProps {
   instrument: Instrument
   note: string | null
   /**
-   * Drops everything around the chart — legend digits, fingering hint, missing-note prose — at the
-   * same size. The neighbours in the note row are dimmed rather than shrunk, so this chrome is what
-   * marks out the note you are being asked to play.
+   * Drops everything around the chart — legend digits, missing-note prose — at the same size. The
+   * neighbours in the note row are dimmed rather than shrunk, so this chrome is what marks out the
+   * note you are being asked to play.
    */
   bare?: boolean
 }
@@ -255,17 +255,10 @@ export function FluteDiagram({
 
   const label = `Fingering for ${note} on the ${instrument.shortName}`
 
-  return (
-    <Stack align="center" gap="sm">
-      {layout.kind === 'ocarina'
-        ? <OcarinaBody layout={layout} holes={fingering.holes} label={label} />
-        : <TubeBody layout={layout} holes={fingering.holes} label={label} bare={bare} />}
-
-      {!bare && fingering.hint !== undefined && (
-        <Text size="xs" c="dimmed" ta="center" maw={260}>
-          {fingering.hint}
-        </Text>
-      )}
-    </Stack>
-  )
+  // Only the chart. A fingering's `hint` is drawn by whoever placed the diagram — in the note row
+  // that is `NoteSequence`, below the row rather than inside a column, because a line of prose in
+  // one column of a centred flex row pushes every other chart sideways.
+  return layout.kind === 'ocarina'
+    ? <OcarinaBody layout={layout} holes={fingering.holes} label={label} />
+    : <TubeBody layout={layout} holes={fingering.holes} label={label} bare={bare} />
 }

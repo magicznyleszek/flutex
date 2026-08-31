@@ -12,7 +12,7 @@ const README = 'https://github.com/magicznyleszek/flutex#writing-your-own-song'
 const EXAMPLE = 'F#5 F#5 G5 A5 | A5 G5 F#5 E5 | D5:2 E5:2'
 
 /**
- * What copying the block would get you, in the terms `songs.ts` cares about — whether the entry
+ * What copying the block would get you, in the terms the library cares about — whether the entry
  * would play as written on every instrument, which is what the library's own test demands of it.
  * The shift named here is not the one the `+n semitones` badge shows: that one fits the melody to
  * the instrument in your hand, this one fits it to all five at once.
@@ -95,9 +95,9 @@ export function CustomSongEditor({
         autoCorrect="off"
       />
 
-      {/* The way a tune you like gets into the library: paste ABC here, then paste the block
-          into `songs.ts`. Doing it by hand means finding the transposition yourself, and a
-          wrong one fails the test suite rather than looking wrong. */}
+      {/* The way a tune you like gets into the library: paste ABC here, then paste the block into
+          the file under `data/songs/` for its section. Doing it by hand means finding the
+          transposition yourself, and a wrong one fails the test suite rather than looking wrong. */}
       {definition !== null && (
         <Stack gap={4}>
           <Group gap="xs">

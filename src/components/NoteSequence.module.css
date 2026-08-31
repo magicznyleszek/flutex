@@ -30,6 +30,16 @@
   align-items: flex-start;
 }
 
+/* The middle note's fingering hint, which used to sit under the chart it belongs to. In the column
+   it widened that column, and `justify-content: center` answered by moving every other chart — so a
+   note that happened to have a hint shifted the fingerings under your eyes. Out here it is the full
+   width of the card and one line tall whether it holds anything or not, so it fills and empties
+   without moving anything. A hint long enough to wrap only pushes the two captions under it down. */
+.hint {
+  align-self: stretch;
+  min-height: calc(var(--mantine-font-size-xs) * var(--mantine-line-height-xs));
+}
+
 /* The neighbours are context, not the thing to read. Dimming the whole column covers the
    tube and its holes too, which no `c="dimmed"` on the text could reach — and since the dots
    are the same size as the ones you are playing, this is what separates them. */
