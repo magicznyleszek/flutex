@@ -50,14 +50,8 @@ import {
   isPenaltyMode,
   type DifficultyId,
 } from './data/settings'
-import {
-  CUSTOM_SONG_ID,
-  DEFAULT_SONG_ID,
-  getSong,
-  isSongId,
-  songForInstrument,
-  songNoteNames,
-} from './data/songs'
+import { DEFAULT_SONG_ID, getSong, isSongId } from './data/songs'
+import { CUSTOM_SONG_ID, songForInstrument, songNoteNames } from './data/songUtils'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { usePitchDetection } from './hooks/usePitchDetection'
@@ -427,8 +421,8 @@ export default function App(): JSX.Element {
               Mantine's own anchor colour: that one is the filled primary, accent-8, which at
               12px reads 3.51:1 on a light card. */}
           <Text size="xs" c="dimmed" ta="center">
-            Melodies are transcriptions written out for practice. To have one taken
-            down, write to{' '}
+            The songs are traditional or out of copyright, bar one transcription
+            written out for practice. To have anything taken down, write to{' '}
             <Anchor
               inherit
               c="var(--flutex-accent-ink)"

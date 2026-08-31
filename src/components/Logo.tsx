@@ -2,7 +2,8 @@ import { Box, type MantineBreakpoint } from '@mantine/core'
 import type { JSX } from 'react'
 
 // `bundle-text:` returns the built file as a string instead of emitting a separate
-// asset, so the artwork sits in the document where CSS can set its fill.
+// asset, so the artwork sits in the document where CSS can set its fill. Neither file
+// paints itself — see `Logo.module.css`.
 import iconMarkup from 'bundle-text:../flutex-icon.svg'
 import logotypeMarkup from 'bundle-text:../flutex-logotype.svg'
 

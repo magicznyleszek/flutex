@@ -1,87 +1,27 @@
-import { type Instrument, type InstrumentId, nearestFingered } from './instruments'
-import { bestShift, keyShift, transposeKey, transposeNote } from '../lib/transpose'
-
-export interface SongNote {
-  note: string
-  /** Length in beats. A UI hint only — rhythm is never enforced. */
-  beats: number
-}
-
-export interface Song {
-  /** Saved progress is keyed by these ids, so renaming one resets that song's history. */
-  id: string
-  title: string
-  subtitle?: string
-  tags: readonly string[]
-  /**
-   * The key the melody below is written in, as a pitch-class name.
-   *
-   * Notes are stored at concert pitch — the pitch a piano would play — rather than as scale
-   * degrees, because with the key recorded alongside them the degree is recoverable from the
-   * note and nothing is gained by storing it the other way round. What the key buys is knowing
-   * which way to transpose: `keyShift` from here to the instrument's key is the move most
-   * likely to leave the melody diatonic and so easy to finger.
-   */
-  key: string
-  notes: readonly SongNote[]
-  /**
-   * A shift in semitones to use on one particular instrument, instead of the one worked out
-   * from the keys and the range. The escape hatch, for a song whose automatic arrangement lands
-   * badly, so that it can be pinned by hand without teaching `bestShift` a special case.
-   * "Concerning Hobbits" uses it to stay in D on the ocarinas, which cannot reach its top notes
-   * in any key, so there is nothing to be bought by moving it — a zero here is as much an
-   * instruction as any other number.
-   */
-  overrides?: Readonly<Partial<Record<InstrumentId, number>>>
-}
-
 /**
- * `D5 A5:2 | F#5:0.5` — space-separated note names, `|` bar lines dropped, and an
- * optional `:beats` suffix that defaults to one beat.
+ * The library itself: the songs, and the lookups that need all of them at once. What a song *is*,
+ * and how one is fitted to an instrument, lives in `songUtils.ts`.
  *
- * Nothing is validated here, because the songs below are written by hand and a typo in one
- * fails the test suite. Text a user pasted goes through `parseCustomSong`, which checks it.
+ * Nothing here is anybody's property. The tunes are traditional or were printed long enough ago
+ * that the melody is public domain, and each subtitle names where it comes from. Most were read
+ * off ABC transcriptions in the Nottingham Music Database and re-encoded as bare note lists in a
+ * key the charts can reach.
  */
-export function parseNotes(spec: string): readonly SongNote[] {
-  return spec
-    .trim()
-    .split(/\s+/)
-    .filter((token) => token !== '|' && token.length > 0)
-    .map((token) => {
-      const [note = '', beats] = token.split(':')
-      return { note, beats: beats === undefined ? 1 : Number(beats) }
-    })
-}
+import { CUSTOM_SONG_ID, defineSong, type Song } from './songUtils'
 
-interface SongInput {
-  id: string
-  title: string
-  subtitle?: string
-  tags?: readonly string[]
-  key: string
-  spec: string
-  overrides?: Readonly<Partial<Record<InstrumentId, number>>>
-}
-
-const defineSong = ({ id, title, subtitle, tags = [], key, spec, overrides }: SongInput): Song => ({
-  id,
-  title,
-  ...(subtitle === undefined ? {} : { subtitle }),
-  tags,
-  key,
-  notes: parseNotes(spec),
-  ...(overrides === undefined ? {} : { overrides }),
-})
-
-// Every song but "Concerning Hobbits" stays inside D5-D6 and skips C5 and F5, so it plays on the
-// tin whistle in D and on both recorders with nothing for the transposer to do —
-// `songForInstrument` leaves a melody alone when the instrument can already play it, and these
-// were written to fit. That one is a transcription rather than a melody written to order, and its
-// high section reaches F#6 and A6: the whistle and the recorders have both, the ocarinas have
-// neither, and it stays in D there anyway by way of `overrides` — the high phrases lean on the
-// nearest grips the ocarina does have rather than the whole tune changing key. A pasted custom
-// song, which can arrive in any key and any octave, is what the shift search is really for.
+// Every song but "Concerning Hobbits" is written inside D5-E6 on the ten notes all five charts
+// share: the D major scale plus C natural. That is the intersection of a tin whistle in D and a
+// 6-hole ocarina, and it is what lets every instrument play the library as written, since
+// `songForInstrument` leaves a melody alone when the instrument can already play it. Tunes were
+// transposed into that set when they fitted it and passed over when they did not.
+//
+// "Concerning Hobbits" is the exception: a transcription rather than a tune chosen to fit, whose
+// high section reaches F#6 and A6. The whistle and the recorders have both notes, the ocarinas
+// have neither and lean on the nearest grips they do have. A pasted custom song, which can arrive
+// in any key and any octave, is what the shift search is really for.
 export const SONGS: readonly Song[] = [
+  // --- Exercises
+
   defineSong({
     id: 'd-major-scale',
     title: 'D major scale',
@@ -99,6 +39,8 @@ export const SONGS: readonly Song[] = [
     key: 'D',
     spec: 'D5 F#5 A5 D6 | A5 F#5 D5:2 | D5 A5 F#5 D6 | A5 F#5 D5:2',
   }),
+
+  // --- First tunes: short, near enough stepwise, and probably already in your head
 
   defineSong({
     id: 'twinkle',
@@ -126,6 +68,48 @@ export const SONGS: readonly Song[] = [
   }),
 
   defineSong({
+    id: 'saints',
+    title: 'When the Saints Go Marching In',
+    subtitle: 'Traditional gospel — D major',
+    tags: ['folk', 'easy'],
+    key: 'D',
+    spec: `
+      D5 F#5 G5 A5:4 | A5 D5 F#5 G5 | A5:4 | A5 D5 F#5 G5 | A5:2 F#5:2 | D5:2 F#5:2
+      E5:4 | E5:2 F#5 E5 | D5:3 D5 | F#5:2 A5:2 | A5 G5:3 | G5:2 F#5 G5 | A5:2 F#5:2
+      D5:2 E5:2 | D5:4 | D5
+    `,
+  }),
+
+  defineSong({
+    id: 'oh-susanna',
+    title: 'Oh! Susanna',
+    subtitle: 'Stephen Foster, 1848 — D major',
+    tags: ['folk', 'easy'],
+    key: 'D',
+    spec: `
+      D5:0.25 E5:0.25 | F#5:0.5 A5:0.5 A5:0.75 B5:0.25 | A5:0.5 F#5:0.5 D5:0.5 E5:0.5
+      F#5:0.5 F#5:0.5 E5:0.5 D5:0.5 | E5:1.5 D5:0.25 E5:0.25 | F#5:0.5 A5:0.5 A5:0.75 B5:0.25
+      A5:0.5 F#5:0.5 D5:0.5 E5:0.5 | F#5:0.5 F#5:0.5 E5:0.5 E5:0.5 | D5:2 | G5 G5 | B5:0.5 B5:0.5 B5:0.5 B5:0.5
+      A5:0.5 A5:0.5 F#5:0.5 D5:0.5 | E5:1.5 D5:0.25 E5:0.25 | F#5:0.5 A5:0.5 A5:0.75 B5:0.25
+      A5:0.5 F#5:0.5 D5:0.5 E5:0.5 | F#5:0.5 F#5:0.5 E5:0.5 E5:0.5 | D5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'scots-wha-hae',
+    title: 'Scots Wha Hae',
+    subtitle: 'Hey Tuttie Tatie, traditional Scots — G major',
+    tags: ['folk', 'easy'],
+    key: 'G',
+    spec: `
+      D5 D5:2 | D5 D5:2 | E5 D5:2 | E5 G5:3 | E5:2 E5 | E5:2 D5 | E5:2 F#5 | G5:2 A5
+      B5:2 B5 | A5:2 G5 | G5:2 A5 | B5:2 A5 | G5:2 E5 | E5:2 D5 | D5:3 | D5:3 | B5:2 B5
+      B5:2 A5 | B5:2 C6 | D6:3 | A5:2 A5 | A5:2 G5 | A5:2 B5 | C6:3 | D6:2 B5 | A5:2 G5
+      G5:2 A5 | B5:3 | G5:2 E5 | E5:2 D5 | D5:3 | D5:2
+    `,
+  }),
+
+  defineSong({
     id: 'jingle-bells',
     title: 'Jingle Bells',
     subtitle: 'Chorus, D major',
@@ -134,6 +118,96 @@ export const SONGS: readonly Song[] = [
     spec: `
       F#5 F#5 F#5:2 | F#5 F#5 F#5:2 | F#5 A5 D5 E5 F#5:4
       G5 G5 G5 G5:2 | G5 F#5 F#5 F#5:2 | F#5 E5 E5 F#5 E5:2 A5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'happy-birthday',
+    title: 'Happy Birthday',
+    subtitle: 'G major',
+    tags: ['occasion', 'medium'],
+    key: 'G',
+    spec: `
+      D5:0.5 D5:0.5 E5 D5 G5 F#5:2
+      D5:0.5 D5:0.5 E5 D5 A5 G5:2
+      D5:0.5 D5:0.5 D6 B5 G5 A5 G5:2
+      C6:0.5 C6:0.5 B5 G5 A5 G5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'amazing-grace',
+    title: 'Amazing Grace',
+    subtitle: 'Traditional, G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | G5:2 E5 | D5:3
+      D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | B5:3
+      D6 | B5:2 D6:0.5 B5:0.5 | G5:2 E5 | D5:3
+      D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | G5:3
+    `,
+  }),
+
+  // --- Songs and airs: longer melodies, held notes, more of a tune to shape
+
+  defineSong({
+    id: 'ye-banks-and-braes',
+    title: 'Ye Banks and Braes',
+    subtitle: "The Caledonian Hunt's Delight, 1788 — G major",
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      D5 G5:2 | G5 A5:1.5 G5:0.5 | A5 B5 D6 | B5 A5:1.5 G5:0.5 | A5 B5:1.5 A5:0.5 | G5 G5 E5
+      D5 D5 E5 | G5 A5:2 | D5 G5:2 | G5 A5:1.5 G5:0.5 | A5 B5 D6 | B5 A5:1.5 G5:0.5
+      A5 B5:1.5 A5:0.5 | G5 G5 E5 | D5 D5 E5 | G5 G5:2 | B5 D6:2 | E6 D6 B5 | G5 D6:2
+      E6 D6 B5 | G5 D6 B5 | G5 D6 B5 | G5 E6 D6:0.5 C6:0.5 | B5 A5:2 | D5 G5:2 | G5 A5:1.5 G5:0.5
+      A5 B5 D6 | B5 A5:1.5 G5:0.5 | A5 B5:1.5 A5:0.5 | G5 G5 E5 | D5 D5 E5 | G5 G5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'endearing-young-charms',
+    title: 'Believe Me, If All Those Endearing Young Charms',
+    subtitle: 'Thomas Moore, 1808, to an older Irish air — D major',
+    tags: ['folk', 'medium'],
+    key: 'D',
+    spec: `
+      F#5:0.5 E5:0.5 D5:1.5 E5:0.5 | D5 D5 F#5 | A5 G5 B5 | D6 D6:2 | C#6:0.5 B5:0.5 A5:1.5 G5:0.5
+      F#5 E5 D5 | E5 F#5 A5 | F#5 E5:2 | F#5:0.5 E5:0.5 D5:1.5 E5:0.5 | D5 D5 F#5 | A5 G5 B5
+      D6 D6:2 | C#6:0.5 B5:0.5 A5 D6 | F#5 E5:1.5 D5:0.5 | E5 D5:3 | D5 A5 G5 | F#5 A5 D6
+      D6:2 A5 | B5 G5 D6 | D6:2 C#6:0.5 B5:0.5 | A5:1.5 G5:0.5 F#5 | E5 D5 E5 | F#5 A5 F#5
+      E5:2 F#5:0.5 E5:0.5 | D5:1.5 E5:0.5 D5 | D5 F#5 A5 | G5 B5 D6 | D6:2 C#6:0.5 B5:0.5
+      A5 D6 F#5 | E5:1.5 D5:0.5 E5 | D5:3 | D5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'daisy-bell',
+    title: 'Daisy Bell',
+    subtitle: 'Harry Dacre, 1892 — G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      B5:0.5 C6:0.5 | D6:3 | B5:3 | G5:3 | D5:3 | E5 F#5 G5 | E5:2 G5 | D5:3 | D5 G5 A5:3
+      D6:3 | B5:3 | G5:3 | E5 F#5 G5 | A5:2 B5 | A5:3 | A5 A5 B5 | C6 B5 A5 | D6:2 B5
+      A5 G5:2 | G5 G5 A5 | B5:2 G5 | E5:2 G5 | E5 D5:2 | D5 F#5 G5:2 | B5 A5:2 | D5 G5:2
+      B5 A5 B5 | C6 D6 B5 | G5 A5:2 | B5 G5:3 | G5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'huntsmans-chorus',
+    title: "Huntsman's Chorus",
+    subtitle: 'Carl Maria von Weber, Der Freischütz, 1821 — G major',
+    tags: ['classical', 'medium'],
+    key: 'G',
+    spec: `
+      D5 G5 D5 G5:0.5 A5:0.5 | B5:0.5 C6:0.5 D6:2 B5:2 | A5 D6 A5 D6 | B5:0.5 C6:0.5 B5:0.5 A5:0.5 G5 D5
+      G5 D5 G5:0.5 A5:0.5 B5:0.5 C6:0.5 | D6:2 C6:2 | B5:0.5 A5:0.5 G5:0.5 A5:0.5 B5 A5
+      G5:3 G5:0.5 A5:0.5 | B5:1.5 B5:0.5 B5 A5 | G5:2 G5:2 | C6:1.5 C6:0.5 C6 B5 | A5 F#5 E5 D5
+      B5:1.5 A5:0.5 G5:0.5 A5:0.5 B5:0.5 C6:0.5 | D6:2 C6:2 | B5:0.5 A5:0.5 G5:0.5 A5:0.5 B5 A5
+      G5:3
     `,
   }),
 
@@ -170,43 +244,246 @@ export const SONGS: readonly Song[] = [
     `,
   }),
 
+  // --- Carols
+
   defineSong({
-    id: 'happy-birthday',
-    title: 'Happy Birthday',
-    subtitle: 'G major',
-    tags: ['occasion', 'medium'],
-    key: 'G',
+    id: 'god-rest-ye-merry-gentlemen',
+    title: 'God Rest You Merry, Gentlemen',
+    subtitle: 'Traditional English carol — E minor',
+    tags: ['seasonal', 'medium'],
+    key: 'E',
     spec: `
-      D5:0.5 D5:0.5 E5 D5 G5 F#5:2
-      D5:0.5 D5:0.5 E5 D5 A5 G5:2
-      D5:0.5 D5:0.5 D6 B5 G5 A5 G5:2
-      C6:0.5 C6:0.5 B5 G5 A5 G5:2
+      E5 | E5 B5 B5 A5 | G5 F#5 E5 D5 | E5 F#5 G5 A5 | B5:3 E5 | E5 B5 B5 A5 | G5 F#5 E5 D5
+      E5 F#5 G5 A5 | B5:3 B5 | C6 A5 B5 C6 | D6 E6 B5 A5 | G5 E5 F#5 G5 | A5:2 G5 A5
+      B5:2 C6 B5 | B5 A5 G5 F#5 | E5:2 G5 F#5 | E5 A5:2 G5 | A5 B5 C6 D6 | E6 B5 A5 G5
+      F#5 E5:4 | E5:3
     `,
   }),
 
   defineSong({
-    id: 'amazing-grace',
-    title: 'Amazing Grace',
-    subtitle: 'Traditional, G major',
-    tags: ['folk', 'medium'],
+    id: 'sussex-carol',
+    title: 'Sussex Carol',
+    subtitle: 'On Christmas Night All Christians Sing — G major',
+    tags: ['seasonal', 'medium'],
     key: 'G',
     spec: `
-      D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | G5:2 E5 | D5:3
-      D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | B5:3
-      D6 | B5:2 D6:0.5 B5:0.5 | G5:2 E5 | D5:3
-      D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | G5:3
+      D6:0.5 D6 | B5:0.5 C6 D6:0.5 B5:0.5 A5:0.5 | G5:0.5 A5 F#5:0.5 G5 | G5:0.5 A5:0.5 B5:0.5 C6:0.5 B5
+      A5:0.5 G5 D6:0.5 D6 | B5:0.5 C6 D6:0.5 B5:0.5 A5:0.5 | G5:0.5 A5 F#5:0.5 G5 | G5:0.5 A5:0.5 B5:0.5 C6:0.5 B5
+      A5:0.5 G5:1.5 A5:1.5 | A5 G5:0.5 A5:0.5 B5:0.5 C6:0.5 | D6:0.5 C6:0.5 B5:0.5 A5:1.5
+      A5:1.5 D6:1.5 | E6:1.5 D6:1.5 | C6 B5:0.5 A5:0.5 G5:0.5 A5:0.5 | G5:1.5 G5
+    `,
+  }),
+
+  defineSong({
+    id: 'ding-dong-merrily-on-high',
+    title: 'Ding Dong Merrily on High',
+    subtitle: "Branle de l'Official, Thoinot Arbeau, 1589 — G major",
+    tags: ['seasonal', 'medium'],
+    key: 'G',
+    spec: `
+      G5 G5 A5:0.5 G5:0.5 F#5:0.5 E5:0.5 | D5:3 D5 | E5 G5 G5 F#5 | G5:2 G5:2 | D6:1.5 C6:0.5 B5:0.5 C6:0.5 D6:0.5 B5:0.5
+      C6:1.5 B5:0.5 A5:0.5 B5:0.5 C6:0.5 A5:0.5 | B5:1.5 A5:0.5 G5:0.5 A5:0.5 B5:0.5 G5:0.5
+      A5:1.5 G5:0.5 F#5:0.5 G5:0.5 A5:0.5 F#5:0.5 | G5:1.5 F#5:0.5 E5:0.5 F#5:0.5 G5:0.5 E5:0.5
+      F#5:1.5 E5:0.5 D5 D5 | E5 G5 G5 F#5 | G5:2 G5:2
+    `,
+  }),
+
+  // --- English dance tunes
+
+  defineSong({
+    id: 'nonesuch',
+    title: 'Nonesuch',
+    subtitle: 'Playford, The English Dancing Master, 1651 — E minor',
+    tags: ['dance', 'easy'],
+    key: 'E',
+    spec: `
+      B5 B5 G5 A5 | B5 G5 F#5:0.5 G5:0.5 E5 | B5 B5 G5 A5 | B5 G5:2 G5 | B5 B5 G5 A5
+      B5 G5 F#5:0.5 G5:0.5 E5 | B5 B5 G5 A5 | B5 G5:2 E5 | F#5 F#5 D5 E5 | F#5 G5 F#5:0.5 G5:0.5 E5
+      F#5 F#5 D5 E5 | F#5 G5:2 E5 | F#5 F#5 D5 E5 | F#5 G5 F#5:0.5 G5:0.5 E5 | F#5 F#5 D5 E5
+      F#5 G5:2 E5
+    `,
+  }),
+
+  defineSong({
+    id: 'queens-jig',
+    title: "The Queen's Jig",
+    subtitle: 'Playford, The Dancing Master — G major',
+    tags: ['dance', 'medium'],
+    key: 'G',
+    spec: `
+      D5:0.5 G5 A5:0.5 B5:0.5 G5:0.5 | B5:0.5 C6:1.5 B5:0.5 C6:0.5 | D6:0.5 B5:0.5 C6:0.5 B5:0.5 A5
+      G5:0.5 A5:1.5 D5 | D5:0.5 G5 A5:0.5 B5:0.5 G5:0.5 | B5:0.5 C6:1.5 B5:0.5 C6:0.5
+      D6:0.5 B5:0.5 C6:0.5 B5:0.5 A5 | G5:0.5 G5:1.5 G5 | D6:0.5 D6:0.5 E6:0.5 D6:0.5 C6
+      B5:0.5 C6:1.5 B5:0.5 C6:0.5 | D6:0.5 B5:0.5 C6:0.5 B5:0.5 A5 | G5:0.5 A5:1.5 D5
+      D6:0.5 D6:0.5 E6:0.5 D6:0.5 C6 | B5:0.5 C6:1.5 B5:0.5 C6:0.5 | D6:0.5 B5:0.5 C6:0.5 B5:0.5 A5
+      G5:0.5 G5:1.5 G5
+    `,
+  }),
+
+  defineSong({
+    id: 'wakefield-hunt',
+    title: 'Wakefield Hunt',
+    subtitle: "Thompson's country dances, 1779 — G major",
+    tags: ['dance', 'hard'],
+    key: 'G',
+    spec: `
+      B5 C6:0.5 | D6:1.5 B5 C6:0.5 | D6:0.5 B5:0.5 G5:0.5 E5 D5:0.5 | E5:0.5 F#5:0.5 G5:0.5 D5 B5:0.5
+      C6 B5:0.5 A5 G5:0.5 | D6:1.5 B5 C6:0.5 | D6:0.5 B5:0.5 G5:0.5 E5 D5:0.5 | E5:0.5 F#5:0.5 G5:0.5 D5 C6:0.5
+      B5:0.5 C6:0.5 A5:0.5 G5:1.5 | D6:0.5 B5:0.5 G5:0.5 E6:0.5 C6:0.5 A5:0.5 | D6:0.5 B5:0.5 G5:0.5 E5 D5:0.5
+      E5:0.5 F#5:0.5 G5:0.5 D5 B5:0.5 | C6 B5:0.5 A5 G5:0.5 | D6:0.5 B5:0.5 G5:0.5 E6:0.5 C6:0.5 A5:0.5
+      D6:0.5 B5:0.5 G5:0.5 E5 D5:0.5 | E5:0.5 F#5:0.5 G5:0.5 D5 C6:0.5 | B5:0.5 C6:0.5 A5:0.5 G5:1.5
+      D5 D5:0.5 E5 E5:0.5 | D5 B5:0.5 C6 B5:0.5 | A5:0.5 C6:0.5 E6:0.5 D6:0.5 B5:0.5 G5:0.5
+      F#5 G5:0.5 A5:1.5 | D5 D5:0.5 E5 E5:0.5 | D5 B5:0.5 C6 B5:0.5 | A5:0.5 C6:0.5 E6:0.5 D6:0.5 E6:0.5 C6:0.5
+      B5:0.5 C6:0.5 A5:0.5 G5:1.5
+    `,
+  }),
+
+  defineSong({
+    id: 'lads-a-bunchum',
+    title: 'Lads a Bunchum',
+    subtitle: 'Adderbury morris tune — D major',
+    tags: ['dance', 'medium'],
+    key: 'D',
+    spec: `
+      D5:0.5 E5:0.5 F#5:1.5 | G5:0.5 F#5:0.5 G5:0.5 A5:0.5 B5:0.5 G5 E5 | E5 F#5:0.5 G5:0.5 A5 A5
+      A5:0.5 G5:0.5 F#5:0.5 E5:0.5 D5 D5 | D5:2 D6:0.5 C#6:0.5 B5 | A5 A5 D5:0.5 E5:0.5 F#5
+      F#5 F#5 D6:0.5 C#6:0.5 B5 | A5 G5 F#5 E5 | D5 D5 D6:0.5 C#6:0.5 B5 | A5 A5 D5:0.5 E5:0.5 F#5
+      F#5 F#5 D6:0.5 C#6:0.5 B5 | A5 F#5 D5 E5 | D5 D5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'winster-galop',
+    title: 'Winster Galop',
+    subtitle: 'Derbyshire morris tune — D major',
+    tags: ['dance', 'easy'],
+    key: 'D',
+    spec: `
+      A5 D5 F#5:0.5 F#5:0.5 D5 | F#5 D5 F#5 A5:2 | E5:1.5 G5:0.5 F#5 E5 | D5 F#5 A5:2
+      G5 B5 C#6 B5 | A5 F#5 A5:2 | E5:1.5 G5:0.5 F#5 E5 | D5:2 D5 A5 | D6 C#6 B5 A5
+      D6 C#6 B5 A5 | D6 C#6 B5 A5 | G5 F#5 E5:2 | C#6 B5 A5:2 | C#6 B5 A5:2 | A5:2 E5:1.5 G5:0.5
+      F#5 D5 D5
+    `,
+  }),
+
+  // --- Irish and Scottish
+
+  defineSong({
+    id: 'egans-polka',
+    title: "Egan's Polka",
+    subtitle: 'Traditional Irish polka — G major',
+    tags: ['dance', 'medium'],
+    key: 'G',
+    spec: `
+      B5:0.5 D5:0.5 E5:0.5 D5:0.5 | B5:0.5 D5:0.5 E5:0.5 D5:0.5 | G5 A5:0.75 B5:0.25
+      A5:0.5 G5:0.5 E5:0.5 D5:0.5 | B5:0.5 D5:0.5 E5:0.5 D5:0.5 | B5:0.5 D5:0.5 E5:0.5 D5:0.5
+      G5 A5:0.75 B5:0.25 | A5:0.5 G5:0.5 G5 | B5:0.5 D6:0.5 B5:0.5 A5:0.5 | A5:0.5 G5:0.5 E5:0.5 D5:0.5
+      G5 A5:0.75 B5:0.25 | A5:0.5 G5:0.5 E5:0.5 D5:0.5 | B5:0.5 D6:0.5 B5:0.5 A5:0.5
+      A5:0.5 G5:0.5 E5:0.5 D5:0.5 | G5 A5:0.75 B5:0.25 | A5:0.5 G5:0.5 G5
+    `,
+  }),
+
+  defineSong({
+    id: 'brian-borus-march',
+    title: "Brian Boru's March",
+    subtitle: 'Traditional Irish march — E minor',
+    tags: ['folk', 'medium'],
+    key: 'E',
+    spec: `
+      B5:0.5 G5:0.5 F#5:0.5 E5:0.5 E5:0.5 B5:0.5 | A5:0.5 G5:0.5 F#5:0.5 E5:0.5 E5 | A5:0.5 F#5:0.5 E5:0.5 D5:0.5 D5:0.5 A5:0.5
+      G5:0.5 F#5:0.5 E5:0.5 D5:0.5 D5 | B5:0.5 G5:0.5 F#5:0.5 E5:0.5 E5:0.5 B5:0.5 | A5:0.5 G5:0.5 F#5:0.5 E5:0.5 E5
+      F#5:0.5 G5:0.5 A5:0.5 B5:0.5 B5 | A5:0.5 G5:0.5 E5:0.5 E5:0.5 E5 | F#5:0.5 G5:0.5 A5:0.5 B5:0.5 B5:0.5 C6:0.5
+      B5:0.5 B5:0.5 C6:0.5 B5:0.5 B5:0.5 A5:0.5 | G5:0.5 F#5:0.5 G5:0.5 A5:0.5 A5:0.5 B5:0.5
+      A5:0.5 A5:0.5 B5:0.5 A5:0.5 A5:0.5 G5:0.5 | F#5:0.5 G5:0.5 A5:0.5 B5:0.5 B5:0.5 C6:0.5
+      B5:0.5 B5:0.5 C6:0.5 B5:0.5 B5:0.5 A5:0.5 | G5:0.5 B5:1.5 B5 | A5:0.5 G5:0.5 E5:0.5 E5:0.5 E5
+    `,
+  }),
+
+  defineSong({
+    id: 'cavan-buck',
+    title: 'Cavan Buck',
+    subtitle: 'Traditional Irish jig — E dorian',
+    tags: ['dance', 'medium'],
+    key: 'E',
+    spec: `
+      G5 E5:0.5 F#5:1.5 | E5 F#5:0.5 G5 A5:0.5 | B5 B5:0.5 A5 G5:0.5 | F#5 D5:0.5 D5:0.5 E5:0.5 F#5:0.5
+      G5:0.5 F#5:0.5 E5:0.5 F#5:0.5 E5:0.5 D5:0.5 | E5 F#5:0.5 G5 A5:0.5 | B5:0.5 C#6:0.5 D6:0.5 C#6:0.5 B5:0.5 A5:0.5
+      B5 E5:0.5 E5:1.5 | D6 B5:0.5 G5 A5:0.5 | B5 E6:0.5 E6 B5:0.5 | D6 B5:0.5 A5 G5:0.5
+      F#5 D5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5:0.5 F#5:0.5 E5:0.5 F#5:0.5 E5:0.5 D5:0.5
+      E5 F#5:0.5 G5 A5:0.5 | B5:0.5 C#6:0.5 D6:0.5 C#6:0.5 B5:0.5 A5:0.5 | B5 E5:0.5 E5:1.5
+    `,
+  }),
+
+  defineSong({
+    id: 'sprig-of-shillelagh',
+    title: 'The Sprig of Shillelagh',
+    subtitle: 'Traditional Irish jig — G major',
+    tags: ['dance', 'hard'],
+    key: 'G',
+    spec: `
+      D5:0.5 D5:0.5 G5:0.5 G5:0.5 G5:0.5 F#5:0.5 | G5:0.5 A5:0.5 C6:0.5 B5:0.5 A5:0.5 G5:0.5
+      F#5:0.5 G5:0.5 D6:0.5 D6:0.5 D6:0.5 C6:0.5 | B5:0.5 A5:0.5 C6:0.5 B5:0.5 A5:0.5 G5:0.5
+      F#5:0.5 G5:0.5 A5:0.5 B5:0.5 E5:0.5 F#5:0.5 | G5:0.5 D5:0.5 E5:0.5 F#5:0.5 G5
+      G5:0.5 B5:0.5 G5:0.5 B5:0.5 D6:0.5 B5:0.5 | D6:0.5 E6:0.5 C6:0.5 E6:0.5 D6 | C6:0.5 B5:0.5 G5:0.5 B5:0.5 D6:0.5 B5:0.5
+      D6:0.5 E6:0.5 C6:0.5 E6:0.5 D6 | C6:0.5 B5:0.5 B5:0.5 B5:0.5 B5:0.5 A5:0.5 | G5:0.5 A5:0.5 C6:0.5 B5:0.5 A5:0.5 G5:0.5
+      F#5:0.5 G5:0.5 D6:0.5 D6:0.5 D6:0.5 C6:0.5 | B5:0.5 A5:0.5 C6:0.5 B5:0.5 A5:0.5 G5:0.5
+      F#5:0.5 G5:0.5 A5:0.5 B5:0.5 E5:0.5 F#5:0.5 | G5:0.5 D5:0.5 E5:0.5 F#5:0.5 G5
+    `,
+  }),
+
+  defineSong({
+    id: 'cock-o-the-north',
+    title: "Cock o' the North",
+    subtitle: 'Traditional Scots jig — D major',
+    tags: ['dance', 'hard'],
+    key: 'D',
+    spec: `
+      A5:0.25 | G5:0.25 F#5:0.5 G5:0.5 F#5:0.5 F#5:0.5 E5:0.5 D5:0.5 | D5:0.5 F#5:0.5 A5:0.5 B5 A5:0.5
+      F#5:0.5 G5:0.5 F#5:0.5 F#5:0.5 E5:0.5 D5:0.5 | E5:0.5 F#5:0.5 E5:0.5 E5:0.5 A5:0.5 G5:0.5
+      F#5:0.5 G5:0.5 F#5:0.5 F#5:0.5 E5:0.5 D5:0.5 | D5:0.5 F#5:0.5 A5:0.5 B5 A5:0.5
+      F#5 F#5:0.5 E5:0.5 F#5:0.5 E5:0.5 | D5:1.5 D5 A5:0.25 B5:0.25 | C#6:0.25 D6 A5:0.5 B5 A5:0.5
+      D6 A5:0.5 B5 A5:0.5 | F#5:0.5 G5:0.5 F#5:0.5 F#5:0.5 E5:0.5 D5:0.5 | E5:0.5 F#5:0.5 G5:0.5 A5:0.5 B5:0.5 C#6:0.5
+      D6 A5:0.5 B5 A5:0.5 | D6 A5:0.5 B5 A5:0.5 | F#5 F#5:0.5 E5:0.5 F#5:0.5 E5:0.5
+      D5:1.5 D5
+    `,
+  }),
+
+  // --- American old-time
+
+  defineSong({
+    id: 'angeline-the-baker',
+    title: 'Angeline the Baker',
+    subtitle: "Old-time, after Foster's Angelina Baker, 1850 — G major",
+    tags: ['dance', 'medium'],
+    key: 'G',
+    spec: `
+      G5:0.5 E5:0.5 D5 E5 G5:1.5 | D5:0.5 E5 G5:2 G5:0.5 | E5:0.5 D5 E5 G5:0.5 E5:0.5 D5
+      E5:3 G5:0.5 E5:0.5 | D5 E5 G5:1.5 A5:0.5 | B5 A5 G5:1.5 A5:0.5 | B5 A5 G5 E5 | D5:1.5 E5:0.5 D5 B5:0.5 C6:0.5
+      D6 B5 A5 G5:0.5 A5:0.5 | B5 A5 G5 B5:0.5 C6:0.5 | D6 B5 A5 G5 | E5:1.5 E5:0.5 E5 B5:0.5 C6:0.5
+      D6 B5 A5 G5:0.5 A5:0.5 | B5 A5 G5 G5:0.5 A5:0.5 | B5 A5 G5 E5 | D5:1.5 E5:0.5 D5
+    `,
+  }),
+
+  defineSong({
+    id: 'mississippi-sawyer',
+    title: 'Mississippi Sawyer',
+    subtitle: 'Traditional old-time reel — G major',
+    tags: ['dance', 'hard'],
+    key: 'G',
+    spec: `
+      B5:0.5 | C6:0.5 D6 D6:0.5 B5:0.5 D6 D6:0.5 | B5:0.5 D6 D6:0.5 B5:0.5 D6:0.5 E6:0.5 D6:0.5
+      B5:0.5 C6 C6:0.5 A5:0.5 C6 C6:0.5 | A5:0.5 C6 C6:0.5 A5:0.5 D6:0.5 C6:0.5 B5:0.5
+      A5:0.5 B5 B5:0.5 D6:0.5 B5 B5:0.5 | A5:0.5 G5:0.5 A5:0.5 B5:0.5 C6:0.5 D6 B5:0.5
+      C6:0.5 D6 D6:0.5 B5:0.5 A5:0.5 C6:0.5 B5:0.5 | A5:0.5 G5:2 G5 D5:0.5 | E5:0.5 F#5:0.5 G5 B5:0.5 A5:0.5 G5
+      B5:0.5 A5:0.5 G5:0.5 A5:0.5 B5:0.5 C6:0.5 D6:2 | D5 F#5:0.5 E5:0.5 D5 F#5:0.5 E5:0.5
+      D5:0.5 E5:0.5 F#5:0.5 G5:0.5 A5:0.5 C6:0.5 B5:0.5 A5:0.5 | G5 B5:0.5 A5:0.5 G5 B5:0.5 A5:0.5
+      G5:0.5 A5:0.5 B5:0.5 C6:0.5 D6 B5:0.5 C6:0.5 | D6:0.5 E6:0.5 D6:0.5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 B5:0.5
+      A5:0.5 G5:0.5 A5:0.5 B5:0.5 G5
     `,
   }),
 ]
 
 export const DEFAULT_SONG_ID = 'd-major-scale'
-
-/**
- * The song a user types in themselves, which is not in `SONGS` — it is parsed out of saved text
- * on every load, and there is only ever one of it. Everything that keys off a song id treats
- * this as just another id, `isSongId` included, so the picker can select it.
- */
-export const CUSTOM_SONG_ID = 'custom'
 
 export function findSong(id: string | null | undefined): Song | null {
   return SONGS.find((entry) => entry.id === id) ?? null
@@ -232,84 +509,4 @@ export function getSong(id: string | null | undefined): Song {
  */
 export function isSongId(value: string): value is string {
   return value === CUSTOM_SONG_ID || findSong(value) !== null
-}
-
-/** Takes an `Arrangement` as happily as a `Song`, since the notes are all it reads. */
-export function songNoteNames(song: Pick<Song, 'notes'>): readonly string[] {
-  return song.notes.map((entry) => entry.note)
-}
-
-/** A note the melody asks for that the instrument cannot finger, and the grip put there instead. */
-export interface Approximation {
-  /** The note as the melody has it, after any transposition. */
-  written: string
-  /** The nearest note the instrument does have a grip for. */
-  played: string
-}
-
-/** A song as one instrument will actually play it. */
-export interface Arrangement {
-  notes: readonly SongNote[]
-  /** Semitones the melody was moved by. Zero means it is played exactly as written. */
-  semitones: number
-  /** The key it sounds in after the move. */
-  key: string
-  /**
-   * Every note swapped for a nearby one because the instrument has no grip for it,
-   * deduplicated, in the order the melody first reaches them. Empty for a song that fits, which
-   * is nearly all of them. Notes too far outside the range for even that are left as written and
-   * turn up in `unplayableNotes` instead.
-   */
-  approximations: readonly Approximation[]
-}
-
-/**
- * Fits a song to an instrument in two steps: move the whole melody if that lets the instrument
- * play more of it, then swap whatever notes are still out of reach for the nearest ones there
- * are grips for.
- *
- * The swap is not cosmetic. `notes` is what the trainer waits for, what the charts draw and what
- * **Hear it** plays, so a note with no grip used to be a wall — the fingering slot showed a
- * warning, the pitch detector's search band did not even extend to that note, and the song could
- * not be got past. A near note is playable and audibly close, and `approximations` is how the UI
- * says so rather than passing it off as the melody.
- *
- * An `overrides` entry short-circuits the shift search, including an explicit `0` meaning "leave
- * it alone even though something could be gained" — hence `??` rather than a truthiness check.
- */
-export function songForInstrument(song: Song, instrument: Instrument): Arrangement {
-  const override = song.overrides?.[instrument.id]
-  const semitones = override ?? bestShift(
-    songNoteNames(song),
-    keyShift(song.key, instrument.key),
-    (note) => note in instrument.fingering,
-  ).semitones
-
-  const shifted = semitones === 0
-    ? song.notes
-    : song.notes.map((entry) => ({ ...entry, note: transposeNote(entry.note, semitones) }))
-
-  // Collected per distinct note rather than per position: the same note out of range in eight
-  // places is one thing to tell the player about, and one lookup rather than eight.
-  const swaps = new Map<string, string>()
-  for (const { note } of shifted) {
-    if (note in instrument.fingering || swaps.has(note)) continue
-    const nearest = nearestFingered(instrument, note)
-    if (nearest !== null) swaps.set(note, nearest)
-  }
-
-  return {
-    // The array is only rebuilt when there is something to swap, so a song that needed neither
-    // step comes back as the very same notes it was written with — which is what keeps the memo
-    // downstream from rebuilding the note row, and through it restarting the song.
-    notes: swaps.size === 0
-      ? shifted
-      : shifted.map((entry) => {
-          const swap = swaps.get(entry.note)
-          return swap === undefined ? entry : { ...entry, note: swap }
-        }),
-    semitones,
-    key: semitones === 0 ? song.key : transposeKey(song.key, semitones),
-    approximations: [...swaps].map(([written, played]) => ({ written, played })),
-  }
 }

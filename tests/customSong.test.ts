@@ -1,6 +1,7 @@
 import { CUSTOM_SONG_TITLE, EMPTY_CUSTOM_SONG, parseCustomSong } from '../src/data/customSong'
 import { INSTRUMENTS } from '../src/data/instruments'
-import { CUSTOM_SONG_ID, isSongId, songForInstrument } from '../src/data/songs'
+import { isSongId } from '../src/data/songs'
+import { CUSTOM_SONG_ID, songForInstrument } from '../src/data/songUtils'
 import { parseAbc } from '../src/lib/abc'
 
 /** The notes of a tune, or the error, so a failed parse shows the message in the diff. */

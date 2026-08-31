@@ -13,8 +13,9 @@ Live at [flutex.zefirefemera.xyz](https://flutex.zefirefemera.xyz).
   German fingering, and 6-hole and 12-hole ocarinas. Each has its own fingering
   chart and its own drawing, and the previous, current and next note are all
   shown at once.
-- **A song library**, plus one song you write yourself in
-  [either of two formats](#writing-your-own-song).
+- **Thirty songs** — two exercises, tunes most people already know, carols, and
+  traditional dance tunes and airs, all of them out of copyright — plus one song
+  you write yourself in [either of two formats](#writing-your-own-song).
 - **Hear it** plays the melody through the speakers with an oscillator, so you
   can check what you are aiming at. The microphone stays off while it runs.
 - **A tuner** and a hold meter: the note counts once you have held it in tune for
@@ -103,7 +104,7 @@ to GitHub Pages.
 ```
 src/
   lib/          pitch detection, music theory, transposition, ABC, the state machine
-  data/         instruments, fingering charts, songs, the custom song, settings
+  data/         instruments, fingering charts, the song library, the custom song, settings
   hooks/        microphone session, trainer wiring, demo playback, persistence
   components/   presentational components, a CSS module each where they need one
   theme.ts      Mantine theme: colours, fonts, radii
@@ -114,10 +115,13 @@ tests/          unit tests plus an SSR smoke test of App
 
 ## Adding a song to the library
 
-Songs live in [src/data/songs.ts](src/data/songs.ts). In a spec string a note is
-`D5` for one beat and `D5:2` for two; `|` marks a bar line and is stripped before
-the note list reaches the trainer. `key` is the key it is written in, which is
-what transposition aims from.
+The songs are in [src/data/songs.ts](src/data/songs.ts) and nothing else is: what
+a song *is*, and how one is fitted to an instrument, lives in
+[src/data/songUtils.ts](src/data/songUtils.ts), which the library imports and
+never the other way round. In a spec string a note is `D5` for one beat and
+`D5:2` for two; `|` marks a bar line and is stripped before the note list reaches
+the trainer. `key` is the key it is written in, which is what transposition aims
+from.
 
 ```ts
 defineSong({
@@ -137,6 +141,19 @@ transcribed from the film rather than written to fit, and its high section climb
 past both ocarinas, which play it in D anyway and lean on their top notes up
 there. The test pins those swaps exactly, so anything else that leaves the shared
 range still fails.
+
+That test passes by construction rather than by luck. Every song but that one is
+written inside D5–E6 on the ten notes all five charts have in common — the D major
+scale plus C natural, which is what a tin whistle in D and a 6-hole ocarina share
+— so a tune that did not fit was transposed until it did, or left out.
+
+The tunes are public domain: traditional, or printed long enough ago that the
+melody is out of copyright — Arbeau's *Orchésographie* (1589), Playford's *English
+Dancing Master* (1651), Thompson's country dances (1779), Stephen Foster, Weber.
+Most were read off ABC transcriptions in the [Nottingham Music
+Database](https://ifdo.ca/~seymour/nottingham/nottingham.html) and re-encoded here
+as bare note lists in a key the charts can reach; each song's subtitle names where
+it came from.
 
 ## Writing your own song
 

@@ -1,6 +1,6 @@
 import { parseAbc } from '../lib/abc'
 import { NOTE_NAMES, noteToMidi } from '../lib/music'
-import { CUSTOM_SONG_ID, parseNotes, type Song } from './songs'
+import { CUSTOM_SONG_ID, parseNotes, type Song } from './songUtils'
 
 export type CustomSongResult =
   | { ok: true, song: Song }

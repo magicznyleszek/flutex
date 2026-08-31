@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import type { SongNote } from '../data/songs'
+import type { SongNote } from '../data/songUtils'
 import { noteToFreq } from '../lib/music'
 
 /**

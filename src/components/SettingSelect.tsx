@@ -15,6 +15,8 @@ export interface SettingSelectProps<T extends string> {
   isValid: (value: string) => value is T
   icon?: ReactNode
   description?: string
+  /** Worth it once a list is too long to scan, which of these lists is only the song one. */
+  searchable?: boolean
 }
 
 export function SettingSelect<T extends string>({
@@ -25,6 +27,7 @@ export function SettingSelect<T extends string>({
   isValid,
   icon,
   description,
+  searchable = false,
 }: SettingSelectProps<T>): JSX.Element {
   return (
     <Select
@@ -33,6 +36,12 @@ export function SettingSelect<T extends string>({
       leftSection={icon}
       data={options}
       value={value}
+      searchable={searchable}
+      nothingFoundMessage={searchable ? 'Nothing by that name' : undefined}
+      // A searchable Select opens with the current label sitting in the box as the search term,
+      // so typing would append to it and match nothing. Selecting it means the first keystroke
+      // replaces it, and the label is still readable for anyone who opened the list to browse.
+      onFocus={searchable ? (event) => event.currentTarget.select() : undefined}
       allowDeselect={false}
       checkIconPosition="right"
       comboboxProps={{ withinPortal: true }}

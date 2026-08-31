@@ -1,5 +1,5 @@
 import { INSTRUMENTS } from '../src/data/instruments'
-import { songForInstrument, type Song } from '../src/data/songs'
+import { songForInstrument, type Song } from '../src/data/songUtils'
 import { bestShift, keyShift, pitchClass, transposeKey, transposeNote } from '../src/lib/transpose'
 
 /** A one-off song, so these tests do not break every time the library gains an entry. */

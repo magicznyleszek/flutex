@@ -6,7 +6,8 @@ import {
   unplayableNotes,
   type HoleState,
 } from '../src/data/instruments'
-import { DEFAULT_SONG_ID, SONGS, findSong, songForInstrument, songNoteNames } from '../src/data/songs'
+import { DEFAULT_SONG_ID, SONGS, findSong } from '../src/data/songs'
+import { songForInstrument, songNoteNames } from '../src/data/songUtils'
 import { noteToMidi } from '../src/lib/music'
 
 const VALID_HOLE_STATES: readonly HoleState[] = [0, 0.5, 1]

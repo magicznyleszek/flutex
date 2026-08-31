@@ -4,14 +4,8 @@ import type { JSX } from 'react'
 
 import { CUSTOM_SONG_TITLE } from '../data/customSong'
 import { type Instrument, unplayableNotes } from '../data/instruments'
-import {
-  type Arrangement,
-  CUSTOM_SONG_ID,
-  isSongId,
-  SONGS,
-  type Song,
-  songNoteNames,
-} from '../data/songs'
+import { isSongId, SONGS } from '../data/songs'
+import { type Arrangement, CUSTOM_SONG_ID, type Song, songNoteNames } from '../data/songUtils'
 import { SettingSelect } from './SettingSelect'
 import * as classes from './SongPicker.module.css'
 
@@ -77,6 +71,8 @@ export function SongPicker({
         value={song.id}
         isValid={isSongId}
         onChange={onSongChange}
+        // Thirty-odd entries is past the point of scrolling to find one by eye.
+        searchable
         // Yours first, because it is the only entry whose contents you decide, and it would
         // otherwise be the one option nobody scrolls to.
         options={[
