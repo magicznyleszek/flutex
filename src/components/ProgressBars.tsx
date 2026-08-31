@@ -51,8 +51,10 @@ export function ProgressBars({
           close the next mistake is to sending you backwards, so it stays at every width. */}
       <Stack gap={4} visibleFrom={penaltyMode === 'wait' ? 'sm' : undefined}>
         <Group justify="space-between">
+          {/* "Off target" rather than "Wrong notes": this is a percentage of the allowance, and
+              anything plural reads as a tally of the same thing the mistakes badge counts. */}
           <Text size="xs" c="dimmed">
-            {penaltyMode === 'wait' ? 'Wrong notes' : PENALTIES[penaltyMode].label}
+            {penaltyMode === 'wait' ? 'Off target' : PENALTIES[penaltyMode].label}
           </Text>
           <Text size="xs" c="dimmed" ff="monospace">{percent(mistakeProgress)}%</Text>
         </Group>
@@ -63,7 +65,7 @@ export function ProgressBars({
           size="xs"
           radius="sm"
           transitionDuration={80}
-          aria-label="Wrong note level"
+          aria-label="Wrong note allowance used"
         />
       </Stack>
     </SimpleGrid>

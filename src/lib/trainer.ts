@@ -78,7 +78,7 @@ export interface TrainerSnapshot extends NoteWindow {
   mistakeProgress: number
   status: TrainerStatus
   finished: boolean
-  /** Penalties triggered in this run, not wrong frames. */
+  /** One per sustained wrong note, not one per wrong frame. */
   mistakes: number
   /** Notes completed in this run. */
   hits: number
@@ -118,6 +118,8 @@ export function createTrainerEngine(
   let mistakeFrames = 0
   let cooldownLeft = 0
   let awaitingRelease = false
+  /** Whether the wrong note now sounding has already been counted. See `registerPenalty`. */
+  let wrongCounted = false
   let finished = false
   let mistakes = 0
   let hits = 0
@@ -160,6 +162,7 @@ export function createTrainerEngine(
   const clearCounters = (): void => {
     holdFrames = 0
     mistakeFrames = 0
+    wrongCounted = false
   }
 
   const reset = (): TrainerSnapshot => {
@@ -199,17 +202,19 @@ export function createTrainerEngine(
   }
 
   const registerPenalty = (): void => {
-    mistakes += 1
-
     if (config.penaltyMode === 'wait') {
-      // The index does not move. The bar is pinned full as a "wrong note" signal and
-      // decays only once the wrong note stops.
+      // The index does not move. The bar is pinned full as a "wrong note" signal and decays only
+      // once the wrong note stops — which also means every frame after this one crosses the
+      // threshold again, so without the flag one held wrong note would count once per frame.
+      if (!wrongCounted) mistakes += 1
+      wrongCounted = true
       mistakeFrames = config.mistakeLimitFrames
       holdFrames = 0
       status = 'wrong'
       return
     }
 
+    mistakes += 1
     clearCounters()
     const destination = config.penaltyMode === 'back' ? index - config.backSteps : 0
     goTo(destination, config.penaltyCooldownFrames)
@@ -255,6 +260,10 @@ export function createTrainerEngine(
       mistakeFrames = Math.max(0, mistakeFrames - 0.5)
       status = 'waiting'
     }
+
+    // Playing the right note or stopping ends the run of wrong playing, so the next time the bar
+    // fills it is a fresh mistake.
+    if (status !== 'wrong') wrongCounted = false
 
     // A finished hold wins when both bars fill on the same frame.
     if (holdFrames >= config.holdFrames) {

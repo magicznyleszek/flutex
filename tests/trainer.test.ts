@@ -270,6 +270,28 @@ describe('penalty modes', () => {
     expect(snapshot.mistakeProgress).toBe(1)
   })
 
+  it('"wait" counts one mistake however long the wrong note is held', () => {
+    const engine = engineWith('wait')
+
+    // Half a frame each, so the bar is exactly full on the eighth.
+    const filled = feed(engine, 8, 'E5')
+    expect(filled.mistakeProgress).toBe(1)
+    expect(filled.mistakes).toBe(1)
+
+    // The bar stays pinned at full, which crosses the threshold again on every one of these
+    // frames. Each used to count as its own mistake.
+    expect(feed(engine, 60, 'E5').mistakes).toBe(1)
+  })
+
+  it('"wait" counts again once the wrong note has stopped in between', () => {
+    const engine = engineWith('wait')
+    expect(feed(engine, 8, 'E5').mistakes).toBe(1)
+
+    // Silence ends the run and drains the bar below the limit, so refilling it is a new mistake.
+    feed(engine, 4, null)
+    expect(feed(engine, 8, 'E5').mistakes).toBe(2)
+  })
+
   it('"back" rewinds by the configured number of notes', () => {
     const engine = engineWith('back')
     for (let i = 0; i < 5; i++) playNote(engine)
