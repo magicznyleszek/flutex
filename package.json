@@ -8,6 +8,7 @@
     "start": "parcel",
     "build": "parcel build --public-url ./",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+    "song": "jiti scripts/abcToSong.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint .",

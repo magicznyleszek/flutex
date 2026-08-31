@@ -23,7 +23,7 @@
 
     "noEmit": true
   },
-  "include": ["src", "tests", "eslint.config.ts", "jest.config.ts"],
+  "include": ["src", "tests", "scripts", "eslint.config.ts", "jest.config.ts"],
 
   // Typechecked separately, against the WebWorker lib instead of the DOM one —
   // see tsconfig.worker.json.

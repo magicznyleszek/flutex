@@ -28,6 +28,9 @@ export const EMPTY_CUSTOM_SONG: Song = {
  */
 const ABC_FIELD = /^[A-Za-z]:/m
 
+/** Which of the two formats a paste is in. Exported so nothing else has to guess the same way. */
+export const isAbc = (text: string): boolean => ABC_FIELD.test(text)
+
 /** One melody, not a tune book. Long enough for anything you would sit down and learn. */
 const MAX_NOTES = 2000
 
@@ -120,5 +123,5 @@ export function parseCustomSong(text: string): CustomSongResult {
     return fail('Nothing to play yet. Type a melody in the box under the song picker.')
   }
 
-  return ABC_FIELD.test(text) ? fromAbc(text) : fromNoteList(text)
+  return isAbc(text) ? fromAbc(text) : fromNoteList(text)
 }

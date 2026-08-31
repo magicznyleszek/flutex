@@ -111,6 +111,7 @@ src/
   global.css    the two colour schemes as custom properties
   service-worker.ts, manifest.webmanifest, color-scheme-boot.ts
 tests/          unit tests plus an SSR smoke test of App
+scripts/        abcToSong.ts, which prints a library entry for an ABC tune
 ```
 
 ## Adding a song to the library
@@ -154,6 +155,34 @@ Most were read off ABC transcriptions in the [Nottingham Music
 Database](https://ifdo.ca/~seymour/nottingham/nottingham.html) and re-encoded here
 as bare note lists in a key the charts can reach; each song's subtitle names where
 it came from.
+
+### From an ABC tune
+
+That re-encoding is not done by hand. Paste the tune into **My own song** and a
+**Copy song definition** button appears under the box, giving you the block with
+the transposition already worked out, plus a line saying whether it would pass the
+test above. Fill in the subtitle, which names the source, and pick its tags.
+
+The same for a tune in a file, with the longer report the app has no room for —
+which instrument would struggle, what each would put in place of a note it cannot
+finger, whether the id is already taken:
+
+```sh
+npm run song -- tune.abc     # or: pbpaste | npm run song
+```
+
+Both go through [src/data/songDefinition.ts](src/data/songDefinition.ts), which
+searches for the *smallest* move landing every note on those ten. It is rarely the
+move you would guess: a tune written an octave low usually wants a fifth rather
+than an octave, because an octave clears the bottom of the range but pushes the
+top past both ocarinas — and that also pulls the tune into the whistle's D.
+
+Two things it will not do for you. It reads a repeat mark as a plain bar line, the
+same as the trainer does, so a tune with an `AABB` shape comes out as `AB` and the
+bars have to be duplicated by hand; the report counts the marks it ignored so you
+know to look. And a tune that does not fit those ten notes at any shift is
+reported rather than forced — it needs editing, an `overrides` entry and an
+exemption, or leaving out.
 
 ## Writing your own song
 
@@ -212,6 +241,13 @@ says so.
 Anything it cannot read is an error naming the character, shown where the
 fingerings normally are. Rhythm is never enforced anywhere in the app: note
 lengths only feed the beat counts and **Hear it**.
+
+### Keeping one
+
+Whichever format you pasted, a **Copy song definition** button appears under the
+box once the melody parses. It gives you the tune as a library entry, ready to
+paste into `songs.ts` — see [Adding a song to the
+library](#adding-a-song-to-the-library).
 
 ## Fingering charts
 

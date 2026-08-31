@@ -4,6 +4,9 @@
  *
  * The tunes are traditional or old enough to be out of copyright, and each subtitle names its
  * source. Most were read off ABC transcriptions in the Nottingham Music Database.
+ *
+ * These entries are compiled output, not hand-typed: `songDefinition.ts` turns an ABC tune into one,
+ * transposition and all. Paste a tune into **My own song** and the app offers you the block.
  */
 import { CUSTOM_SONG_ID, defineSong, type Song } from './songUtils'
 
@@ -472,6 +475,30 @@ export const SONGS: readonly Song[] = [
       D5:0.5 E5:0.5 F#5:0.5 G5:0.5 A5:0.5 C6:0.5 B5:0.5 A5:0.5 | G5 B5:0.5 A5:0.5 G5 B5:0.5 A5:0.5
       G5:0.5 A5:0.5 B5:0.5 C6:0.5 D6 B5:0.5 C6:0.5 | D6:0.5 E6:0.5 D6:0.5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 B5:0.5
       A5:0.5 G5:0.5 A5:0.5 B5:0.5 G5
+    `,
+  }),
+
+  // -- Custom misc songs
+
+  defineSong({
+    id: 'a-blast-of-wind',
+    title: 'A Blast Of Wind',
+    subtitle: 'Source - A major',
+    tags: ['hard'],
+    key: 'A',
+    spec: `
+      A5:1.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 B4:0.5 A4:0.5
+      A5 A5:0.5 A5:0.5 E5:0.5 C#5:0.5 D5 B4:0.5
+      E5:0.5 F#5:0.5 G#5:0.5 A5:0.5 E5:0.5 D5:0.5 C#5:0.5 D5:0.5 E5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 D6 B5:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 B5:0.5 G#5:0.5 B5:0.5
+      A5 D6:0.5 C#6:0.5 A5:0.5 C#6:0.5 D6 B5:0.5
+      E6:0.5 C#6:0.5 A5:0.5 D6:0.5 B5:0.5 G#5:0.5 A5 F#5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 B4 C#5:0.5 D5 B4:0.5
     `,
   }),
 ]

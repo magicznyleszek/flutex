@@ -1,4 +1,4 @@
-import { Alert, Anchor, Badge, Code, Group, Stack, Text, Textarea } from '@mantine/core'
+import { Alert, Badge, Group, Stack, Text } from '@mantine/core'
 import { MusicNotesIcon, WarningIcon } from '@phosphor-icons/react'
 import type { JSX } from 'react'
 
@@ -6,13 +6,8 @@ import { CUSTOM_SONG_TITLE } from '../data/customSong'
 import { type Instrument, unplayableNotes } from '../data/instruments'
 import { isSongId, SONGS } from '../data/songs'
 import { type Arrangement, CUSTOM_SONG_ID, type Song, songNoteNames } from '../data/songUtils'
+import { CustomSongEditor } from './CustomSongEditor'
 import { SettingSelect } from './SettingSelect'
-import * as classes from './SongPicker.module.css'
-
-const README = 'https://github.com/magicznyleszek/flutex#writing-your-own-song'
-
-/** Short enough to read in the placeholder, and it is a real melody: the start of Ode to Joy. */
-const EXAMPLE = 'F#5 F#5 G5 A5 | A5 G5 F#5 E5 | D5:2 E5:2'
 
 /**
  * What the shift did to the melody, in words. A whole number of octaves is deliberately a
@@ -38,10 +33,9 @@ export interface SongPickerProps {
   arrangement: Arrangement
   instrument: Instrument
   onSongChange: (id: string) => void
-  /** The raw text of the custom song, shown whether or not it currently parses. */
+  /** These three are only for the custom entry, and go straight through to its editor. */
   customText: string
   onCustomTextChange: (text: string) => void
-  /** Why the text does not parse, or null. The message itself is shown by the trainer. */
   customError: string | null
 }
 
@@ -59,7 +53,6 @@ export function SongPicker({
   const missing = unplayableNotes(instrument, songNoteNames(arrangement))
   const { approximations } = arrangement
   const unfingered = [...approximations.map((swap) => swap.written), ...missing]
-  const custom = song.id === CUSTOM_SONG_ID
 
   return (
     <Stack gap="xs">
@@ -79,38 +72,12 @@ export function SongPicker({
         ]}
       />
 
-      {custom && (
-        <Textarea
-          label="Your melody"
-          description={
-            <>
-              Note names with an optional <Code className={classes.token}>:beats</Code>, or paste
-              an ABC tune, headers and all. Stays in this browser.{' '}
-              {/* Same colour as the footer link and for the same reason: Mantine's own anchor
-                  colour is the filled primary, which reads 3.51:1 at this size. */}
-              <Anchor
-                inherit
-                c="var(--flutex-accent-ink)"
-                href={README}
-                target="_blank"
-              >
-                Both formats, written out
-              </Anchor>.
-            </>
-          }
-          placeholder={EXAMPLE}
-          value={customText}
-          onChange={(event) => onCustomTextChange(event.currentTarget.value)}
-          // The message goes where the fingerings would be, which is where you are looking. This
-          // only marks the box it came from — and tells a screen reader the field is invalid.
-          error={customError !== null}
-          classNames={{ input: classes.editor }}
-          autosize
-          minRows={3}
-          maxRows={12}
-          spellCheck={false}
-          autoCapitalize="off"
-          autoCorrect="off"
+      {song.id === CUSTOM_SONG_ID && (
+        <CustomSongEditor
+          song={song}
+          customText={customText}
+          onCustomTextChange={onCustomTextChange}
+          customError={customError}
         />
       )}
 
