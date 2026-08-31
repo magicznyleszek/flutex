@@ -1,0 +1,26 @@
+/*
+ * A melody is a grid of short tokens — bar lines only line up under each other in a monospaced
+ * face, and lining them up is how you spot a note typed into the wrong bar.
+ */
+.editor {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+}
+
+/*
+ * Mantine repaints the text of a field in error red. That is right for a wrong postcode and
+ * wrong for the melody you are here to fix: at this size it reads 2.24:1 on the dark scheme.
+ * The red border and `aria-invalid` still say the field is the problem.
+ */
+.editor[data-error] {
+  color: var(--mantine-color-text);
+}
+
+/*
+ * The `:beats` chip in the instructions. `Code` inherits the dimmed description colour and puts
+ * it on its own lighter fill, which lands at 4.16:1 — under AA for 12px text. Full-strength ink
+ * is also the right emphasis here, since the chip is the bit you are meant to copy.
+ */
+.token {
+  color: var(--mantine-color-text);
+}

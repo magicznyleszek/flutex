@@ -44,4 +44,25 @@ describe('FluteDiagram', () => {
     expect(render(INSTRUMENTS.recorder_german, 'C7')).toContain('No fingering for C7')
     expect(render(INSTRUMENTS.recorder, 'C7')).not.toContain('No fingering')
   })
+
+  // An ocarina takes the other branch entirely: an SVG of the body with the holes in their
+  // places on it, named by finger rather than numbered down a tube. C5 is the tonic of the
+  // 12-hole, which is the one fingering where both subholes are open and nothing else is.
+  it('names the holes of an ocarina by finger', () => {
+    const markup = render(INSTRUMENTS.ocarina_12, 'C5')
+
+    expect(markup).toContain('Left index: covered')
+    expect(markup).toContain('Left subhole: open')
+    expect(markup).toContain('Right subhole: open')
+    expect(markup).toContain('Left thumb, on the back: covered')
+  })
+
+  // The 6-hole's two chromatics are the only half-covered holes outside the recorders' second
+  // register, and on an SVG a half cover is a drawn shape rather than a CSS gradient.
+  it('draws a half-covered ocarina hole as its own arc', () => {
+    const markup = render(INSTRUMENTS.ocarina_6, 'C#5')
+
+    expect(markup).toContain('Front upper right: half covered')
+    expect(markup).toContain('<path')
+  })
 })

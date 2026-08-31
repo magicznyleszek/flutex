@@ -22,6 +22,7 @@ import {
   MusicNoteIcon,
   PlayIcon,
   StopIcon,
+  WarningIcon,
 } from '@phosphor-icons/react'
 import { type JSX, useCallback, useEffect, useMemo, useRef } from 'react'
 
@@ -33,6 +34,7 @@ import { ProgressBars } from './components/ProgressBars'
 import { SettingsBar } from './components/SettingsBar'
 import { SongPicker } from './components/SongPicker'
 import { Tuner } from './components/Tuner'
+import { EMPTY_CUSTOM_SONG, parseCustomSong } from './data/customSong'
 import {
   DEFAULT_INSTRUMENT_ID,
   INSTRUMENTS,
@@ -48,13 +50,21 @@ import {
   isPenaltyMode,
   type DifficultyId,
 } from './data/settings'
-import { DEFAULT_SONG_ID, getSong, isSongId, songNoteNames } from './data/songs'
+import {
+  CUSTOM_SONG_ID,
+  DEFAULT_SONG_ID,
+  getSong,
+  isSongId,
+  songForInstrument,
+  songNoteNames,
+} from './data/songs'
 import { useFullscreen } from './hooks/useFullscreen'
 import { useLocalStorage } from './hooks/useLocalStorage'
 import { usePitchDetection } from './hooks/usePitchDetection'
 import { useSongDemo } from './hooks/useSongDemo'
 import { useSongProgress } from './hooks/useSongProgress'
 import { useSongTrainer } from './hooks/useSongTrainer'
+import { useWakeLock } from './hooks/useWakeLock'
 import { noteWindow, type PenaltyMode } from './lib/trainer'
 
 /** Renaming the `fluteTrainer_*` keys drops settings users have already saved. */
@@ -63,7 +73,11 @@ const STORAGE_KEYS = {
   difficulty: 'fluteTrainer_difficulty',
   penalty: 'fluteTrainer_penalty',
   song: 'flutex_song',
+  customSong: 'flutex_customSong',
 } as const
+
+/** Any text at all is worth keeping: half-typed melodies have to survive a reload too. */
+const anyText = (value: string): value is string => typeof value === 'string'
 
 export default function App(): JSX.Element {
   const [instrumentId, setInstrumentId] = useLocalStorage<InstrumentId>(
@@ -87,9 +101,31 @@ export default function App(): JSX.Element {
     isSongId,
   )
 
+  const [customText, setCustomText] = useLocalStorage<string>(
+    STORAGE_KEYS.customSong,
+    '',
+    anyText,
+  )
+
   const instrument = INSTRUMENTS[instrumentId]
-  const song = useMemo(() => getSong(songId), [songId])
-  const notes = useMemo(() => songNoteNames(song), [song])
+
+  // Only parsed while the custom song is the one selected, so a melody left half-typed in the
+  // box costs nothing until you go back to it.
+  const custom = useMemo(
+    () => (songId === CUSTOM_SONG_ID ? parseCustomSong(customText) : null),
+    [songId, customText],
+  )
+  const librarySong = useMemo(() => getSong(songId), [songId])
+  // Always a song, even when the text is nonsense: an empty one, whose lack of notes is what
+  // suppresses the trainer below. `songError` is the sentence to show instead.
+  const song = custom === null ? librarySong : custom.ok ? custom.song : EMPTY_CUSTOM_SONG
+  const songError = custom !== null && !custom.ok ? custom.error : null
+
+  // Everything downstream of here plays the arrangement rather than the song: the notes stored
+  // in the library are at concert pitch, and an instrument that cannot reach them gets the
+  // melody moved into its range. Switching instrument re-runs this, which is the point.
+  const arrangement = useMemo(() => songForInstrument(song, instrument), [song, instrument])
+  const notes = useMemo(() => songNoteNames(arrangement), [arrangement])
   const range = useMemo(() => instrumentFreqRange(instrument), [instrument])
 
   const toleranceCents = DIFFICULTIES[difficultyId].toleranceCents
@@ -106,23 +142,30 @@ export default function App(): JSX.Element {
     onFrame: handleFrame,
   })
 
-  const demo = useSongDemo(song.notes)
+  const demo = useSongDemo(arrangement.notes)
   const fullscreen = useFullscreen()
   const { records, recordCompletion } = useSongProgress()
   const record = records[song.id]
 
+  // A song with no notes has nothing left to play, so the engine reports it finished the moment
+  // it loads — which is the state a custom song sits in while its text does not parse. Nobody
+  // played anything, so nothing is finished.
+  const finished = view.finished && notes.length > 0
+
   // The effect reruns for as long as the song stays finished, so credit each run once.
   const creditedRef = useRef(false)
   useEffect(() => {
-    if (!view.finished) {
+    if (!finished) {
       creditedRef.current = false
       return
     }
     if (creditedRef.current) return
 
     creditedRef.current = true
-    recordCompletion(song.id, view.mistakes)
-  }, [view.finished, view.mistakes, song.id, recordCompletion])
+    // Except the custom song, which keeps one id while the melody behind it changes. A personal
+    // best there would be a record of a tune you no longer have.
+    if (song.id !== CUSTOM_SONG_ID) recordCompletion(song.id, view.mistakes)
+  }, [finished, view.mistakes, song.id, recordCompletion])
 
   const handleSongChange = useCallback(
     (id: string) => {
@@ -133,6 +176,10 @@ export default function App(): JSX.Element {
   )
 
   const listening = mic.status === 'listening'
+
+  // Practising is the one time nothing touches the screen for minutes on end, so hold the
+  // wake lock exactly while something is running and give it straight back afterwards.
+  useWakeLock(listening || demo.playing)
 
   // Playback owns the note row while it runs, so the charts show what is sounding rather
   // than the note the trainer is still waiting for. Same helper the engine uses, so the two
@@ -171,8 +218,8 @@ export default function App(): JSX.Element {
                 min-width only. Hiding this below `sm` saves 81px rather than its own 41,
                 because it also wraps the counters onto a second row. */}
             <Text c="dimmed" size="sm" visibleFrom="sm">
-              A recorder and tin whistle trainer. It waits until you play the
-              right note.
+              A recorder, tin whistle and ocarina trainer. It waits until you
+              play the right note.
             </Text>
           </Stack>
           <Group gap="xs">
@@ -197,33 +244,53 @@ export default function App(): JSX.Element {
             describe the middle one. The instrument's own chart used to sit in a second
             column, which is now the middle of this row. */}
         <Paper p="lg" radius="lg" withBorder>
-          <Stack gap="lg">
-            <NoteSequence
-              instrument={instrument}
-              previous={row.previous}
-              target={row.target}
-              upcoming={row.upcoming}
-              status={view.status}
-              demo={demo.playing}
-            />
+          {songError !== null
+            ? (
+                /* The whole card, not a line under the textarea: this is where you are looking
+                   when you expect a fingering, and there is nothing else to put here. */
+                <Alert
+                  color="alarm"
+                  variant="light"
+                  icon={<WarningIcon size={20} />}
+                  title="I cannot read that melody"
+                >
+                  <Text size="sm">{songError}</Text>
+                </Alert>
+              )
+            : (
+                <Stack gap="lg">
+                  <NoteSequence
+                    instrument={instrument}
+                    previous={row.previous}
+                    target={row.target}
+                    upcoming={row.upcoming}
+                    status={view.status}
+                    demo={demo.playing}
+                  />
 
-            <Divider visibleFrom="sm" />
+                  <Divider visibleFrom="sm" />
 
-            <Tuner
-              cents={view.cents}
-              toleranceCents={toleranceCents}
-              active={listening && view.detectedNote !== null}
-            />
+                  {/* Hold comes before the tuner because it answers the question you actually
+                      have while a note is sounding — "is this counting yet?" — and it belongs
+                      next to the chart it is measuring. The tuner is the finer correction you
+                      reach for only once the hold bar refuses to move, and as a wide block of
+                      colour it used to split the note from its own progress. */}
+                  <ProgressBars
+                    holdProgress={view.holdProgress}
+                    mistakeProgress={view.mistakeProgress}
+                    penaltyMode={penaltyMode}
+                  />
 
-            <ProgressBars
-              holdProgress={view.holdProgress}
-              mistakeProgress={view.mistakeProgress}
-              penaltyMode={penaltyMode}
-            />
-          </Stack>
+                  <Tuner
+                    cents={view.cents}
+                    toleranceCents={toleranceCents}
+                    active={listening && view.detectedNote !== null}
+                  />
+                </Stack>
+              )}
         </Paper>
 
-        {view.finished && (
+        {finished && (
           <Alert
             color="accent"
             variant="light"
@@ -331,8 +398,12 @@ export default function App(): JSX.Element {
           <Stack gap="lg">
             <SongPicker
               song={song}
+              arrangement={arrangement}
               instrument={instrument}
               onSongChange={handleSongChange}
+              customText={customText}
+              onCustomTextChange={setCustomText}
+              customError={songError}
             />
             <Divider />
             <SettingsBar
@@ -361,9 +432,9 @@ export default function App(): JSX.Element {
             <Anchor
               inherit
               c="var(--flutex-accent-ink)"
-              href="mailto:zefirefemara@proton.me"
+              href="mailto:zefirefemera@proton.me"
             >
-              zefirefemara@proton.me
+              zefirefemera@proton.me
             </Anchor>
             .
           </Text>

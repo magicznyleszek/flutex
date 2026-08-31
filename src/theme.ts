@@ -126,6 +126,6 @@ export const theme = createTheme({
     fontWeight: '700',
   },
 
-  defaultRadius: 'lg',
+  defaultRadius: 'md',
   cursorType: 'pointer',
 })

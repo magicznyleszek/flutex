@@ -2,7 +2,15 @@ import { Alert, Stack, Text } from '@mantine/core'
 import { WarningIcon } from '@phosphor-icons/react'
 import type { CSSProperties, JSX } from 'react'
 
-import { getFingering, type HoleState, type Instrument } from '../data/instruments'
+import {
+  getFingering,
+  type HolePlacement,
+  type HoleState,
+  type Instrument,
+  type Layout,
+  type OcarinaLayout,
+  type TubeLayout,
+} from '../data/instruments'
 import { cx } from '../lib/css'
 import * as classes from './FluteDiagram.module.css'
 
@@ -10,26 +18,35 @@ export interface FluteDiagramProps {
   instrument: Instrument
   note: string | null
   /**
-   * Drops everything around the tube: the legend digits, the fingering hint, and the prose
-   * that stands in for a missing note. The tube and its holes stay exactly the size they
-   * are — the two neighbours in the note row are dimmed rather than shrunk, so this chrome
-   * is what marks out the note you are actually being asked to play.
+   * Drops everything around the chart: the legend digits, the fingering hint, and the prose
+   * that stands in for a missing note. The chart itself stays exactly the size it is — the
+   * neighbours in the note row are dimmed rather than shrunk, so this chrome is what marks
+   * out the note you are actually being asked to play.
    */
   bare?: boolean
 }
 
 /**
- * The two bits of the diagram's geometry CSS cannot work out for itself. Hole count gets
- * multiplied into `--diagram-height`, which the placeholder states reuse so the card does
- * not jump. `--side-slot` is the width of the two columns flanking the tube, which have to
- * match for the tube to end up centred: wide enough for a thumb hole on a recorder, and
- * otherwise only as wide as a legend digit, so a whistle chart stays narrow enough for
- * three of them to fit a phone.
+ * The bits of geometry CSS cannot work out for itself, for whichever kind of chart the
+ * instrument wants. Both kinds feed `--diagram-height`, which the placeholder states reuse
+ * so the card does not jump when a note has no fingering or the song ends.
+ *
+ * On a tube the height falls out of the hole count, and `--side-slot` is the width of the two
+ * columns flanking it, which have to match for the tube to end up centred: wide enough for a
+ * thumb hole on a recorder, and otherwise only as wide as a legend digit, so a whistle chart
+ * stays narrow enough for four of them to fit a phone.
+ *
+ * An ocarina is a drawing 100 units wide, so the only thing missing is how tall — hence the
+ * aspect ratio, which is the one number that differs between the two ocarinas.
  */
-function geometry(frontHoleCount: number, hasThumb: boolean): CSSProperties {
+function geometry(layout: Layout, holeCount: number): CSSProperties {
+  if (layout.kind === 'ocarina') {
+    return { '--ocarina-aspect': layout.height / 100 } as CSSProperties
+  }
+
   return {
-    '--hole-count': frontHoleCount,
-    '--side-slot': hasThumb ? 'var(--hole-size)' : '1ch',
+    '--hole-count': layout.hasThumb ? holeCount - 1 : holeCount,
+    '--side-slot': layout.hasThumb ? 'var(--hole-size)' : '1ch',
   } as CSSProperties
 }
 
@@ -55,34 +72,171 @@ function Hole({ state, label }: { state: HoleState, label: string }): JSX.Elemen
   return <div className={holeClass(state)} aria-label={`${label}: ${describe(state)}`} />
 }
 
+interface TubeBodyProps {
+  layout: TubeLayout
+  holes: readonly HoleState[]
+  /** The whole chart's accessible name, since the holes inside it are decoration. */
+  label: string
+  bare: boolean
+}
+
+/** A whistle or recorder: one column of holes down the tube, numbered beside it. */
+function TubeBody({ layout, holes, label, bare }: TubeBodyProps): JSX.Element {
+  const thumbState = layout.hasThumb ? holes[0] ?? 0 : null
+  const frontHoles = layout.hasThumb ? holes.slice(1) : holes
+
+  return (
+    <div
+      className={classes.wrapper}
+      style={geometry(layout, holes.length)}
+      role="img"
+      aria-label={label}
+    >
+      {thumbState !== null && (
+        <div className={classes.thumb}>
+          <Hole state={thumbState} label="Thumb" />
+        </div>
+      )}
+
+      <div className={classes.body}>
+        <div className={classes.mouthpiece} />
+        {frontHoles.map((state, position) => (
+          <Hole
+            // The holes never reorder, so the index is a stable key here.
+            key={position}
+            state={state}
+            label={`Hole ${position + 1}`}
+          />
+        ))}
+      </div>
+
+      {/* Rendered even when empty, because it is what claims the grid slot on the far side
+          of the tube. Dropping it on the neighbours would leave them a slot narrower than
+          the note being played, and the tubes in the row would no longer be evenly spaced. */}
+      <div className={classes.legend}>
+        {!bare && frontHoles.map((_, position) => (
+          <div key={position} className={classes.legendRow}>
+            <Text size="xs" c="dimmed" ff="monospace">{position + 1}</Text>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The filled half of a half-covered hole, as the top half of a disc. `sweep-flag` 1 with `y`
+ * growing downwards sweeps over the top, and SVG has no gradient fill without an id, so the
+ * covered half is its own shape rather than the gradient the tube chart uses.
+ */
+function halfDisc({ x, y, r }: HolePlacement): string {
+  return `M ${x - r},${y} A ${r},${r} 0 0 1 ${x + r},${y} Z`
+}
+
+interface OcarinaBodyProps {
+  layout: OcarinaLayout
+  holes: readonly HoleState[]
+  label: string
+}
+
+/**
+ * How far a back hole's patch of body sticks out past the hole itself, in viewBox units. A
+ * thumb hole is drawn clear of the front view, so without something under it the hole floats
+ * on the card — this is the scrap of instrument it is actually bored through.
+ */
+const BACK_PAD = 2.5
+
+/**
+ * A vessel flute, drawn from the layout's own coordinates. There is no order to walk here the
+ * way there is down a tube — which hole a finger covers is the whole information — so the
+ * chart is the shape of the instrument with the holes in their places on it, and the sizes it
+ * draws them at are the ones that explain the fingering.
+ */
+function OcarinaBody({ layout, holes, label }: OcarinaBodyProps): JSX.Element {
+  const { body } = layout
+
+  return (
+    <svg
+      className={cx(classes.ocarina, classes.ocarinaChart)}
+      style={geometry(layout, holes.length)}
+      viewBox={`0 0 100 ${layout.height}`}
+      role="img"
+      aria-label={label}
+    >
+      <ellipse
+        className={classes.ocarinaShell}
+        cx={body.cx}
+        cy={body.cy}
+        rx={body.rx}
+        ry={body.ry}
+        // About its own centre, so `cx`/`cy` still mean what they say.
+        transform={body.rotate === undefined
+          ? undefined
+          : `rotate(${body.rotate} ${body.cx} ${body.cy})`}
+      />
+
+      {layout.holes.map((placement, position) => {
+        const state = holes[position] ?? 0
+
+        return (
+          <g key={placement.label} aria-label={`${placement.label}: ${describe(state)}`}>
+            {placement.back === true && (
+              <circle
+                className={classes.ocarinaBackPad}
+                cx={placement.x}
+                cy={placement.y}
+                r={placement.r + BACK_PAD}
+              />
+            )}
+            <circle
+              className={cx(
+                classes.ocarinaHole,
+                state !== 0 && classes.ocarinaHoleActive,
+                state === 1 && classes.ocarinaHoleCovered,
+              )}
+              cx={placement.x}
+              cy={placement.y}
+              r={placement.r}
+            />
+            {state === 0.5 && (
+              <path className={classes.ocarinaHoleHalf} d={halfDisc(placement)} />
+            )}
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 export function FluteDiagram({
   instrument,
   note,
   bare = false,
 }: FluteDiagramProps): JSX.Element {
+  const { layout } = instrument
   const fingering = note === null ? null : getFingering(instrument, note)
 
-  // The placeholder states below need a height before there is a fingering to draw, so
-  // the count comes from the instrument.
-  const frontHoleCount = instrument.hasThumb
-    ? instrument.holeCount - 1
-    : instrument.holeCount
+  // The placeholders below need a size before there is a fingering to draw, so it comes from
+  // the instrument. An ocarina takes its width from the drawing rather than from a column of
+  // holes, which is a different `--diagram-height` and so a class of its own.
+  const style = geometry(layout, instrument.holeCount)
+  const sizing = layout.kind === 'ocarina' ? classes.ocarina : undefined
 
-  // A neighbour with nothing to show says so with an empty slot. Either message below
-  // would be wider than the whole three-chart row, and neither is about the note you are
-  // being asked to play.
+  // A neighbour with nothing to show says so with an empty slot. Either message below would
+  // be wider than the whole note row, and neither is about the note you are being asked to
+  // play.
   if (bare && (note === null || fingering === null)) {
     return (
       <div
-        className={cx(classes.placeholder, classes.barePlaceholder)}
-        style={geometry(frontHoleCount, instrument.hasThumb)}
+        className={cx(classes.placeholder, classes.barePlaceholder, sizing)}
+        style={style}
       />
     )
   }
 
   if (note === null) {
     return (
-      <div className={classes.placeholder} style={geometry(frontHoleCount, instrument.hasThumb)}>
+      <div className={cx(classes.placeholder, sizing)} style={style}>
         <Text c="dimmed" size="sm">Song finished</Text>
       </div>
     )
@@ -90,7 +244,7 @@ export function FluteDiagram({
 
   if (fingering === null) {
     return (
-      <div className={classes.placeholder} style={geometry(frontHoleCount, instrument.hasThumb)}>
+      <div className={cx(classes.placeholder, sizing)} style={style}>
         {/* Capped, because this sits in a flex row between the two neighbours and an
             unconstrained Alert would stretch it past the card. */}
         <Alert
@@ -107,47 +261,13 @@ export function FluteDiagram({
     )
   }
 
-  const thumbState = instrument.hasThumb ? fingering.holes[0] ?? 0 : null
-  const frontHoles = instrument.hasThumb ? fingering.holes.slice(1) : fingering.holes
+  const label = `Fingering for ${note} on the ${instrument.shortName}`
 
   return (
     <Stack align="center" gap="sm">
-      <div
-        className={classes.wrapper}
-        style={geometry(frontHoles.length, instrument.hasThumb)}
-        role="img"
-        aria-label={`Fingering for ${note} on the ${instrument.shortName}`}
-      >
-        {thumbState !== null && (
-          <div className={classes.thumb}>
-            <Hole state={thumbState} label="Thumb" />
-          </div>
-        )}
-
-        <div className={classes.body}>
-          <div className={classes.mouthpiece} />
-          {frontHoles.map((state, position) => (
-            <Hole
-              // The holes never reorder, so the index is a stable key here.
-              key={position}
-              state={state}
-              label={`Hole ${position + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Rendered even when empty, because it is what claims the grid slot on the far side
-            of the tube. Dropping it on the neighbours would leave them a slot narrower than
-            the note being played, and the three tubes in the row would no longer be evenly
-            spaced. */}
-        <div className={classes.legend}>
-          {!bare && frontHoles.map((_, position) => (
-            <div key={position} className={classes.legendRow}>
-              <Text size="xs" c="dimmed" ff="monospace">{position + 1}</Text>
-            </div>
-          ))}
-        </div>
-      </div>
+      {layout.kind === 'ocarina'
+        ? <OcarinaBody layout={layout} holes={fingering.holes} label={label} />
+        : <TubeBody layout={layout} holes={fingering.holes} label={label} bare={bare} />}
 
       {!bare && fingering.hint !== undefined && (
         <Text size="xs" c="dimmed" ta="center" maw={260}>

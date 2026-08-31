@@ -5,7 +5,7 @@ import {
   unplayableNotes,
   type HoleState,
 } from '../src/data/instruments'
-import { DEFAULT_SONG_ID, SONGS, findSong, songNoteNames } from '../src/data/songs'
+import { DEFAULT_SONG_ID, SONGS, findSong, songForInstrument, songNoteNames } from '../src/data/songs'
 import { noteToMidi } from '../src/lib/music'
 
 const VALID_HOLE_STATES: readonly HoleState[] = [0, 0.5, 1]
@@ -30,6 +30,33 @@ describe('instruments', () => {
     const midis = instrument.notes.map((note) => noteToMidi(note) ?? 0)
     const sorted = [...midis].sort((left, right) => left - right)
     expect(midis).toEqual(sorted)
+  })
+
+  // An ocarina's chart and its drawing are two separate lists, and nothing else stops a hole
+  // being added to one and not the other. That would not throw — it would quietly draw a
+  // fingering with a hole missing, which is worse.
+  it('draws every hole an ocarina fingers', () => {
+    for (const instrument of INSTRUMENT_LIST) {
+      const { layout } = instrument
+      if (layout.kind !== 'ocarina') continue
+
+      expect(layout.holes).toHaveLength(instrument.holeCount)
+
+      // The labels are the React keys of the drawn circles as well as what a screen reader
+      // reads out, so two holes sharing one is a bug either way.
+      const labels = new Set(layout.holes.map((hole) => hole.label))
+      expect(labels.size).toBe(layout.holes.length)
+
+      // The viewBox is 100 units wide and `height` tall, so anything outside it is a hole
+      // clipped off the side of the diagram.
+      for (const hole of layout.holes) {
+        expect(hole.r).toBeGreaterThan(0)
+        expect(hole.x - hole.r).toBeGreaterThanOrEqual(0)
+        expect(hole.x + hole.r).toBeLessThanOrEqual(100)
+        expect(hole.y - hole.r).toBeGreaterThanOrEqual(0)
+        expect(hole.y + hole.r).toBeLessThanOrEqual(layout.height)
+      }
+    }
   })
 
   it('computes a frequency range with headroom for intonation', () => {
@@ -76,7 +103,9 @@ describe('instruments', () => {
   // match baroque exactly unless it is one of the five the systems genuinely disagree on.
   // Iterating the German notes also catches a note added to one chart but not the other.
   it('differs from baroque only where German fingering really does', () => {
-    const divergent = ['F5', 'F#5', 'F6', 'F#6', 'G#6']
+    // G#5 is the one first-octave divergence, and the only one of the six that is not about F:
+    // German closes hole 6 where baroque half-covers it.
+    const divergent = ['F5', 'F#5', 'G#5', 'F6', 'F#6', 'G#6']
 
     for (const note of INSTRUMENTS.recorder_german.notes) {
       const german = INSTRUMENTS.recorder_german.fingering[note]?.holes
@@ -86,6 +115,23 @@ describe('instruments', () => {
       if (divergent.includes(note)) expect(german).not.toEqual(baroque)
       else expect(german).toEqual(baroque)
     }
+  })
+
+  // Both recorders now play the whole first octave chromatically, and three of the four
+  // accidentals do it with a half hole. Which hole is halved is the entire content of those
+  // fingerings — C#5 halves 7, D#5 and baroque G#5 halve 6 — and a half in the wrong slot draws
+  // a diagram that looks right and sounds a semitone off.
+  it.each(['recorder', 'recorder_german'] as const)('%s plays the first octave chromatically', (id) => {
+    const { fingering } = INSTRUMENTS[id]
+
+    for (const note of ['C5', 'C#5', 'D5', 'D#5', 'E5', 'F5', 'F#5', 'G5', 'G#5', 'A5', 'A#5', 'B5', 'C6']) {
+      expect(fingering[note]).toBeDefined()
+    }
+
+    expect(fingering['C#5']?.holes).toEqual([1, 1, 1, 1, 1, 1, 1, 0.5])
+    expect(fingering['D#5']?.holes).toEqual([1, 1, 1, 1, 1, 1, 0.5, 0])
+    // The fork: hole 2 open with 3 and 4 still down. Written out because it reads as a typo.
+    expect(fingering['A#5']?.holes).toEqual([1, 1, 0, 1, 1, 0, 0, 0])
   })
 
   // The thumb is what switches register, and it does it in two steps. Getting the boundary
@@ -134,11 +180,23 @@ describe('songs', () => {
     }
   })
 
+  // Through `songForInstrument`, because the arrangement is what a player is actually shown. A
+  // melody that was out of range and got moved into it is fine; one still short of a grip after
+  // the best shift available is not playable at all.
   it.each(SONGS)('$title is playable on every instrument', (song) => {
-    const notes = songNoteNames(song)
-
     for (const instrument of INSTRUMENT_LIST) {
-      expect(unplayableNotes(instrument, notes)).toEqual([])
+      const arrangement = songForInstrument(song, instrument)
+      expect(unplayableNotes(instrument, songNoteNames(arrangement))).toEqual([])
+    }
+  })
+
+  // The stronger claim, and the one that catches a new song drifting outside the range the
+  // library shares: every song here is written to fit every chart as it stands, so the
+  // transposer should find nothing to do. A failure here is a song to fix, not a bug in the
+  // shift search — the test above would still pass.
+  it.each(SONGS)('$title plays as written on every instrument', (song) => {
+    for (const instrument of INSTRUMENT_LIST) {
+      expect(songForInstrument(song, instrument).semitones).toBe(0)
     }
   })
 

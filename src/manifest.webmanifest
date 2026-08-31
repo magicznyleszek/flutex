@@ -1,5 +1,5 @@
 {
-  "name": "Flutex — recorder and tin whistle trainer",
+  "name": "Flutex — recorder, tin whistle and ocarina trainer",
   "short_name": "Flutex",
   "description": "Listens through your microphone and waits until you play the right note.",
   "start_url": "./",

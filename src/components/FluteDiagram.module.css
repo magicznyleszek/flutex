@@ -15,7 +15,8 @@
    recorder is too much above the fold on a phone. So the gaps and the tube's head and foot
    are cut harder than the holes themselves. */
 .wrapper,
-.placeholder {
+.placeholder,
+.ocarina {
   --hole-size: clamp(12px, 3.6vw, 16px);
   --hole-gap: 5px;
   --head-pad: 10px;
@@ -25,6 +26,12 @@
   --mouthpiece-height: 8px;
   --mouthpiece-gap: 4px;
   --chart-gap: clamp(3px, 1vw, 5px);
+
+  /* The one measurement an ocarina chart needs, because its height follows from it. Width is
+     the scarce direction — five charts abreast — and it is set here rather than in `.ocarina`
+     below so that the media queries, which come first in the file, still win. Four of these
+     and their gaps come to 264px on a 320px screen, which has 276px inside the card. */
+  --ocarina-width: clamp(60px, 18vw, 84px);
 
   /* The tube is a picture of a wooden instrument rather than a surface of the interface, so
      it gets its own small palette instead of borrowing Mantine's. What stays constant across
@@ -71,7 +78,8 @@
    the card, which hung the outer two off the edge. A 6px gap takes a chart to 110px. */
 @media (width >= 48em) {
   .wrapper,
-  .placeholder {
+  .placeholder,
+  .ocarina {
     --hole-size: 22px;
     --hole-gap: 14px;
     --head-pad: 18px;
@@ -79,6 +87,10 @@
     --body-width: 54px;
     --mouthpiece-width: 34px;
     --chart-gap: 6px;
+
+    /* Five of these plus the row's own 23px gaps come to 672px, inside the 696px a 768px
+       screen leaves in the card. */
+    --ocarina-width: 116px;
   }
 }
 
@@ -87,8 +99,12 @@
    room to spend on the gap between the tube and the legend again. */
 @media (width >= 62em) {
   .wrapper,
-  .placeholder {
+  .placeholder,
+  .ocarina {
     --chart-gap: var(--mantine-spacing-lg);
+
+    /* Same arithmetic the tube chart gets here: 5 × 138 plus four 44px gaps is 866 in 888. */
+    --ocarina-width: 138px;
   }
 }
 
@@ -128,6 +144,66 @@
     var(--body-width) + (2 * var(--side-slot, 1ch)) + (2 * var(--chart-gap))
   );
   padding-inline: 0;
+}
+
+/* Sizing for a chart that is a drawing rather than a column: the SVG is 100 units wide and
+   `--ocarina-aspect` of that tall, which FluteDiagram.tsx hands in because only the instrument
+   data knows the shape. The same class goes on the placeholders, so an ocarina card keeps its
+   height when a note has no fingering — and it ends up a good deal shorter than a recorder
+   card, because an ocarina is wide and a tube is long.
+
+   Written after `.placeholder` and `.barePlaceholder` on purpose: all three are single classes,
+   so the last one in the file is the one whose `--diagram-height` and `min-width` win. */
+.ocarina {
+  --diagram-height: calc(var(--ocarina-width) * var(--ocarina-aspect, 1));
+
+  min-width: var(--ocarina-width);
+}
+
+/* The viewBox does the scaling, so width is the only number to set. */
+.ocarinaChart {
+  display: block;
+  width: var(--ocarina-width);
+  height: auto;
+}
+
+/* Flat where the tube is a gradient: an SVG gradient needs an id to point at, and five of
+   these are on screen at once. The palette is the tube's, so the two kinds of chart read as
+   the same material.
+
+   `.ocarinaBackPad` is the same material for the same reason — it is the bit of instrument a
+   thumb hole is bored through, drawn under a hole that sits outside the front view so that the
+   hole reads as being on the instrument rather than floating beside it. Dashing the hole itself
+   was the other option, and at four viewBox units across a dash pattern came out as a flower. */
+.ocarinaShell,
+.ocarinaBackPad {
+  fill: var(--tube-face);
+  stroke: var(--tube-border);
+  stroke-width: 1;
+}
+
+/* Strokes are in viewBox units rather than pixels, so a chart shrunk onto a phone keeps its
+   proportions instead of turning twelve holes into twelve rings of outline. */
+.ocarinaHole {
+  fill: var(--hole-void);
+  stroke: var(--tube-trim);
+  stroke-width: 1.2;
+  transition: fill 120ms ease, stroke 120ms ease;
+}
+
+/* Covered and half covered both get the filled ring, the same as on the tube. */
+.ocarinaHoleActive {
+  stroke: var(--hole-fill-ring);
+}
+
+.ocarinaHoleCovered {
+  fill: var(--hole-fill);
+}
+
+/* The covered half of a half-covered hole, drawn over the open one. Filled from the top so it
+   reads the same way round as the gradient on `.holeHalf`. */
+.ocarinaHoleHalf {
+  fill: var(--hole-fill);
 }
 
 /* The rounded end of a tube, lit down the middle. Everything inside it is measured against
