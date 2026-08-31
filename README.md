@@ -254,7 +254,10 @@ Ignored, because a melody trainer has nothing to do with them: rests, grace
 notes, decorations (`!trill!`, `~`), chord symbols and lyrics. Chords collapse to
 their top note, ties become two notes, and a tuplet's notes keep their written
 lengths. Several voices are read as one line, so an arrangement for two
-instruments comes out interleaved.
+instruments comes out interleaved. A header wrapped onto a bare second line — old
+collections do that instead of continuing the field with `+:` — is recognised as
+prose and skipped, rather than read as melody and failing on the first letter that
+is not a note.
 
 In ABC, `C` is middle C — the same `C4` as above — so a whistle tune written from
 `D` to `d'` sounds an octave below the whistle. Flutex moves it up for you and
