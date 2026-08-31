@@ -126,6 +126,18 @@ describe('ABC notation', () => {
     expect(tune(`${HEADER}C D % and the rest\nw: la la\nE`)).toEqual(['C4', 'D4', 'E4'])
   })
 
+  it('ignores a header wrapped onto a bare line of its own', () => {
+    // Straight out of an O'Neill's transcription: a `Z:` field continued on the next line instead of
+    // with `+:`, which used to be read as melody and die on the first letter that is not a note.
+    const wrapped = 'X:1\nZ:FROM O\'NEILL\'S TO ABC BY VINCE\nBRENNAN July 2003 (HTTP://SOSYOURMOM.COM)'
+    expect(tune(`${wrapped}\nL:1/4\nK:C\nC D`)).toEqual(['C4', 'D4'])
+
+    // And the two things it must not swallow: a melody line with no bar line to give it away, and a
+    // mistyped note, which is still worth an error rather than a silently shorter tune.
+    expect(tune(`${HEADER}cdedcAGA`)).toEqual(['C5', 'D5', 'E5', 'D5', 'C5', 'A4', 'G4', 'A4'])
+    expect(tune(`${HEADER}C D H`)).toContain('"H"')
+  })
+
   it('reports the title and the key it read', () => {
     const titled = parseAbc('X:1\nT:The Butterfly\nK:Edor\nE')
     expect(titled.ok ? titled.tune : null).toMatchObject({ title: 'The Butterfly', key: 'E' })

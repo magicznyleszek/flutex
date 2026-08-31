@@ -128,6 +128,22 @@ function stripComment(line: string): string {
 }
 
 /**
+ * Whether a line is prose rather than music. Old collections wrap a long `Z:` or `N:` field onto a
+ * bare second line instead of continuing it with the `+:` the standard asks for, which leaves a
+ * sentence sitting where the melody should be.
+ *
+ * Told apart by what the words are made of: three letters together that are not all note names
+ * cannot be music, and prose carries no bar line. A single stray letter is left alone, so a mistyped
+ * note is still reported rather than quietly dropped.
+ */
+function isProse(line: string): boolean {
+  if (line.includes('|')) return false
+
+  const words = line.match(/[A-Za-z]{3,}/g) ?? []
+  return words.some((word) => /[^A-Ga-gxzZ]/.test(word))
+}
+
+/**
  * Reads the melody out of an ABC tune — the subset a melody trainer can use, not the whole
  * standard. Pitches, lengths, key signatures, accidentals and broken rhythm are kept; anything
  * about printing or accompaniment is dropped, so rests vanish, chords collapse to their top note,
@@ -155,6 +171,10 @@ export function parseAbc(text: string): AbcResult {
       if (!fields.has(name)) fields.set(name, value.trim())
       continue
     }
+
+    // Only while the melody has not started, which is what makes this safe: a line dropped here is
+    // always still inside the header block, so no music can go missing behind it.
+    if (bodyLines.length === 0 && isProse(line)) continue
 
     bodyLines.push(line)
   }
