@@ -18,26 +18,21 @@ export interface FluteDiagramProps {
   instrument: Instrument
   note: string | null
   /**
-   * Drops everything around the chart: the legend digits, the fingering hint, and the prose
-   * that stands in for a missing note. The chart itself stays exactly the size it is — the
-   * neighbours in the note row are dimmed rather than shrunk, so this chrome is what marks
-   * out the note you are actually being asked to play.
+   * Drops everything around the chart — legend digits, fingering hint, missing-note prose — at the
+   * same size. The neighbours in the note row are dimmed rather than shrunk, so this chrome is what
+   * marks out the note you are being asked to play.
    */
   bare?: boolean
 }
 
 /**
- * The bits of geometry CSS cannot work out for itself, for whichever kind of chart the
- * instrument wants. Both kinds feed `--diagram-height`, which the placeholder states reuse
- * so the card does not jump when a note has no fingering or the song ends.
+ * The bits of geometry CSS cannot work out for itself. Both kinds of chart feed
+ * `--diagram-height`, which the placeholder states reuse so the card does not jump when a note has
+ * no fingering or the song ends.
  *
- * On a tube the height falls out of the hole count, and `--side-slot` is the width of the two
- * columns flanking it, which have to match for the tube to end up centred: wide enough for a
- * thumb hole on a recorder, and otherwise only as wide as a legend digit, so a whistle chart
- * stays narrow enough for four of them to fit a phone.
- *
- * An ocarina is a drawing 100 units wide, so the only thing missing is how tall — hence the
- * aspect ratio, which is the one number that differs between the two ocarinas.
+ * `--side-slot` is the width of the two columns flanking a tube, equal so the tube ends up centred:
+ * a thumb hole's width on a recorder, otherwise one legend digit, which keeps a whistle chart
+ * narrow enough for four of them on a phone.
  */
 function geometry(layout: Layout, holeCount: number): CSSProperties {
   if (layout.kind === 'ocarina') {
@@ -110,9 +105,8 @@ function TubeBody({ layout, holes, label, bare }: TubeBodyProps): JSX.Element {
         ))}
       </div>
 
-      {/* Rendered even when empty, because it is what claims the grid slot on the far side
-          of the tube. Dropping it on the neighbours would leave them a slot narrower than
-          the note being played, and the tubes in the row would no longer be evenly spaced. */}
+      {/* Rendered even when empty: it claims the grid slot on the far side of the tube, without
+          which the dimmed neighbours would come out narrower than the note being played. */}
       <div className={classes.legend}>
         {!bare && frontHoles.map((_, position) => (
           <div key={position} className={classes.legendRow}>
@@ -140,17 +134,16 @@ interface OcarinaBodyProps {
 }
 
 /**
- * How far a back hole's patch of body sticks out past the hole itself, in viewBox units. A
- * thumb hole is drawn clear of the front view, so without something under it the hole floats
- * on the card — this is the scrap of instrument it is actually bored through.
+ * How far a back hole's patch of body sticks out past the hole, in viewBox units. Thumb holes are
+ * drawn clear of the front view, so without this scrap of instrument under them they would float on
+ * the card.
  */
 const BACK_PAD = 2.5
 
 /**
- * A vessel flute, drawn from the layout's own coordinates. There is no order to walk here the
- * way there is down a tube — which hole a finger covers is the whole information — so the
- * chart is the shape of the instrument with the holes in their places on it, and the sizes it
- * draws them at are the ones that explain the fingering.
+ * A vessel flute, drawn from the layout's own coordinates. Unlike a tube there is no order to walk
+ * — which hole a finger covers is the whole information — so the chart is the instrument's shape
+ * with the holes in their places on it.
  */
 function OcarinaBody({ layout, holes, label }: OcarinaBodyProps): JSX.Element {
   const { body } = layout
@@ -216,15 +209,14 @@ export function FluteDiagram({
   const { layout } = instrument
   const fingering = note === null ? null : getFingering(instrument, note)
 
-  // The placeholders below need a size before there is a fingering to draw, so it comes from
-  // the instrument. An ocarina takes its width from the drawing rather than from a column of
-  // holes, which is a different `--diagram-height` and so a class of its own.
+  // The placeholders below need a size before there is a fingering to draw, so it comes from the
+  // instrument. An ocarina sizes off the drawing rather than a column of holes, so it needs a class
+  // of its own.
   const style = geometry(layout, instrument.holeCount)
   const sizing = layout.kind === 'ocarina' ? classes.ocarina : undefined
 
-  // A neighbour with nothing to show says so with an empty slot. Either message below would
-  // be wider than the whole note row, and neither is about the note you are being asked to
-  // play.
+  // A dimmed neighbour with nothing to show leaves an empty slot: either message below would be
+  // wider than the whole note row.
   if (bare && (note === null || fingering === null)) {
     return (
       <div

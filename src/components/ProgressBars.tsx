@@ -19,10 +19,9 @@ export function ProgressBars({
   mistakeProgress,
   penaltyMode,
 }: ProgressBarsProps): JSX.Element {
-  // The penalty modes need both gauges on screen, and stacked they cost 65px of a phone
-  // against 33 side by side, where a labelled bar is still legible at half of 358px.
-  // `wait` mode stays at one column everywhere, because its second gauge is hidden below
-  // `sm` and a two-column grid with one in-flow child strands the hold bar at half width.
+  // Side by side the two gauges cost 33px of a phone rather than 65, and a labelled bar is still
+  // legible at half of 358px. `wait` mode keeps one column, since its second gauge is hidden below
+  // `sm` and a two-column grid with one in-flow child would strand the hold bar at half width.
   const cols = { base: penaltyMode === 'wait' ? 1 : 2, sm: 1 }
 
   return (

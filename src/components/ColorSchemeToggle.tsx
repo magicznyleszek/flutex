@@ -8,12 +8,10 @@ import { MoonIcon, SunIcon } from '@phosphor-icons/react'
 import type { JSX } from 'react'
 
 /**
- * Flips between the two schemes and stores the choice, which Mantine keeps in
- * localStorage. `useComputedColorScheme` is the resolved value rather than the setting, so
- * it is still `light` or `dark` when the setting is `auto`.
- *
- * `getInitialValueInEffect: false` reads the stored scheme on the first render instead of
- * a frame later, so the icon does not start on the wrong one and swap.
+ * Flips between the two schemes; Mantine stores the choice. `useComputedColorScheme` is the
+ * resolved value, so it is still `light` or `dark` when the setting is `auto`, and
+ * `getInitialValueInEffect: false` reads it on the first render so the icon does not start on the
+ * wrong one and swap.
  */
 export function ColorSchemeToggle(): JSX.Element {
   const { setColorScheme } = useMantineColorScheme()

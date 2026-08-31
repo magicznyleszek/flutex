@@ -109,12 +109,11 @@ function fromAbc(text: string): CustomSongResult {
 }
 
 /**
- * Reads text a user typed or pasted into a song, in either of the two formats the app takes:
- * ABC notation, or the plain note list the built-in songs are written in.
+ * Reads pasted text as a song, in ABC notation or the plain note list the library is written in.
+ * Which one is decided by looking for an ABC information field, so a tune copied off the web works
+ * unedited and a bare note list needs no header.
  *
- * Which one it is, is decided by looking for an ABC information field, so a tune copied from
- * anywhere on the web works unedited and a bare note list needs no header. Failure is always a
- * sentence to show the user rather than a throw — bad input is the normal case here, not a bug.
+ * Failure is a sentence to show the user, never a throw — bad input is the normal case here.
  */
 export function parseCustomSong(text: string): CustomSongResult {
   if (text.trim() === '') {

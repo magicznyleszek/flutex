@@ -2,11 +2,9 @@
  * What a song *is* — the shape, the spec-string reader, and how a song is fitted to one
  * instrument. The songs themselves live in `songs.ts`, which imports `defineSong` from here.
  *
- * The split is one-way on purpose. Everything in this file is about a single song and knows
- * nothing about the library, so the library can import it while it is still being built. Put a
- * lookup over `SONGS` in here and the two files would import each other, which for a module whose
- * top level calls `defineSong` means a half-initialised import and a crash on load rather than a
- * warning.
+ * Keep the dependency one-way. Nothing here may reach for `SONGS`, or the two files would import
+ * each other, and since `songs.ts` calls `defineSong` at its top level that is a crash on load
+ * rather than a warning.
  */
 import { type Instrument, type InstrumentId, nearestFingered } from './instruments'
 import { bestShift, keyShift, transposeKey, transposeNote } from '../lib/transpose'
@@ -24,23 +22,18 @@ export interface Song {
   subtitle?: string
   tags: readonly string[]
   /**
-   * The key the melody is written in, as a pitch-class name.
-   *
-   * Notes are stored at concert pitch — the pitch a piano would play — rather than as scale
-   * degrees, because with the key recorded alongside them the degree is recoverable from the
-   * note and nothing is gained by storing it the other way round. What the key buys is knowing
-   * which way to transpose: `keyShift` from here to the instrument's key is the move most
-   * likely to leave the melody diatonic and so easy to finger.
+   * The key the melody is written in, as a pitch-class name. Notes themselves are stored at
+   * concert pitch, not as scale degrees, since the degree follows from the note plus this. What
+   * the key buys is a direction to transpose in: `keyShift` from here to the instrument's key is
+   * the move most likely to leave the melody diatonic and so easy to finger.
    */
   key: string
   notes: readonly SongNote[]
   /**
-   * A shift in semitones to use on one particular instrument, instead of the one worked out
-   * from the keys and the range. The escape hatch, for a song whose automatic arrangement lands
-   * badly, so that it can be pinned by hand without teaching `bestShift` a special case.
-   * "Concerning Hobbits" uses it to stay in D on the ocarinas, which cannot reach its top notes
-   * in any key, so there is nothing to be bought by moving it — a zero here is as much an
-   * instruction as any other number.
+   * A shift in semitones to use on one instrument instead of the one worked out from the keys and
+   * the range — the escape hatch for a song whose automatic arrangement lands badly, so it can be
+   * pinned by hand without teaching `bestShift` a special case. A zero is as much an instruction as
+   * any other number: it is how "Concerning Hobbits" stays in D on the ocarinas.
    */
   overrides?: Readonly<Partial<Record<InstrumentId, number>>>
 }
@@ -53,11 +46,9 @@ export interface Song {
 export const CUSTOM_SONG_ID = 'custom'
 
 /**
- * `D5 A5:2 | F#5:0.5` — space-separated note names, `|` bar lines dropped, and an
- * optional `:beats` suffix that defaults to one beat.
- *
- * Nothing is validated here, because the library is written by hand and a typo in one song fails
- * the test suite. Text a user pasted goes through `parseCustomSong`, which checks it.
+ * `D5 A5:2 | F#5:0.5` — space-separated note names, `|` bar lines dropped, and an optional
+ * `:beats` suffix defaulting to one beat. Nothing is validated: the library is checked by the test
+ * suite, and pasted text goes through `parseCustomSong` instead.
  */
 export function parseNotes(spec: string): readonly SongNote[] {
   return spec
@@ -81,9 +72,9 @@ export interface SongInput {
 }
 
 /**
- * One library entry, written as a spec string rather than a note array. The optional fields are
- * spread in conditionally rather than assigned, so an entry without a subtitle has no `subtitle`
- * key at all instead of one set to `undefined`.
+ * One library entry, written as a spec string rather than a note array. Optional fields are spread
+ * in conditionally so an entry without a subtitle has no `subtitle` key at all, rather than one
+ * set to `undefined`.
  */
 export const defineSong = (
   { id, title, subtitle, tags = [], key, spec, overrides }: SongInput,
@@ -127,18 +118,16 @@ export interface Arrangement {
 }
 
 /**
- * Fits a song to an instrument in two steps: move the whole melody if that lets the instrument
- * play more of it, then swap whatever notes are still out of reach for the nearest ones there
- * are grips for.
+ * Fits a song to an instrument in two steps: move the whole melody if that lets the instrument play
+ * more of it, then swap whatever notes are still out of reach for the nearest ones there are grips
+ * for.
  *
  * The swap is not cosmetic. `notes` is what the trainer waits for, what the charts draw and what
- * **Hear it** plays, so a note with no grip used to be a wall — the fingering slot showed a
- * warning, the pitch detector's search band did not even extend to that note, and the song could
- * not be got past. A near note is playable and audibly close, and `approximations` is how the UI
- * says so rather than passing it off as the melody.
+ * **Hear it** plays, so a note with no grip used to be a wall the song could not be got past.
+ * `approximations` is how the UI owns up to it rather than passing it off as the melody.
  *
- * An `overrides` entry short-circuits the shift search, including an explicit `0` meaning "leave
- * it alone even though something could be gained" — hence `??` rather than a truthiness check.
+ * `??`, not a truthiness check: an `overrides` entry of `0` means "leave it alone even though
+ * something could be gained".
  */
 export function songForInstrument(song: Song, instrument: Instrument): Arrangement {
   const override = song.overrides?.[instrument.id]

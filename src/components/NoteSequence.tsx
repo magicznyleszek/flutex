@@ -89,10 +89,9 @@ export function NoteSequence({
 }: NoteSequenceProps): JSX.Element {
   const meta = demo ? DEMO_META : STATUS_META[status]
 
-  // `waiting` is a deliberately quiet grey, which is the wrong colour for the largest type
-  // on the screen — so while waiting the name stays at the card's text colour. Every other
-  // status is something that just happened, and colouring the name is the fastest way to
-  // catch it without reading the label.
+  // `waiting`'s quiet grey is the wrong colour for the largest type on screen, so the name keeps the
+  // card's text colour. Every other status just happened, and colour catches the eye faster than the
+  // label does.
   const nameColor = !demo && status === 'waiting' ? undefined : meta.color
 
   return (

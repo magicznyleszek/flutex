@@ -1,18 +1,13 @@
-/* Neither SVG names a colour on its artwork: the root carries `fill="currentColor"` and the path
-   inherits it, so the mark is whatever `color` resolves to here. Logo.tsx inlines the markup with
-   `bundle-text:` rather than pointing an `<img>` or a `background` at the file, because those two
-   cannot be styled from outside at all. The box is a span, since the logotype sits in the page's
-   h1 and an h1 takes only phrasing content. */
+/* The artwork is `fill="currentColor"` throughout, so the mark is whatever `color` resolves to
+   here. Logo.tsx inlines the markup with `bundle-text:` because an `<img>` or a `background` cannot
+   be styled from outside at all. A span, since the logotype sits in the page's h1. */
 .mark {
   display: block;
   flex: none;
 
-  /* Not `--mantine-color-accent-filled`: the mark sits straight on the page rather than on
-     a card, and the filled shade is picked for focus rings. The ink shades read 10.37:1 on
-     the dark page and 4.80:1 on the light one.
-
-     On the span rather than on the svg so that a caller can still retheme the mark with `c=`,
-     which is a `color` on this element and would otherwise be beaten by the rule below. */
+  /* Not `--mantine-color-accent-filled`: that shade is picked for focus rings, while the mark sits
+     straight on the page. The ink shades read 10.37:1 dark and 4.80:1 light. Set on the span so a
+     caller's `c=` still works — on the svg it would be beaten by the rule below. */
   color: var(--flutex-accent-ink);
 }
 
@@ -23,10 +18,8 @@
   width: 100%;
   height: auto;
 
-  /* The one job of this declaration is to lose to nothing. Each SVG carries a `prefers-color-scheme`
-     rule of its own for the times it is rendered as a favicon, with no stylesheet to ask, and that
-     rule sets `color` on the svg element — which beats an inherited value however specific the rule
-     that carried it. `.mark > svg` outranks the file's own `.flutex-mark`, and `inherit` hands the
-     colour back to the span above, where the scheme and any `c=` are already accounted for. */
+  /* Each SVG sets its own `color` under `prefers-color-scheme` for when it is rendered standalone as
+     a favicon, and that beats an inherited value however specific the rule carrying it. `.mark > svg`
+     outranks the file's `.flutex-mark`, and `inherit` hands the colour back to the span. */
   color: inherit;
 }

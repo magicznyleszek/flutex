@@ -49,10 +49,9 @@ async function fromNetwork(request: Request): Promise<Response | null> {
 async function respond(request: Request): Promise<Response> {
   const cache = await caches.open(CACHE)
 
-  // index.html is the only unhashed name, so a deploy that touches nothing else leaves
-  // every hashed bundle byte-identical and no worker update fires. A 600-byte network
-  // request first closes that hole, and the cache still answers offline. The fresh copy
-  // is not written back, since it belongs to a build precached under a different version.
+  // Network first for the document: index.html is the only unhashed name, so a deploy that changes
+  // nothing else fires no worker update. The cache still answers offline, and the fresh copy is not
+  // written back — it belongs to a build precached under a different version.
   if (request.mode === 'navigate') {
     return (await fromNetwork(request))
       ?? (await cache.match(DOCUMENT))

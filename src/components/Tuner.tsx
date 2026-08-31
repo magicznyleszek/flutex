@@ -15,11 +15,10 @@ export interface TunerProps {
 
 /**
  * How far past the green zone each end of the track reaches, in cents. Added rather than
- * multiplied on purpose: a multiplier makes the zone the same fraction of the track at every
- * setting, so ±50, ±75 and ±100 all drew the same two thirds of it and only the number
- * underneath changed. A fixed margin keeps the zone's own width meaningful — a fifth of the
- * track at ±10, two thirds at ±100 — while still leaving the needle somewhere to go, which
- * the old flat ±50 scale did not at anything above ±50.
+ * multiplied: a multiplier would draw the zone as the same fraction of the track at every
+ * tolerance setting, so only the number underneath would change. Adding keeps the zone's width
+ * meaningful — a fifth of the track at ±10, two thirds at ±100 — and still leaves the needle
+ * somewhere to go.
  */
 const RANGE_MARGIN = 50
 
@@ -52,9 +51,8 @@ export function Tuner({ cents, toleranceCents, active }: TunerProps): JSX.Elemen
 
       <Group justify="space-between" className={classes.scale}>
         <Text size="xs" c="dimmed">flat</Text>
-        {/* Idle, it states the window you are aiming for; playing, how far off you are. The
-            zone's width says the same thing, but the track carries no numbers, so this is
-            what tells you whether you are on the ±25 setting or the ±100 one. */}
+        {/* Idle, the window you are aiming for; playing, how far off you are. The track carries no
+            numbers, so this is the only thing saying which tolerance setting you are on. */}
         <Text size="xs" c={inTune ? 'var(--flutex-accent-ink)' : 'dimmed'} ff="monospace">
           {active
             ? `${cents > 0 ? '+' : ''}${Math.round(cents)}¢`

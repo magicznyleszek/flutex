@@ -122,16 +122,13 @@ function stripComment(line: string): string {
 }
 
 /**
- * Reads the melody out of an ABC tune.
+ * Reads the melody out of an ABC tune — the subset a melody trainer can use, not the whole
+ * standard. Pitches, lengths, key signatures, accidentals and broken rhythm are kept; anything
+ * about printing or accompaniment is dropped, so rests vanish, chords collapse to their top note,
+ * and several voices come out interleaved as one line.
  *
- * This is the subset a melody trainer can use, not a full implementation of the standard. It
- * keeps pitches, lengths, key signatures, accidentals and broken rhythm, and throws away
- * everything that is about printing or accompaniment: rests are dropped, chords collapse to
- * their top note, ties become two notes, and decorations, lyrics and repeat marks are skipped.
- * Multiple voices are read as one line, so a piano arrangement comes out interleaved.
- *
- * Anything it cannot place is an error naming the character, because a pasted tune that half
- * works is harder to fix than one that says what is wrong.
+ * Anything it cannot place is an error naming the character: a pasted tune that half works is
+ * harder to fix than one that says what is wrong.
  */
 export function parseAbc(text: string): AbcResult {
   const fields = new Map<string, string>()

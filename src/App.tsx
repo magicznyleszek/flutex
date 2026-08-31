@@ -192,10 +192,8 @@ export default function App(): JSX.Element {
       ? 'Listening. Hold each note for a moment for it to count.'
       : 'Without a microphone the trainer only shows fingerings.'
 
-  // Container `md` rather than `lg`: the trainer used to be a two-column grid and needed the
-  // width. It is one centred column now, and at 1140px everything in it floated in its own
-  // empty half of the card. Not `sm` either — that drops the three settings selects to 205px
-  // each, which cuts "Soprano recorder (baroque)" off mid-word.
+  // Container `md`: at `lg`'s 1140px this single centred column floats in its own empty half, and
+  // `sm` drops the settings selects to 205px, cutting "Soprano recorder (baroque)" off mid-word.
   return (
     <Container size="md" py="xl">
       <Stack gap="lg">

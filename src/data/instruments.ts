@@ -18,14 +18,12 @@ export type InstrumentId =
   | 'ocarina_12'
 
 /**
- * Where a hole sits on an ocarina chart, in the diagram's own coordinates: 100 units wide,
- * `y` growing downwards, as tall as `OcarinaLayout.height`.
+ * Where a hole sits, in the diagram's own coordinates: 100 units wide, `y` growing downwards,
+ * as tall as `OcarinaLayout.height`.
  *
- * The radius is data rather than a constant because printed charts draw the holes at the sizes
- * they are on the instrument, and on an ocarina those differ a great deal — it is the open
- * *area* that sets the pitch, not how many fingers came off. Drawing them all alike would
- * leave a player unable to match this diagram against the chart in the box their ocarina came
- * in, which is the one thing a chart has to do.
+ * The radius is per hole because on an ocarina it is the open *area* that sets the pitch, and
+ * printed charts draw the holes at the sizes they really are. Uniform circles would not match
+ * the chart in the box the instrument came in.
  */
 export interface HolePlacement {
   x: number
@@ -61,10 +59,9 @@ interface InstrumentDefinition {
   name: string
   shortName: string
   /**
-   * The home key as a pitch-class name — the tonic of the scale the instrument plays without
-   * accidentals. It describes where the instrument's range sits rather than what music it is
-   * for: a whistle in D plays in G all day. So this is a hint for transposing a melody towards,
-   * not a constraint, which is the whole of what `bestShift` does with it.
+   * The tonic of the scale the instrument plays without accidentals. A key to transpose *towards*
+   * rather than a constraint — a whistle in D plays in G all day — and that is all `bestShift`
+   * uses it for.
    */
   key: string
   layout: Layout
@@ -80,29 +77,18 @@ export interface Instrument extends InstrumentDefinition {
 
 const OVERBLOWN = 'Second register — same fingering, stronger breath.'
 
-/*
- * The recorder changes register with the thumb rather than with breath alone, and it does it in
- * two steps: C#6, D6 and D#6 want the thumb right off the hole, and from E6 up it goes back on
- * as a narrow slit. Every chart consulted puts the line in the same place, and half-covering
- * down at D6 sends players after a note that will not sound. Both fingering systems below share
- * these two sentences, so they live up here rather than being retyped twenty times.
- */
+// The recorder's second register turns on the thumb in two steps: right off the hole for C#6 to
+// D#6, back on as a narrow slit from E6 up. Every chart consulted draws the line in that same
+// place, and half-covering down at D6 chases a note that will not sound.
 const THUMB_OFF = 'Second register. The thumb comes right off the hole — from E6 up it is only cracked open.'
 const PINCHED = 'Second register. Crack the thumb hole open into a narrow slit, not half uncovered.'
 
-/*
- * The two tricks the first-octave accidentals need, which the dots on their own do not explain.
- * A half hole looks like a mistake, and so does a fork — a hole put back down underneath one
- * that is open — so both say plainly that the diagram is right.
- */
+// A half hole and a fork both look like mistakes in a diagram, so they say so in words.
 const HALF_HOLE = 'Half-hole: leave half of it open. Recorders with a split hole 6 or 7 do it by closing one of the pair.'
 const FORKED = 'Forked: hole 2 is open while 3 and 4 stay down. That gap is deliberate.'
 
-/*
- * Ocarina hints. An ocarina is fingered by open area rather than in a run down the tube, so a
- * chart of it looks arbitrary until someone says which notes are the odd ones out and why —
- * these four sentences are most of what the diagrams cannot show on their own.
- */
+// An ocarina is fingered by open area rather than in a run down a tube, so these say which notes
+// are the odd ones out — which is what its diagrams cannot show on their own.
 const HALF_COVER = 'Slide the finger to leave about half the hole open, rather than lifting it.'
 const THUMBS_OFF = 'Top of the range: the front is already open, so the thumb holes go next.'
 const SUBHOLES = 'Below the tonic. Only a subhole opens — every finger stays where it was.'
@@ -147,30 +133,24 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
     key: 'C',
     layout: { kind: 'tube', hasThumb: true },
     fingering: {
-      /*
-       * The whole first octave, chromatic. The accidentals are transcribed from Dolmetsch's
-       * "Baroque / English Recorder Fingering Chart" (c) 2001, page one, which is published as
-       * freely copyable; the half holes are read off its own double-hole notation, where one
-       * circle of the pair is filled. Nicholas Lander's Recorder Home Page independently gives
-       * the same two awkward ones — G#5 as `O 12- 45/-` and A#5 as `O 1-3 4---` — which is the
-       * agreement worth having, since these are the two a chart could plausibly print otherwise.
-       */
+      // First octave, chromatic, from Dolmetsch's freely copyable "Baroque / English Recorder
+      // Fingering Chart" (c) 2001, page one. Lander's Recorder Home Page independently gives the
+      // same two awkward ones, G#5 and A#5 — the agreement worth having, since those are the two
+      // another chart might plausibly print differently.
       C5: { holes: [1, 1, 1, 1, 1, 1, 1, 1] },
       'C#5': { holes: [1, 1, 1, 1, 1, 1, 1, 0.5], hint: HALF_HOLE },
       D5: { holes: [1, 1, 1, 1, 1, 1, 1, 0] },
       'D#5': { holes: [1, 1, 1, 1, 1, 1, 0.5, 0], hint: HALF_HOLE },
       E5: { holes: [1, 1, 1, 1, 1, 1, 0, 0] },
-      // Baroque F5 is forked: hole 4 closed, hole 5 open, 6 and 7 closed. That break in the
-      // sequence is the whole difference between baroque and German fingering, so getting it
-      // backwards silently turns the table into a German one — `[1,1,1,1,0,1,1,1]` is in fact
-      // the German F#5. Verified against Mollenhauer, Moeck, Yamaha, the American Recorder
-      // Society and Dolmetsch, which agree without dissent.
+      // Baroque F5 is forked: hole 5 open with 6 and 7 closed. That break is the whole difference
+      // between the two systems, and writing it the other way round would quietly make this a
+      // German chart. Checked against Mollenhauer, Moeck, Yamaha, the ARS and Dolmetsch.
       F5: { holes: [1, 1, 1, 1, 1, 0, 1, 1] },
       'F#5': { holes: [1, 1, 1, 1, 0, 1, 1, 0] },
       G5: { holes: [1, 1, 1, 1, 0, 0, 0, 0] },
-      // The one first-octave note the two systems finger differently: German closes hole 6
-      // rather than half-covering it. Lander warns this one "is often painfully out of tune in
-      // ensemble work" on either — a property of the instrument, not of the transcription.
+      // German closes hole 6 here rather than half-covering it. Lander warns the note "is often
+      // painfully out of tune in ensemble work" either way — the instrument's fault, not the
+      // chart's.
       'G#5': { holes: [1, 1, 1, 0, 1, 1, 0.5, 0], hint: HALF_HOLE },
       A5: { holes: [1, 1, 1, 0, 0, 0, 0, 0] },
       'A#5': { holes: [1, 1, 0, 1, 1, 0, 0, 0], hint: FORKED },
@@ -178,10 +158,9 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
       C6: { holes: [1, 0, 1, 0, 0, 0, 0, 0] },
       'C#6': { holes: [0, 1, 1, 0, 0, 0, 0, 0] },
       D6: { holes: [0, 0, 1, 0, 0, 0, 0, 0], hint: THUMB_OFF },
-      // The rest of the second register, as printed by Mollenhauer, Moeck, Prescott and
-      // Dolmetsch, which agree on all of these without dissent. A#6 is left out on purpose:
-      // those same charts give four different grips for it, so there is nothing to teach.
-      // C7 is the last one worth having — C#7 needs the bell closed against your knee.
+      // The rest of the second register, per Mollenhauer, Moeck, Prescott and Dolmetsch. A#6 is
+      // left out because those same charts give four different grips for it, and C7 is the last
+      // one worth having — C#7 needs the bell closed against your knee.
       'D#6': { holes: [0, 0, 1, 1, 1, 1, 1, 0], hint: THUMB_OFF },
       E6: { holes: [0.5, 1, 1, 1, 1, 1, 0, 0], hint: PINCHED },
       F6: { holes: [0.5, 1, 1, 1, 1, 0, 1, 0], hint: PINCHED },
@@ -195,15 +174,11 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
   },
 
   /*
-   * German fingering, Peter Harlan's 1920s redesign. Widening hole 4 lets F play straight down
-   * the scale with no fork, which is easier for a beginner's first tune and harder for every
-   * accidental above it — the fork it saves on F comes back on F#. Worth having because it is
-   * still roughly a third of the sopranos sold in Europe, and the two look identical in the
-   * hand, so a player following a baroque chart on a German recorder just hears wrong notes.
-   *
-   * Written out in full rather than spread from the baroque table above. A chart you can read
-   * top to bottom against its published source is worth more here than the shorter diff, and
-   * `tests/data.test.ts` pins the divergences so the two cannot drift apart quietly.
+   * German fingering, Peter Harlan's 1920s redesign: a wider hole 4 lets F play straight down the
+   * scale with no fork, and the fork comes back on F#. Still about a third of European sopranos,
+   * and the two look identical in the hand, so a baroque chart on a German recorder just sounds
+   * wrong. Written out in full rather than spread from the table above, because a chart you can
+   * read against its source beats a shorter diff; `tests/data.test.ts` pins the divergences.
    */
   recorder_german: {
     name: 'Soprano recorder (German fingering)',
@@ -211,10 +186,9 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
     key: 'C',
     layout: { kind: 'tube', hasThumb: true },
     fingering: {
-      // Accidentals from Dolmetsch's "German Recorder Fingering Chart" (c) 2001, page one, the
-      // companion to the baroque one above and read the same way. Three of the four come out
-      // identical to baroque, which is what you would expect: the wider hole 4 only bites where
-      // a fingering leans on hole 4 or 5.
+      // Accidentals from Dolmetsch's "German Recorder Fingering Chart" (c) 2001, page one. Three
+      // of the four match baroque, as expected: the wider hole 4 only bites where a fingering
+      // leans on hole 4 or 5.
       C5: { holes: [1, 1, 1, 1, 1, 1, 1, 1] },
       'C#5': { holes: [1, 1, 1, 1, 1, 1, 1, 0.5], hint: HALF_HOLE },
       D5: { holes: [1, 1, 1, 1, 1, 1, 1, 0] },
@@ -242,33 +216,23 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
       G6: { holes: [0.5, 1, 1, 1, 0, 0, 0, 0], hint: PINCHED },
       'G#6': { holes: [0.5, 1, 1, 1, 0, 1, 1, 1], hint: PINCHED },
       A6: { holes: [0.5, 1, 1, 0, 0, 0, 0, 0], hint: PINCHED },
-      // Stops a note short of the baroque chart. The German charts consulted end at B6, and a
-      // C7 guessed from the baroque grip is exactly the kind of invention this table cannot
-      // afford — hole sizes differ, so the same fingers do not give the same pitch.
+      // Stops a note short of the baroque chart: the German charts consulted end at B6, and hole
+      // sizes differ, so a C7 borrowed from the baroque grip would be a guess, not a fingering.
       B6: { holes: [0.5, 1, 1, 0, 1, 1, 0, 0], hint: PINCHED },
     },
   },
 
   /*
-   * Six-hole pendant on John Taylor's 1964 English system: four finger holes on the front in
-   * a 2x2, two thumb holes on the back. Transcribed from STL Ocarina's "A Complete Fingering
-   * Chart for 6 Hole Ocarina in C Major" (c) 2020, every diagram read twice — once by eye and
-   * once by locating the printed circles programmatically — with the two passes agreeing on
-   * all seventeen.
+   * Six-hole pendant on John Taylor's 1964 system: four finger holes in a 2x2, two thumb holes
+   * behind. From STL Ocarina's "A Complete Fingering Chart for 6 Hole Ocarina in C Major" (c) 2020.
    *
-   * What makes the transcription trustworthy is that the chart implies its own hole sizes.
-   * Taking the front holes as areas 1 (upper right), 2 (lower right), 3 (lower left) and
-   * 4 (upper left), every one of C5 to C6 comes out as a different total open area, in order,
-   * one unit at a time: D is 1, E is 2, F is 3, F# is 4, G is 5, up to C6 at 10. A chart with
-   * a hole transcribed wrong could not produce that run, which is Taylor's whole trick — four
-   * holes sized so their combinations count upwards.
+   * The table checks itself, which is Taylor's trick: sizing the front holes 1, 2, 3, 4 makes every
+   * note from D5 to C6 a different total open area, one unit at a time. A hole transcribed wrong
+   * would break the run.
    *
-   * The octave is the one thing the chart declines to pin down: it says only that "the actual
-   * pitch will be higher than written" and refers you to the product page. Its staff runs
-   * C4 to E5, and STL's other charts state a tenor sounds one octave above written, which
-   * puts this at C5-E6 — the standard soprano-C pendant, and the reading that makes every
-   * song here playable. Pendants are also sold in E, F, G, Bb and B; a key selector is the
-   * natural home for those rather than five more copies of this table.
+   * The octave is a reading — the chart's staff runs C4 to E5 and only says the real pitch is
+   * higher, and STL's other charts put a tenor an octave above written. That makes this the standard
+   * soprano-C pendant at C5-E6.
    */
   ocarina_6: {
     name: 'Ocarina, 6-hole pendant (key of C)',
@@ -313,25 +277,14 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
   },
 
   /*
-   * Twelve-hole single-chamber transverse — the "sweet potato", which Wikipedia calls the
-   * best-known style, and with the 10-hole one of "the two most common transverse ocarinas".
-   * Eight finger holes on the front, two small subholes for the notes below the tonic, and
-   * two thumb holes on the back.
+   * Twelve-hole single-chamber transverse, the "sweet potato": eight finger holes, two subholes for
+   * the notes under the tonic, two thumb holes behind. From STL Ocarina's "A Complete Fingering
+   * Chart for 12 Hole Tenor and Soprano Ocarinas" (c) 2008, which writes A3 to F5 and puts a tenor
+   * an octave above written — hence the A4-F6 here.
    *
-   * Transcribed from STL Ocarina's "A Complete Fingering Chart for 12 Hole Tenor and Soprano
-   * Ocarinas" (c) 2008 by locating every printed circle programmatically and reading whether
-   * it was filled — 21 diagrams of 12 holes each is more than an eye should be asked to do.
-   * The chart writes A3 to F5 with no gaps, and states that a tenor sounds an octave above
-   * the notes written, giving the A4-F6 here. Pure Ocarinas' note that "low C on the staff
-   * technically refers to C4" is the same convention seen from the notation side, and its
-   * prose account of the system agrees with these diagrams on every point the two cover: the
-   * right hand lifts first, the left pinky stays down almost to the top because it is holding
-   * the instrument up, the left subhole opens before the right, and the second octave gives
-   * back the left thumb before the right.
-   *
-   * Hence the finger names below. They are not on the chart — they come from matching the
-   * order the diagrams lift holes in against that prose, so they are a reading rather than a
-   * quotation, which is also why no hint here tells you to move a named finger.
+   * The finger names below are not on the chart; they come from matching the order the diagrams lift
+   * holes in against Pure Ocarinas' prose account, which agrees throughout. Being a reading rather
+   * than a quotation is why no hint tells you to move a named finger.
    */
   ocarina_12: {
     name: 'Ocarina, 12-hole transverse (alto C)',
@@ -344,13 +297,9 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
       // enough that the right pinky hole, which sits nearest the tip, keeps a visible margin of
       // body around it.
       body: { cx: 50, cy: 40, rx: 48, ry: 22, rotate: -28 },
-      /*
-       * Positions are the chart's own, scaled by the same factor in both axes. The radii keep
-       * the chart's proportions — eight equal finger holes, subholes at 0.62 of them, thumbs
-       * between the two — but are drawn about a fifth smaller than that scaling gives. STL
-       * prints the four holes of a hand almost touching, and at the size five of these charts
-       * have to fit in, faithful spacing turned each hand into one green sausage.
-       */
+      // Positions are the chart's own, scaled equally in both axes; the radii keep its proportions
+      // but are drawn about a fifth smaller. STL prints the four holes of a hand almost touching,
+      // and at the size these diagrams render, faithful spacing made each hand one green sausage.
       holes: [
         { x: 84, y: 18, r: 4.6, label: 'Right pinky' },
         { x: 74, y: 24, r: 4.6, label: 'Right ring' },
@@ -435,21 +384,16 @@ export function getFingering(instrument: Instrument, note: string): Fingering | 
 
 /**
  * The widest stand-in still worth calling close, in semitones. The case that sets it is A6 on a
- * 6-hole ocarina, a fourth above the top of its chart, and a tritone is one step further out
- * than that. Past it there is nothing in the neighbourhood to stand in for the note at all — a
- * grip eleven semitones off is a different tune, not an approximation of this one — so a note
- * that far outside is better left with no fingering than given a wrong one.
+ * 6-hole ocarina, a fourth above the top of its chart. Further out than a tritone and the grip is
+ * a different tune, so the note is better left with no fingering than a wrong one.
  */
 const NEAREST_LIMIT = 6
 
 /**
  * The note this instrument would put where `note` should go: `note` itself when there is a grip
  * for it, otherwise the nearest note there is a grip for, or null when nothing is within
- * `NEAREST_LIMIT`.
- *
- * Ties go to the lower note, which is how `bestShift` breaks its own — between two notes an
- * equal distance off there is nothing to choose by but the register, and the lower one is the
- * easier to blow.
+ * `NEAREST_LIMIT`. Ties go to the lower note, the way `bestShift` breaks its own, since the lower
+ * of two equally distant notes is the easier to blow.
  */
 export function nearestFingered(instrument: Instrument, note: string): string | null {
   if (note in instrument.fingering) return note
@@ -460,9 +404,8 @@ export function nearestFingered(instrument: Instrument, note: string): string | 
   let nearest: string | null = null
   let distance = Number.POSITIVE_INFINITY
 
-  // `notes` runs lowest first, so the distance falls to its minimum and climbs again. A strict
-  // `<` keeps the first of two equal ones, which is the tie-break above with no comparison of
-  // its own.
+  // `notes` runs lowest first, so a strict `<` keeps the first of two equally distant notes —
+  // that is the low-note tie-break, with no comparison of its own.
   for (const candidate of instrument.notes) {
     const gap = Math.abs((noteToMidi(candidate) ?? 0) - midi)
     if (gap < distance) {

@@ -54,10 +54,8 @@ export function SongPicker({
   onCustomTextChange,
   customError,
 }: SongPickerProps): JSX.Element {
-  // The arrangement's notes, not the song's, and what is left in them after the near notes have
-  // been swapped in: a melody that was out of range until it got moved is not missing anything,
-  // and neither is a note the instrument has something to put in its place. What reaches here is
-  // the remainder — notes with no grip and nothing close enough to be worth offering.
+  // The arrangement's notes, not the song's, and after the near notes have been swapped in — so
+  // what is left is only the notes with no grip and nothing close enough to offer instead.
   const missing = unplayableNotes(instrument, songNoteNames(arrangement))
   const { approximations } = arrangement
   const unfingered = [...approximations.map((swap) => swap.written), ...missing]

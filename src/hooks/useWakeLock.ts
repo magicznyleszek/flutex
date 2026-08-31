@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Keeps the screen awake while `active` is true, so a phone propped up in front of you does
- * not dim halfway through a tune — both your hands are on the instrument, and the trainer is
- * useless the moment the display sleeps.
+ * Keeps the screen awake while `active` is true — both hands are on the instrument, so nothing is
+ * going to tap the phone before it dims.
  *
- * The lock is not something you take once and keep. Browsers drop it whenever the tab stops
- * being visible and never hand it back on their own, so this listens for the tab coming
- * forward again and re-takes it. That is also why the sentinel lives in a ref: it outlives
- * the render that asked for it.
+ * The lock is not taken once and kept: browsers drop it whenever the tab stops being visible and
+ * never hand it back, hence the `visibilitychange` listener and the sentinel in a ref.
  */
 export function useWakeLock(active: boolean): void {
   const sentinelRef = useRef<WakeLockSentinel | null>(null)

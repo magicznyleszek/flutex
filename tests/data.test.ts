@@ -222,13 +222,9 @@ describe('songs', () => {
     }
   })
 
-  // Through `songForInstrument`, because the arrangement is what a player is actually shown. A
-  // melody that was out of range and got moved into it is fine; one still short of a grip after
-  // the best shift available is not playable at all.
-  //
-  // `approximations` is checked as well as the missing notes, and that is the half with the
-  // teeth: the arrangement now puts a near note where a missing one was, so `unplayableNotes`
-  // alone would come back empty for a song that had half its melody stood in for.
+  // Through `songForInstrument`, because the arrangement is what a player is shown. `approximations`
+  // is the half with teeth: the arrangement puts a near note where a missing one was, so
+  // `unplayableNotes` alone comes back empty even for a song half stood in for.
   it.each(SHARED_RANGE)('$title is playable on every instrument', (song) => {
     for (const instrument of INSTRUMENT_LIST) {
       const arrangement = songForInstrument(song, instrument)
@@ -237,10 +233,9 @@ describe('songs', () => {
     }
   })
 
-  // The stronger claim, and the one that catches a new song drifting outside the range the
-  // library shares: every song here is written to fit every chart as it stands, so the
-  // transposer should find nothing to do. A failure here is a song to fix, not a bug in the
-  // shift search — the test above would still pass.
+  // The stronger claim, which catches a new song drifting outside the shared range: every song here
+  // is written to fit every chart as it stands, so the transposer should find nothing to do. A
+  // failure is a song to fix, not a bug in the shift search — the test above would still pass.
   it.each(SHARED_RANGE)('$title plays as written on every instrument', (song) => {
     for (const instrument of INSTRUMENT_LIST) {
       expect(songForInstrument(song, instrument).semitones).toBe(0)

@@ -1,24 +1,21 @@
 /**
- * The library itself: the songs, and the lookups that need all of them at once. What a song *is*,
- * and how one is fitted to an instrument, lives in `songUtils.ts`.
+ * The songs, plus the lookups that need all of them at once. What a song *is*, and how one is
+ * fitted to an instrument, lives in `songUtils.ts`.
  *
- * Nothing here is anybody's property. The tunes are traditional or were printed long enough ago
- * that the melody is public domain, and each subtitle names where it comes from. Most were read
- * off ABC transcriptions in the Nottingham Music Database and re-encoded as bare note lists in a
- * key the charts can reach.
+ * The tunes are traditional or old enough to be out of copyright, and each subtitle names its
+ * source. Most were read off ABC transcriptions in the Nottingham Music Database.
  */
 import { CUSTOM_SONG_ID, defineSong, type Song } from './songUtils'
 
 // Every song but "Concerning Hobbits" is written inside D5-E6 on the ten notes all five charts
-// share: the D major scale plus C natural. That is the intersection of a tin whistle in D and a
-// 6-hole ocarina, and it is what lets every instrument play the library as written, since
-// `songForInstrument` leaves a melody alone when the instrument can already play it. Tunes were
-// transposed into that set when they fitted it and passed over when they did not.
+// share — the D major scale plus C natural, which is a tin whistle in D intersected with a 6-hole
+// ocarina. That is what lets every instrument play the library as written, since
+// `songForInstrument` leaves a melody alone when the instrument can already play it: a tune that
+// did not fit that set was transposed until it did, or left out.
 //
-// "Concerning Hobbits" is the exception: a transcription rather than a tune chosen to fit, whose
-// high section reaches F#6 and A6. The whistle and the recorders have both notes, the ocarinas
-// have neither and lean on the nearest grips they do have. A pasted custom song, which can arrive
-// in any key and any octave, is what the shift search is really for.
+// The exception is a transcription rather than a tune chosen to fit, and its high section reaches
+// F#6 and A6, past both ocarinas. The shift search is really there for pasted custom songs, which
+// arrive in any key and any octave.
 export const SONGS: readonly Song[] = [
   // --- Exercises
 
@@ -211,22 +208,18 @@ export const SONGS: readonly Song[] = [
     `,
   }),
 
-  // The one song here transcribed from a recording rather than written to fit the charts, so it
-  // is also the one that outgrows an instrument: the high section reaches F#6 and A6, past both
-  // ocarinas, which play the nearest notes they have there. No lengths, because the transcription
-  // is a list of pitches — which costs nothing in a trainer that waits for each note and only
-  // feeds `beats` to the beat count and playback.
+  // Transcribed from a recording rather than chosen to fit, so it is the one song that outgrows an
+  // instrument: the ocarinas play its F#6 and A6 as the nearest notes they have. No lengths,
+  // because the transcription is a list of pitches, and `beats` only feeds the count and playback.
   defineSong({
     id: 'concerning-hobbits',
     title: 'Concerning Hobbits',
     subtitle: 'The Shire theme, Howard Shore',
     tags: ['film', 'medium'],
     key: 'D',
-    // Left in D on the ocarinas rather than let the search drop it into C. The shift would buy
-    // back the nine F#6s and cost the whole tune its key, which is not a trade to make on an
-    // instrument this melody was transcribed on: the low two thirds is what an ocarina can play
-    // of it, and it should be there in the key it was learnt in. The high section flattens onto
-    // the top of the chart instead, and the song card names the swaps.
+    // Left in D rather than let the search drop it into C: that would buy back the nine F#6s and
+    // cost the whole tune its key. The high section flattens onto the top of the chart instead,
+    // and the song card names the swaps.
     overrides: { ocarina_6: 0, ocarina_12: 0 },
     spec: `
       D5 E5 F#5 A5 F#5 E5 D5

@@ -126,12 +126,12 @@ export function createTrainerEngine(
   const noteAt = (position: number): string | null => song[position] ?? null
 
   /**
-   * A note counts when it is within the tolerance of the target in cents — not when the
-   * pitch happens to be nearest to the target's own semitone. Past ±50 cents those two
-   * disagree, and the wide tolerances exist for exactly that case: a whistle that plays 70
-   * cents sharp is named as the semitone above, and the player fingering it correctly should
-   * not be told they are wrong. `note` is asked only whether anything is sounding at all,
-   * because silence arrives as 0 cents and would otherwise score as a perfect hit.
+   * A note counts on cents from the target, not on which semitone the pitch is nearest. Past ±50
+   * those two disagree, which is the whole point of the wide tolerances: a whistle playing 70 cents
+   * sharp is named as the semitone above, and correct fingering should not be called wrong.
+   *
+   * `note` is only asked whether anything is sounding — silence arrives as 0 cents and would
+   * otherwise score as a perfect hit.
    */
   const isOnTarget = (frame: TrainerFrame): boolean =>
     noteAt(index) !== null

@@ -50,13 +50,12 @@ export interface SongDemo {
 }
 
 /**
- * Plays the song through the speakers a note at a time and reports which note is sounding,
- * so the fingering charts can follow along. Rhythm is only ever as good as the `beats` in the
- * song data — it demonstrates the tune, it does not accompany you.
+ * Plays the song through the speakers and reports which note is sounding, so the fingering charts
+ * can follow along. It demonstrates the tune rather than accompanying you: the rhythm is only ever
+ * as good as the `beats` in the song data.
  *
- * Every note is scheduled into the AudioContext in one go and the on-screen position is read
- * back off `currentTime`. Driving the sound and the charts from separate timers would let
- * them drift apart within a few bars.
+ * Every note is scheduled into the AudioContext in one go and the on-screen position read back off
+ * `currentTime` — separate timers for sound and charts would drift apart within a few bars.
  */
 export function useSongDemo(notes: readonly SongNote[]): SongDemo {
   const [playing, setPlaying] = useState(false)

@@ -1,9 +1,9 @@
 import { midiToNote, NOTE_NAMES, noteToMidi } from './music'
 
 /**
- * How many octaves either side of a candidate shift the search looks. Three is already past
- * the range of every chart here — it exists so that a melody written far from where an
- * instrument lives still finds its way in, rather than to be reached.
+ * How many octaves either side of a candidate shift the search looks. Three is well past the range
+ * of every chart here — the headroom is for a pasted melody written far from where the instrument
+ * lives.
  */
 const OCTAVE_SEARCH = 3
 
@@ -49,16 +49,13 @@ export interface ShiftChoice {
 /**
  * How far to move a melody so that an instrument can actually play it.
  *
- * `preferred` is the shift that puts the melody in the instrument's own key, which is the one
- * most likely to come out diatonic and so the easiest to finger. It is a preference and not an
- * answer, because the key an instrument is built in describes its range rather than the music it
- * is for — a whistle in D plays in G all day. So both that shift and no shift at all are tried,
- * each at every octave, and what decides it is how many notes the instrument can reach.
+ * `preferred` is the shift into the instrument's own key, which is the one most likely to come out
+ * diatonic and so easiest to finger. Only a preference, though: the key an instrument is built in
+ * describes its range rather than the music it is for, and a whistle in D plays in G all day. So
+ * both that shift and no shift are tried at every octave, and note count decides.
  *
- * Ties go to an octave first and then to the smallest move, so a melody that already fits is left
- * exactly as it was written and one that has to move keeps its key if it can. That is the common
- * case and deliberately so: transposing a song called "D major scale" into C major would be a
- * worse answer than doing nothing.
+ * A melody that already fits is left exactly as written — transposing a song called "D major scale"
+ * into C would be a worse answer than doing nothing.
  */
 export function bestShift(
   notes: readonly string[],
@@ -72,10 +69,9 @@ export function bestShift(
   }
 
   // Sorting decides the tie-break, so the loop below needs no second comparison. Whole octaves
-  // come first, since an octave is the one move that leaves a melody in the key it was written
-  // in — an E dorian whistle tune is played in E dorian, an octave up, not pulled into D because
-  // D is the whistle's key. Then the smallest move, and between an equal move up and down the
-  // downward one, the lower register being the easier one to blow.
+  // first, since an octave is the one move that keeps the written key — an E dorian tune stays in
+  // E dorian rather than being pulled into the whistle's D. Then the smallest move, and on a tie
+  // the downward one, the lower register being easier to blow.
   const ordered = [...candidates].sort(
     (left, right) =>
       Number(left % 12 !== 0) - Number(right % 12 !== 0)

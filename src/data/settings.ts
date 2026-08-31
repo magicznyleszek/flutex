@@ -56,14 +56,10 @@ export const DIFFICULTY_LIST: readonly DifficultyLevel[] = [
 export const DEFAULT_DIFFICULTY_ID: DifficultyId = 'normal'
 
 /*
- * `Object.hasOwn` reads better and is what this used, but it is a 2022 built-in that Safari
- * only shipped in 15.4, and Parcel transpiles syntax for old browsers without polyfilling
- * built-ins. On a phone a version behind that, this throws a TypeError the moment the select
- * changes, while the song picker beside it goes on working because it looks its value up in
- * an array — which is a symptom that has been reported and is not explained yet.
- * `hasOwnProperty.call` is the same check and has always been there. Plain `in` is not a
- * substitute: it would accept inherited keys like "toString" out of localStorage and hand
- * back a function as a difficulty.
+ * Not `Object.hasOwn`: it is a 2022 built-in Safari only shipped in 15.4, and Parcel transpiles
+ * syntax without polyfilling built-ins, so on an older phone this threw a TypeError the moment the
+ * select changed. Plain `in` is no substitute either — it would accept inherited keys like
+ * "toString" out of localStorage and hand back a function as a difficulty.
  */
 export function isDifficultyId(value: string): value is DifficultyId {
   return Object.prototype.hasOwnProperty.call(DIFFICULTIES, value)
