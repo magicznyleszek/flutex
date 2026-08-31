@@ -434,6 +434,47 @@ export function getFingering(instrument: Instrument, note: string): Fingering | 
 }
 
 /**
+ * The widest stand-in still worth calling close, in semitones. The case that sets it is A6 on a
+ * 6-hole ocarina, a fourth above the top of its chart, and a tritone is one step further out
+ * than that. Past it there is nothing in the neighbourhood to stand in for the note at all — a
+ * grip eleven semitones off is a different tune, not an approximation of this one — so a note
+ * that far outside is better left with no fingering than given a wrong one.
+ */
+const NEAREST_LIMIT = 6
+
+/**
+ * The note this instrument would put where `note` should go: `note` itself when there is a grip
+ * for it, otherwise the nearest note there is a grip for, or null when nothing is within
+ * `NEAREST_LIMIT`.
+ *
+ * Ties go to the lower note, which is how `bestShift` breaks its own — between two notes an
+ * equal distance off there is nothing to choose by but the register, and the lower one is the
+ * easier to blow.
+ */
+export function nearestFingered(instrument: Instrument, note: string): string | null {
+  if (note in instrument.fingering) return note
+
+  const midi = noteToMidi(note)
+  if (midi === null) return null
+
+  let nearest: string | null = null
+  let distance = Number.POSITIVE_INFINITY
+
+  // `notes` runs lowest first, so the distance falls to its minimum and climbs again. A strict
+  // `<` keeps the first of two equal ones, which is the tie-break above with no comparison of
+  // its own.
+  for (const candidate of instrument.notes) {
+    const gap = Math.abs((noteToMidi(candidate) ?? 0) - midi)
+    if (gap < distance) {
+      nearest = candidate
+      distance = gap
+    }
+  }
+
+  return distance <= NEAREST_LIMIT ? nearest : null
+}
+
+/**
  * The playable range in hertz, padded by `marginSemitones` so out-of-tune playing still
  * falls inside it. The detector uses this to search a narrow band of lags.
  */

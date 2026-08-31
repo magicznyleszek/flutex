@@ -60,9 +60,13 @@ export function SongPicker({
   onCustomTextChange,
   customError,
 }: SongPickerProps): JSX.Element {
-  // The arrangement's notes, not the song's: a melody that was out of range until it got moved
-  // is not missing anything, and one that is still short of a grip after the move genuinely is.
+  // The arrangement's notes, not the song's, and what is left in them after the near notes have
+  // been swapped in: a melody that was out of range until it got moved is not missing anything,
+  // and neither is a note the instrument has something to put in its place. What reaches here is
+  // the remainder — notes with no grip and nothing close enough to be worth offering.
   const missing = unplayableNotes(instrument, songNoteNames(arrangement))
+  const { approximations } = arrangement
+  const unfingered = [...approximations.map((swap) => swap.written), ...missing]
   const custom = song.id === CUSTOM_SONG_ID
 
   return (
@@ -141,15 +145,32 @@ export function SongPicker({
         <Text size="xs" c="dimmed">{shiftSentence(arrangement, song.key, instrument)}</Text>
       )}
 
-      {missing.length > 0 && (
+      {unfingered.length > 0 && (
         <Alert
           color="signal"
           variant="light"
           icon={<WarningIcon size={18} />}
           title="The song does not fit this instrument"
         >
-          No fingering for: {missing.join(', ')}. The trainer cannot show a grip for
-          those notes.
+          No fingering for: {unfingered.join(', ')}.{' '}
+          {/* Spelled out as pairs rather than left at "approximations", because the note the
+              chart draws is the one you will be holding, and it is not the one the melody
+              names. Same note twice over is normal — everything past the top of a chart
+              collapses onto its highest grip. */}
+          {approximations.length > 0 && (
+            <>
+              The trainer displays close approximations for those notes:{' '}
+              {approximations.map((swap) => `${swap.written} → ${swap.played}`).join(', ')}.{' '}
+            </>
+          )}
+          {/* Only when a note is further out than a stand-in can reach, which takes a pasted
+              melody with a wider range than the instrument has. */}
+          {missing.length > 0 && (
+            <>
+              Nothing is close enough to stand in for {missing.join(', ')}, so{' '}
+              {missing.length === 1 ? 'that slot stays' : 'those slots stay'} blank.
+            </>
+          )}
         </Alert>
       )}
     </Stack>

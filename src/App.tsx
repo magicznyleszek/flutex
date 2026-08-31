@@ -243,7 +243,7 @@ export default function App(): JSX.Element {
             previous, current and next note with their names, then the two meters that
             describe the middle one. The instrument's own chart used to sit in a second
             column, which is now the middle of this row. */}
-        <Paper p="lg" radius="lg" withBorder>
+        <Paper p="lg" withBorder>
           {songError !== null
             ? (
                 /* The whole card, not a line under the textarea: this is where you are looking
@@ -315,7 +315,7 @@ export default function App(): JSX.Element {
           </Alert>
         )}
 
-        <Paper p="lg" radius="lg" withBorder>
+        <Paper p="lg" withBorder>
           <Stack gap="sm">
             {/* The two icon controls sit beside the microphone button rather than in
                 the header, which wraps on a 360px phone. Fullscreen has to be on
@@ -394,7 +394,7 @@ export default function App(): JSX.Element {
 
         {/* The settings are the one card you are not looking at while playing, so it gets
             `xl` on top of the stack's own `lg` to break it away from the trainer. */}
-        <Paper p="lg" radius="lg" withBorder mt="xl">
+        <Paper p="lg" withBorder mt="xl">
           <Stack gap="lg">
             <SongPicker
               song={song}

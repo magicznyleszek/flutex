@@ -112,7 +112,8 @@ describe('songForInstrument', () => {
 
     expect(arrangement.semitones).toBe(0)
     expect(arrangement.key).toBe('D')
-    // Not a copy: the untouched case skips the map, which is what keeps the memo downstream
+    expect(arrangement.approximations).toEqual([])
+    // Not a copy: the untouched case skips both maps, which is what keeps the memo downstream
     // from rebuilding the note row on every render.
     expect(arrangement.notes).toBe(written.notes)
   })
@@ -149,5 +150,26 @@ describe('songForInstrument', () => {
     const written = song('D', 'D3 A3', { whistle_d: 0 })
 
     expect(songForInstrument(written, INSTRUMENTS.whistle_d).semitones).toBe(0)
+  })
+
+  // A whistle has no A#5, and `bestShift` only tries whole octaves and the key shift, so no move
+  // available to it buys that note. What is left is the second step: put the nearest grip there
+  // and say which note it stands for.
+  it('stands a near note in for one with no grip', () => {
+    const arrangement = songForInstrument(song('D', 'A#5 D5 A#5'), INSTRUMENTS.whistle_d)
+
+    expect(arrangement.semitones).toBe(0)
+    // Every occurrence, not just the first — the note row and the trainer read this list
+    // straight through, so a half-swapped melody would stall on the second one.
+    expect(arrangement.notes.map((entry) => entry.note)).toEqual(['A5', 'D5', 'A5'])
+    // And once in the report, however many times the melody asks for it.
+    expect(arrangement.approximations).toEqual([{ written: 'A#5', played: 'A5' }])
+  })
+
+  it('leaves a note nothing is near exactly as written', () => {
+    const arrangement = songForInstrument(song('D', 'D5 C3'), INSTRUMENTS.whistle_d)
+
+    expect(arrangement.notes.map((entry) => entry.note)).toEqual(['D5', 'C3'])
+    expect(arrangement.approximations).toEqual([])
   })
 })

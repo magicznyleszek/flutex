@@ -98,7 +98,8 @@ export const theme = createTheme({
    * `--mantine-color-white` there, and the fill is `primaryShade` — shade 8 in the light
    * scheme but shade 4 in the dark one, a light green that left the Start button's white
    * label at 1.71:1. `--flutex-filled-ink` is dark in the dark scheme and white in the light
-   * one, which measures 10.37:1 and 3.51:1 on that button.
+   * one, which measures 10.37:1 and 5.57:1 on that button — the light figure only because
+   * `global.css` also drops the accent's fill to shade 9, white ink on shade 8 being 3.51:1.
    *
    * `autoContrast: true` is the documented cure and does not work here: Mantine reads
    * `parsed.isLight` off the theme once, not per scheme, so both schemes get whatever the
@@ -112,9 +113,11 @@ export const theme = createTheme({
       : resolved
   },
   /**
-   * Shade 8 in light rather than the usual 6: this drives the focus ring, and green at
-   * shade 6 only reaches 2.4:1 on a white card where a focus indicator wants 3:1. Shade 8
-   * is 3.5:1. Shade 4 does the same job in the dark scheme at 8.2:1.
+   * Shade 8 in light rather than the usual 6, because this is the shade every ramp fills and
+   * outlines from, and green at shade 6 reads 2.4:1 on a white card where even a focus ring
+   * wants 3:1. Shade 8 is 3.5:1, and the accent goes one further to shade 9 in `global.css`,
+   * which is what the focus ring follows. Shade 4 does the whole job in the dark scheme at
+   * 8.2:1.
    */
   primaryShade: { light: 8, dark: 4 },
 

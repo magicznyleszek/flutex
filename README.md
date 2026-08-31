@@ -42,10 +42,19 @@ Audio never leaves the machine — there is no backend, and no analytics.
   ([src/lib/transpose.ts](src/lib/transpose.ts)): the shift that leaves the most
   notes playable wins, and ties go to a whole octave before a smaller move — so a
   melody that already fits is left exactly as written, and one that has to move
-  keeps the key it was written in wherever that is possible. A song can pin a
-  shift for one instrument by hand through `overrides`. Nothing in the library
-  needs that today — it is the pasted tunes, which arrive in any key and octave,
-  that the search is for.
+  keeps the key it was written in wherever that is possible. A song can also pin
+  a shift for one instrument by hand through `overrides`, which *Concerning
+  Hobbits* uses to stay in D on the ocarinas instead of changing key to buy notes
+  they still could not all reach. The search itself is mostly for the pasted
+  tunes, which arrive in any key and octave.
+- **Notes the instrument does not have** are played at the nearest note it does,
+  within a tritone, and the song card names every swap — `F#6 → E6`. Moving the
+  melody is tried first and this is what is left over; a note further out than
+  that keeps its own name and an empty fingering slot, since there is nothing
+  near enough to be worth offering. The swap goes into the arrangement rather
+  than into the drawing, so the chart, the trainer and **Hear it** agree on what
+  you are being asked to play — without it an unreachable note was a wall the
+  song could not be got past.
 - **Rendering** is throttled deliberately. Detection runs at 60 fps, but only
   structural changes (a new note, a status change, a counter tick) publish
   immediately; the tuner and progress bars are limited to ~30 fps, and silence
@@ -122,7 +131,12 @@ defineSong({
 
 The test suite checks every song against every instrument, and also checks that
 each one plays *as written* — a song that needs transposing on a whistle is a
-song to rewrite, not a transposer to fix.
+song to rewrite, not a transposer to fix, and a song that needs a note
+approximated is one too. One song is exempt by name: *Concerning Hobbits* is
+transcribed from the film rather than written to fit, and its high section climbs
+past both ocarinas, which play it in D anyway and lean on their top notes up
+there. The test pins those swaps exactly, so anything else that leaves the shared
+range still fails.
 
 ## Writing your own song
 

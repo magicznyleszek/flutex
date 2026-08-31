@@ -74,9 +74,22 @@ html:root[data-mantine-color-scheme="light"] {
   --flutex-signal-ink: var(--mantine-color-signal-9);
   --flutex-alarm-ink: var(--mantine-color-alarm-9);
 
-  /* Here a filled button is shade 8 of its ramp, dark enough to keep the white ink Mantine
-     would have used anyway. Named all the same, so `theme.ts` has one variable to point at
-     instead of a rule per scheme. */
+  /* A filled button is shade 8 of its ramp, which the red Stop carries with white ink at
+     6.86:1 and the green Start does not: green is the lightest of these hues at any given
+     lightness, and shade 8 left the label at 3.51:1. Shade 9 reads 5.57:1.
+
+     Hover has to go darker still, and Mantine derives it as shade 8 whenever the fill is
+     shade 9 — which would put the failing green back under the pointer. A shade past the end
+     of the ramp is the one value here that is not in a tuple; 23% is 7.70:1. Only the accent
+     needs any of this, so the other ramps are left to Mantine.
+
+     `-filled` is also `-text` and the focus ring, and both only gain from the darker green. */
+  --mantine-color-accent-filled: var(--mantine-color-accent-9);
+  --mantine-color-accent-filled-hover: hsl(130deg 60% 23%);
+
+  /* The ink on those fills, white here and the dark end of the neutral ramp in the other
+     scheme. Named the same in both, so `theme.ts` has one variable to point at instead of a
+     rule per scheme. */
   --flutex-filled-ink: var(--mantine-color-white);
 }
 
