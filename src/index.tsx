@@ -1,4 +1,3 @@
-import { MantineProvider } from '@mantine/core'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
@@ -6,18 +5,16 @@ import '@mantine/core/styles.css'
 import './global.css'
 
 import App from './App'
-import { theme } from './theme'
+import { Provider } from './Provider'
 
 const container = document.getElementById('root')
 if (!container) throw new Error('No #root element in the document')
 
-// `defaultColorScheme` holds until the user picks one, after which Mantine reads its own
-// localStorage key. color-scheme-boot.ts applies the stored value before paint.
 createRoot(container).render(
   <StrictMode>
-    <MantineProvider theme={theme} defaultColorScheme="dark">
+    <Provider>
       <App />
-    </MantineProvider>
+    </Provider>
   </StrictMode>,
 )
 

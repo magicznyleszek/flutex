@@ -1,23 +1,23 @@
-import { MantineProvider } from '@mantine/core'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import App from '../src/App'
 import { DEFAULT_SONG } from '../src/data/songs'
-import { theme } from '../src/theme'
+import { Provider } from '../src/Provider'
 
 /**
  * Server rendering needs no jsdom and catches what breaks while assembling UI: a bad Mantine prop, a
- * missing provider, a throw in a hook. With no `window`, it also proves localStorage is guarded.
+ * missing provider, a throw in a hook. With no `window`, it also proves storage is guarded. Through
+ * `Provider` rather than a MantineProvider of its own, so this is the configuration that ships.
  */
 const render = (): string =>
   renderToStaticMarkup(
-    <MantineProvider theme={theme} defaultColorScheme="dark">
+    <Provider>
       <App />
-    </MantineProvider>,
+    </Provider>,
   )
 
 describe('App', () => {
-  it('renders without window or localStorage', () => {
+  it('renders without window or storage', () => {
     expect(typeof window).toBe('undefined')
     expect(() => render()).not.toThrow()
   })

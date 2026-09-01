@@ -1,19 +1,12 @@
-import {
-  ActionIcon,
-  Tooltip,
-  useComputedColorScheme,
-  useMantineColorScheme,
-} from '@mantine/core'
+import { ActionIcon, Tooltip } from '@mantine/core'
 import { MoonIcon, SunIcon } from '@phosphor-icons/react'
 import type { JSX } from 'react'
 
-/**
- * Flips between the two schemes; Mantine stores the choice. The *computed* scheme, so it is still
- * `light` or `dark` when the setting is `auto`, read on the first render so the icon does not swap.
- */
+import { useColorSchemeOverride } from '../hooks/useColorSchemeOverride'
+
+/** Flips between the two schemes. What is remembered, and for how long, is the hook's business. */
 export function ColorSchemeToggle(): JSX.Element {
-  const { setColorScheme } = useMantineColorScheme()
-  const scheme = useComputedColorScheme('dark', { getInitialValueInEffect: false })
+  const { scheme, toggle } = useColorSchemeOverride()
   const next = scheme === 'dark' ? 'light' : 'dark'
 
   return (
@@ -21,7 +14,7 @@ export function ColorSchemeToggle(): JSX.Element {
       <ActionIcon
         variant="default"
         size={42}
-        onClick={() => { setColorScheme(next) }}
+        onClick={toggle}
         aria-label={`Switch to the ${next} theme`}
       >
         {scheme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}

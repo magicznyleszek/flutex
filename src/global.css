@@ -1,28 +1,17 @@
-/* The leading `html` is load-bearing. MantineProvider derives every `-light` and hover variable at
-   runtime and injects them from a <style> tag under `:root[data-mantine-color-scheme="dark"]` — the
-   same specificity as this selector and later in the document, so a plain `:root` ties and loses.
-   Without the element name the eight `-light` values below silently do nothing.
+/* Nothing here states a colour. Every value is a pointer at a variable `theme.ts` built from one of
+   the four hues, so a hue changed there carries through this file untouched. A colour that has to be
+   computed — the dark scheme's `variant="light"` tints among them — is in `cssVariablesResolver`
+   instead, which is also spared the specificity problem below.
 
-   Variables Mantine only writes into its bundled stylesheet, `--mantine-color-body` among them, do
-   not need the weight, but they stay here so one selector describes one scheme.
+   The leading `html` is load-bearing. MantineProvider injects its own variables from a <style> tag
+   under `:root[data-mantine-color-scheme="dark"]`, and `--mantine-color-body` is one of them: the same
+   specificity as this selector and later in the document, so a plain `:root` would tie and lose.
 
    Overriding `--mantine-color-default-border` would do nothing: Paper and Divider set
    `--paper-border-color` and `--divider-color` on the element itself. */
 html:root[data-mantine-color-scheme="dark"] {
   /* Paper is painted from this too, so dark-8 against the page's dark-9 separates card from page. */
   --mantine-color-body: var(--mantine-color-dark-8);
-
-  /* `variant="light"` surfaces are `darken(shade 9, 0.5)` in the dark scheme, which for these ramps
-     reads 1.04:1 to 1.52:1 against the card. Each of these keeps its tuple's hue and saturation and
-     moves only lightness, landing near 2.15:1 with shade-0 text at 4.89:1 or better. */
-  --mantine-color-accent-light: hsl(130deg 60% 26%);
-  --mantine-color-accent-light-hover: hsl(130deg 60% 33%);
-  --mantine-color-alarm-light: hsl(8deg 65% 40%);
-  --mantine-color-alarm-light-hover: hsl(8deg 65% 47%);
-  --mantine-color-signal-light: hsl(60deg 45% 26%);
-  --mantine-color-signal-light-hover: hsl(60deg 45% 33%);
-  --mantine-color-dark-light: hsl(32deg 16% 35%);
-  --mantine-color-dark-light-hover: hsl(32deg 16% 42%);
 
   /* The Select chevron defaults to dark-3, which clears the 3:1 a control wants by a hair at
      3.07:1 on a dark-6 input. dark-2 reaches 4.16:1, the same as the hint text around it. */
@@ -63,15 +52,11 @@ html:root[data-mantine-color-scheme="light"] {
 
   /* A filled button is shade 8 of its ramp, which the red Stop carries with white ink at 6.86:1 and
      the green Start does not: green is the lightest of these hues at any lightness, and shade 8 left
-     the label at 3.51:1. Shade 9 reads 5.57:1.
-
-     Hover has to go darker again, and Mantine derives it as shade 8 whenever the fill is shade 9 —
-     putting the failing green back under the pointer. So hover is a shade past the end of the ramp,
-     the one value here not in a tuple; 23% is 7.70:1. Only the accent needs this.
+     the label at 3.51:1. Shade 9 reads 5.57:1. Its hover has to go past the end of the ramp, so that
+     one is in `cssVariablesResolver`.
 
      `-filled` is also `-text` and the focus ring, and both gain from the darker green. */
   --mantine-color-accent-filled: var(--mantine-color-accent-9);
-  --mantine-color-accent-filled-hover: hsl(130deg 60% 23%);
 
   /* The ink on those fills. Named the same in both schemes, so `theme.ts` points at one variable. */
   --flutex-filled-ink: var(--mantine-color-white);
