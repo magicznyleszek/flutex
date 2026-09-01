@@ -49,8 +49,7 @@ export function usePitchDetection({
 
   const sessionRef = useRef<AudioSession | null>(null)
 
-  // The frame loop reschedules itself, so a captured callback would stay on the
-  // first render's game configuration for the whole listening session.
+  // The frame loop reschedules itself, so a captured callback would keep the first render's config.
   const onFrameRef = useRef(onFrame)
   useEffect(() => {
     onFrameRef.current = onFrame
@@ -62,8 +61,7 @@ export function usePitchDetection({
     sessionRef.current = null
 
     cancelAnimationFrame(session.frame)
-    // Closing the AudioContext leaves the browser's mic indicator on. The tracks
-    // have to be stopped by hand.
+    // Closing the AudioContext leaves the browser's mic indicator on; the tracks need stopping too.
     for (const track of session.stream.getTracks()) track.stop()
     void session.context.close().catch(() => undefined)
   }, [])
@@ -80,8 +78,7 @@ export function usePitchDetection({
     setError(null)
 
     try {
-      // Noise suppression and automatic gain control mangle long, steady tones and
-      // ruin detection.
+      // Noise suppression and automatic gain control mangle long steady tones and ruin detection.
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -135,8 +132,7 @@ export function usePitchDetection({
     }
   }, [closeSession, minFreq, maxFreq])
 
-  // Switching instruments changes the search range. Rebuilding the detector in
-  // place keeps the running session alive.
+  // Switching instruments changes the search range; rebuilding in place keeps the session alive.
   useEffect(() => {
     const session = sessionRef.current
     if (!session) return

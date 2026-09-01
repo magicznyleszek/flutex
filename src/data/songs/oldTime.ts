@@ -1,9 +1,4 @@
-/**
- * The fiddle tunes: American old-time, two strains apiece.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
- */
+/** The fiddle tunes: American old-time, two strains apiece. */
 import { defineSong, type Song } from '../songUtils'
 
 export const OLD_TIME: readonly Song[] = [

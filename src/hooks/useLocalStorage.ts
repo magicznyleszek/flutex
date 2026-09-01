@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 
 /**
- * Values are raw strings, so `isValid` has to narrow whatever is already in storage.
- * The try/catch covers a missing `window` and private mode, where some browsers throw
- * on the read alone.
+ * Values are raw strings, so `isValid` narrows whatever is already in storage. The try/catch covers a
+ * missing `window` and private mode, where some browsers throw on the read alone.
  */
 export function useLocalStorage<T extends string>(
   key: string,

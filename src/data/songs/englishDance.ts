@@ -1,9 +1,4 @@
-/**
- * Printed English dance music — Playford, Thompson — and two morris tunes out of the same tradition.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
- */
+/** Printed English dance music — Playford, Thompson — and two morris tunes from the same world. */
 import { defineSong, type Song } from '../songUtils'
 
 export const ENGLISH_DANCE: readonly Song[] = [

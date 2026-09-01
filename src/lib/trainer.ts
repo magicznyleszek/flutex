@@ -1,7 +1,6 @@
-// Wait-and-proceed state machine: hold the right note long enough and it advances to the
-// next one. Pure logic with no React and no Web Audio, so tests can step it frame by
-// frame. The config lives inside the engine because the animation loop would otherwise
-// close over a stale tolerance or penalty mode.
+// Wait-and-proceed state machine: hold the right note long enough and it advances. No React and no
+// Web Audio in here, so tests can step it frame by frame. The config lives inside the engine, or the
+// animation loop would close over a stale tolerance or penalty mode.
 
 /** Where a filled mistake bar sends the player: nowhere, back `backSteps` notes, or to 0. */
 export type PenaltyMode = 'wait' | 'back' | 'restart'
@@ -19,10 +18,7 @@ export type TrainerStatus =
 
 /** One frame of microphone input, already translated into musical terms. */
 export interface TrainerFrame {
-  /**
-   * The recognised note, or null on silence. Only the null-ness decides anything — see
-   * `isOnTarget` for why the name itself is not what a note is scored against.
-   */
+  /** The recognised note, or null on silence. Only the null-ness matters — see `isOnTarget`. */
   note: string | null
   /** Deviation from the *target* note in cents, however far away that is. */
   cents: number
@@ -48,17 +44,13 @@ export const LOOKAHEAD = 3
 export interface NoteWindow {
   previous: string | null
   target: string | null
-  /**
-   * The next `LOOKAHEAD` notes, oldest first, padded with nulls at the end of the song so
-   * the caller can lay out a fixed number of slots without them shifting about.
-   */
+  /** The next `LOOKAHEAD` notes, padded with nulls at the end so the slots never shift about. */
   upcoming: readonly (string | null)[]
 }
 
 /**
- * The stretch of the song the note row draws: one behind, the one to play, and the lookahead.
- * Exported because playback lays out that same row from its own position, and two ideas of
- * what "next" means would drift apart by a note sooner or later.
+ * The stretch of song the note row draws: one behind, the one to play, and the lookahead. Exported
+ * because playback lays out the same row from its own position, and two ideas of "next" would drift.
  */
 export function noteWindow(song: readonly string[], index: number): NoteWindow {
   const at = (position: number): string | null => song[position] ?? null
@@ -128,12 +120,9 @@ export function createTrainerEngine(
   const noteAt = (position: number): string | null => song[position] ?? null
 
   /**
-   * A note counts on cents from the target, not on which semitone the pitch is nearest. Past ±50
-   * those two disagree, which is the whole point of the wide tolerances: a whistle playing 70 cents
-   * sharp is named as the semitone above, and correct fingering should not be called wrong.
-   *
-   * `note` is only asked whether anything is sounding — silence arrives as 0 cents and would
-   * otherwise score as a perfect hit.
+   * Scored on cents from the target, not on which semitone the pitch is nearest: a whistle 70 cents
+   * sharp is named as the semitone above, and correct fingering should not be called wrong. `note`
+   * only says whether anything is sounding — silence arrives as 0 cents and would score as a hit.
    */
   const isOnTarget = (frame: TrainerFrame): boolean =>
     noteAt(index) !== null
@@ -146,8 +135,7 @@ export function createTrainerEngine(
     return {
       ...around,
       index,
-      // A finished song has nothing left to play, though the row still shows the note it
-      // ended on.
+      // Nothing left to play, though the row still shows the note the song ended on.
       target: finished ? null : around.target,
       holdProgress: clamp01(holdFrames / config.holdFrames),
       mistakeProgress: clamp01(mistakeFrames / config.mistakeLimitFrames),
@@ -203,9 +191,8 @@ export function createTrainerEngine(
 
   const registerPenalty = (): void => {
     if (config.penaltyMode === 'wait') {
-      // The index does not move. The bar is pinned full as a "wrong note" signal and decays only
-      // once the wrong note stops — which also means every frame after this one crosses the
-      // threshold again, so without the flag one held wrong note would count once per frame.
+      // The index does not move: the bar is pinned full until the wrong note stops. Every frame after
+      // this one crosses the threshold too, so without the flag one held note would count on each.
       if (!wrongCounted) mistakes += 1
       wrongCounted = true
       mistakeFrames = config.mistakeLimitFrames
@@ -235,9 +222,8 @@ export function createTrainerEngine(
     }
 
     if (awaitingRelease) {
-      // The frame that breaks the sound is not discarded, it still counts below. The same
-      // test as scoring, or a wide tolerance would call a sustained note released and then
-      // score it again on the very next frame.
+      // The same test as scoring, or a wide tolerance would call a sustained note released and then
+      // score it again on the very next frame. The frame that breaks the sound still counts below.
       if (isOnTarget(frame)) {
         status = 'release'
         return snapshot()
@@ -250,8 +236,7 @@ export function createTrainerEngine(
       mistakeFrames = Math.max(0, mistakeFrames - 1)
       status = 'holding'
     } else if (frame.note !== null) {
-      // Half a frame lost against a full frame gained, so a momentary wobble in
-      // intonation does not wipe out the hold.
+      // Half a frame lost against a full one gained, so a wobble in intonation does not wipe the hold.
       holdFrames = Math.max(0, holdFrames - 0.5)
       mistakeFrames += 0.5
       status = 'wrong'
@@ -261,8 +246,7 @@ export function createTrainerEngine(
       status = 'waiting'
     }
 
-    // Playing the right note or stopping ends the run of wrong playing, so the next time the bar
-    // fills it is a fresh mistake.
+    // Playing the right note or stopping ends the run, so the next fill is a fresh mistake.
     if (status !== 'wrong') wrongCounted = false
 
     // A finished hold wins when both bars fill on the same frame.

@@ -1,6 +1,5 @@
-/* A groove cut into the panel: one step away from the card in whichever scheme is on, so
-   the needle and the tolerance zone both have something to sit in. `light-dark()` is
-   postcss-preset-mantine's — light value first. */
+/* A groove cut into the panel, one step away from the card in either scheme, so the needle and the
+   tolerance zone have something to sit in. `light-dark()` is Mantine's preset, light value first. */
 .track {
   position: relative;
   height: 44px;
@@ -10,9 +9,9 @@
   border-radius: var(--mantine-radius-md);
 }
 
-/* The zone marks "close enough", so it has to read as green rather than merely as a
-   lighter patch. On the dark track that means the bottom of the ramp at 3.19:1; on the
-   light one a midtone, where accent-9 would be a bar darker than the needle crossing it. */
+/* The zone marks "close enough", so it has to read as green, not just as a lighter patch: the
+   bottom of the ramp at 3.19:1 on dark, a midtone on light where accent-9 would out-darken the
+   needle crossing it. */
 .zone {
   position: absolute;
   top: 0;
@@ -22,8 +21,7 @@
     light-dark(var(--mantine-color-accent-6), var(--mantine-color-accent-7));
 }
 
-/* Mantine's placeholder shade, the quietest thing it still calls legible: 5.52:1 on the
-   dark track and 3.95:1 on the light one. */
+/* Mantine's placeholder shade, its quietest legible one: 5.52:1 on dark, 3.95:1 on light. */
 .center {
   position: absolute;
   top: 6px;

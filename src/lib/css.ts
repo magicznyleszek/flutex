@@ -1,6 +1,6 @@
 /**
- * CSS module lookups are typed `string | undefined` under `noUncheckedIndexedAccess`,
- * so callers pass them straight in and skip `?? ''` at every call site.
+ * CSS module lookups are `string | undefined` under `noUncheckedIndexedAccess`, so callers pass
+ * them straight in rather than writing `?? ''` at every call site.
  */
 export function cx(...names: (string | false | null | undefined)[]): string {
   let result = ''

@@ -1,7 +1,6 @@
-// Pitch detection with the McLeod Pitch Method (normalised square difference).
-// Only the lags inside the instrument's range are computed, roughly a tenth of
-// the 1024 possible, and prefix sums keep normalisation O(1) per lag. The NSDF
-// lands in <-1, 1>, so peak height also serves as a clarity score.
+// Pitch detection with the McLeod Pitch Method (normalised square difference). Only the lags inside
+// the instrument's range are computed, about a tenth of the 1024 possible, and prefix sums keep
+// normalisation O(1) per lag. The NSDF lands in <-1, 1>, so peak height doubles as a clarity score.
 
 export interface PitchReading {
   /** Frequency in Hz, or -1 when no tone was detected. */
@@ -41,9 +40,8 @@ export function createPitchDetector({
   // Past half the window there are too few overlapping samples left.
   const maxLag = Math.min(bufferSize >> 1, Math.ceil(sampleRate / minFreq))
 
-  // One lag of margin on each side of the searched range. Without it a peak
-  // sitting exactly on minFreq or maxFreq has no neighbour to compare against,
-  // gets skipped, and the tone reads as its subharmonic.
+  // One lag of margin each side: a peak sitting exactly on minFreq or maxFreq would have no
+  // neighbour to compare against, get skipped, and read as its subharmonic.
   const searchMin = Math.max(2, minLag - 1)
   const searchMax = Math.min(bufferSize >> 1, maxLag + 1)
   const lagCount = Math.max(0, searchMax - searchMin + 1)
@@ -61,8 +59,8 @@ export function createPitchDetector({
   return function detect(buffer: Float32Array): PitchReading {
     let sumSquares = 0
     for (let i = 0; i < bufferSize; i++) {
-      // `as number` here and below: the loop bounds keep every index in range,
-      // which noUncheckedIndexedAccess cannot see.
+      // `as number` here and below: the loop bounds keep the index in range, which
+      // noUncheckedIndexedAccess cannot see.
       const sample = buffer[i] as number
       sumSquares += sample * sample
       prefixSquares[i + 1] = sumSquares
@@ -95,8 +93,8 @@ export function createPitchDetector({
     }
     if (highestPeak <= 0) return noPitch(rms)
 
-    // Take the first peak within `peakRatio` of the tallest. The tallest often
-    // lands on a multiple of the period and reads an octave too low.
+    // First peak within `peakRatio` of the tallest: the tallest often lands on a multiple of the
+    // period, which reads an octave too low.
     const cutoff = highestPeak * peakRatio
     let peakIndex = -1
     for (let i = firstPeakIndex; i <= lastPeakIndex; i++) {
@@ -108,8 +106,7 @@ export function createPitchDetector({
     }
     if (peakIndex < 0) return noPitch(rms)
 
-    // Parabolic interpolation. Whole-sample resolution jumps by a dozen cents or
-    // more around 600 Hz.
+    // Parabolic interpolation: whole-sample resolution jumps a dozen cents or more around 600 Hz.
     const y1 = nsdf[peakIndex - 1] as number
     const y2 = nsdf[peakIndex] as number
     const y3 = nsdf[peakIndex + 1] as number
@@ -135,9 +132,8 @@ export function createPitchDetector({
 export type MedianFilter = (value: number) => number
 
 /**
- * Median of the last N readings, which kills single-frame octave jumps without
- * the lag of a moving average. Silence clears the history, so releasing a note
- * registers right away.
+ * Median of the last N readings: kills single-frame octave jumps without a moving average's lag.
+ * Silence clears the history, so releasing a note registers right away.
  */
 export function createMedianFilter(size = 3): MedianFilter {
   const history: number[] = []

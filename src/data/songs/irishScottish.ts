@@ -1,9 +1,6 @@
 /**
  * Polkas, jigs, a march and a slip jig. "A Blast Of Wind" is the other song the range tests exempt by
  * name, for the reason `index.ts` gives.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
  */
 import { defineSong, type Song } from '../songUtils'
 

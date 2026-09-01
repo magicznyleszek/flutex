@@ -1,25 +1,24 @@
-/* The artwork is `fill="currentColor"` throughout, so the mark is whatever `color` resolves to
-   here. Logo.tsx inlines the markup with `bundle-text:` because an `<img>` or a `background` cannot
-   be styled from outside at all. A span, since the logotype sits in the page's h1. */
+/* The artwork is `fill="currentColor"` throughout, so the mark takes whatever `color` resolves to
+   here — which is why Logo.tsx inlines the markup rather than using an `<img>`. A span, since the
+   logotype sits in the page's h1. */
 .mark {
   display: block;
   flex: none;
 
-  /* Not `--mantine-color-accent-filled`: that shade is picked for focus rings, while the mark sits
-     straight on the page. The ink shades read 10.37:1 dark and 4.80:1 light. Set on the span so a
-     caller's `c=` still works — on the svg it would be beaten by the rule below. */
+  /* Not `--mantine-color-accent-filled`: that shade is picked for focus rings, and the mark sits
+     straight on the page. These read 10.37:1 dark, 4.80:1 light. On the span, so a caller's `c=`
+     still works. */
   color: var(--flutex-accent-ink);
 }
 
-/* Both viewBoxes are intrinsic, so `height: auto` takes the aspect ratio from the artwork
-   instead of a declared ratio that can drift from it. */
+/* Both viewBoxes are intrinsic, so `height: auto` takes the ratio from the artwork itself. */
 .mark > svg {
   display: block;
   width: 100%;
   height: auto;
 
-  /* Each SVG sets its own `color` under `prefers-color-scheme` for when it is rendered standalone as
-     a favicon, and that beats an inherited value however specific the rule carrying it. `.mark > svg`
-     outranks the file's `.flutex-mark`, and `inherit` hands the colour back to the span. */
+  /* Each SVG sets its own `color` under `prefers-color-scheme` for standalone favicon use, and that
+     beats any inherited value. `.mark > svg` outranks the file's `.flutex-mark`, and `inherit` hands
+     the colour back to the span. */
   color: inherit;
 }

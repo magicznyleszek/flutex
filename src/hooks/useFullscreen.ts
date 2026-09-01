@@ -32,8 +32,7 @@ const detect = (): boolean => {
   const doc = webkitDoc()
   const supported = doc.fullscreenEnabled || (doc.webkitFullscreenEnabled ?? false)
 
-  // Not `(display-mode: fullscreen)`: element fullscreen matches that too and hides
-  // the control for getting back out.
+  // Not `(display-mode: fullscreen)`: element fullscreen matches that too, hiding the way back out.
   const installed = window.matchMedia('(display-mode: standalone)').matches
 
   return supported && !installed
@@ -53,8 +52,7 @@ const subscribeNothing = (): (() => void) => () => undefined
 const off = (): boolean => false
 
 export function useFullscreen(): Fullscreen {
-  // The third argument keeps these working in the render tests, which have no `window`
-  // and no `document`.
+  // The third argument keeps these working in the render tests, which have no `window`.
   const available = useSyncExternalStore(subscribeNothing, detect, off)
   const active = useSyncExternalStore(subscribe, isActive, off)
 

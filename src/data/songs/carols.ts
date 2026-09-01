@@ -1,10 +1,4 @@
-/**
- * The seasonal ones, which is the one section here gathered by when you would play it rather than by
- * how hard it is.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
- */
+/** The seasonal ones — the one section gathered by when you would play it, not by difficulty. */
 import { defineSong, type Song } from '../songUtils'
 
 export const CAROLS: readonly Song[] = [

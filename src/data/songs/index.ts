@@ -2,12 +2,10 @@
  * The song library, assembled from one file per category, plus the lookups that need all of them at
  * once. What a song *is*, and how one is fitted to an instrument, lives in `../songUtils.ts`.
  *
- * The tunes are traditional or old enough to be out of copyright, and each subtitle names its
- * source. Most were read off ABC transcriptions in the Nottingham Music Database.
- *
- * The entries themselves are compiled output, not hand-typed: `songDefinition.ts` turns an ABC tune
- * into one, transposition and all. Paste a tune into **My own song** and the app offers you the
- * block, then it goes in the file its section is named for.
+ * The tunes are traditional or out of copyright, and each subtitle names its source — mostly ABC
+ * transcriptions from the Nottingham Music Database. The entries are compiled output rather than
+ * hand-typed: paste a tune into **My own song** and `songDefinition.ts` hands you the block,
+ * transposition and all, to drop into the file its section is named for.
  */
 import {
   CUSTOM_SONG_ID,
@@ -38,19 +36,17 @@ const BY_CATEGORY: Readonly<Record<SongCategory, readonly Song[]>> = {
 }
 
 // All but two of these are written inside D5-E6 on the ten notes all five charts share — the D major
-// scale plus C natural, which is a tin whistle in D intersected with a 6-hole ocarina. That is what
-// lets every instrument play the library as written, since `songForInstrument` leaves a melody alone
-// when the instrument can already play it: a tune that did not fit that set was transposed until it
-// did, or left out.
+// scale plus C natural, a tin whistle in D intersected with a 6-hole ocarina. That is what lets every
+// instrument play the library as written, since `songForInstrument` leaves a melody alone when the
+// instrument can already play it. A tune that did not fit was transposed until it did, or left out.
 //
 // The two are "Concerning Hobbits", transcribed from the film rather than chosen to fit, whose high
-// section reaches F#6 and A6 past both ocarinas; and "A Blast Of Wind", which spans nineteen
-// semitones against a window of fourteen, so each instrument takes its own shift. The shift search
-// is really there for pasted custom songs, which arrive in any key and any octave.
+// section reaches F#6 and A6 past both ocarinas; and "A Blast Of Wind", nineteen semitones wide
+// against a window of fourteen, so each instrument takes its own shift.
 //
-// Walked in `SONG_CATEGORIES` order, which is what makes the picker's grouping and the order songs
-// are listed in follow from the category list alone — there is no order here to get wrong. Each
-// song's `category` is stamped on here as well, so a file's name is the only place it is written.
+// Walked in `SONG_CATEGORIES` order, so the picker's grouping and the order songs are listed in both
+// follow from that list — there is no order here to get wrong. Each song's `category` is stamped on
+// here too, which leaves the file name as the only place it is written.
 export const SONGS: readonly Song[] = SONG_CATEGORIES.flatMap(
   (category) => BY_CATEGORY[category.slug].map((song) => ({ ...song, category: category.slug })),
 )
@@ -67,9 +63,8 @@ if (FIRST_SONG === undefined) throw new Error('The song library is empty')
 export const DEFAULT_SONG: Song = findSong(DEFAULT_SONG_ID) ?? FIRST_SONG
 
 /**
- * Falls back to the default song so the UI always has something to render. `CUSTOM_SONG_ID` is
- * not in the library and falls back with everything else, so a caller that offers the custom
- * song has to reach for `parseCustomSong` before asking here.
+ * Falls back to the default song so the UI always has something to render. `CUSTOM_SONG_ID` is not in
+ * the library and falls back too, so a caller offering the custom song calls `parseCustomSong` first.
  */
 export function getSong(id: string | null | undefined): Song {
   return findSong(id) ?? DEFAULT_SONG

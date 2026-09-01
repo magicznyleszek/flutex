@@ -34,10 +34,7 @@ function synth(hz: number, options: SynthOptions = {}): Float32Array {
 const freq = (note: string): number => noteToFreq(note) as number
 const detector = () => createPitchDetector({ sampleRate: SAMPLE_RATE, bufferSize: BUFFER_SIZE })
 
-/**
- * Measuring allocations through `heapUsed` is flaky because the result depends on when
- * the GC runs. A Proxy on the array constructors counts them deterministically.
- */
+/** `heapUsed` depends on when the GC runs; a Proxy on the constructors counts deterministically. */
 function countTypedArrayAllocations(run: () => void): number {
   let count = 0
 
@@ -147,8 +144,8 @@ describe('createPitchDetector', () => {
       maxFreq,
     })
 
-    // 3000 Hz is also periodic at 1000, 750 and 600 Hz, so no period-based method can
-    // reject a tone above the range. The only guarantee is a reading inside the bounds.
+    // 3000 Hz is also periodic at 1000, 750 and 600, so no period-based method can reject a tone
+    // above the range. The only guarantee is a reading inside the bounds.
     for (const hz of [3000, 2350, 4400]) {
       const reading = detect(synth(hz))
       if (reading.hz > 0) {
@@ -168,8 +165,8 @@ describe('createPitchDetector', () => {
       maxFreq,
     })
 
-    // A peak at the outermost lag has no neighbour on one side, so without a margin in
-    // the NSDF table the reading drops to the subharmonic.
+    // A peak at the outermost lag has no neighbour on one side, so without a margin in the NSDF
+    // table the reading drops to the subharmonic.
     for (const hz of [minFreq, maxFreq]) {
       const reading = detect(synth(hz))
       expect(reading.hz).toBeGreaterThan(0)
@@ -187,8 +184,7 @@ describe('createPitchDetector', () => {
     })
 
     expect(allocations).toBe(0)
-    // Self-check: a Proxy that intercepts nothing would make the count above pass
-    // whatever the detector does.
+    // Self-check: a Proxy that intercepts nothing would pass the count above regardless.
     expect(countTypedArrayAllocations(() => void detector())).toBeGreaterThan(0)
   })
 })

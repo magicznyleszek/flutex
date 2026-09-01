@@ -14,8 +14,7 @@ function define(text: string): ReturnType<typeof songDefinition> {
 
 /** Runs a generated block back through the reader it was written for. */
 function reparse(block: string): Song {
-  // The block is source text, so the fields come back out with a regex rather than an eval. Only
-  // `key` and `spec` decide any notes, and those are what the assertions are about.
+  // The block is source text, so a regex rather than an eval. Only `key` and `spec` decide notes.
   const key = /key: '([^']+)'/.exec(block)?.[1] ?? ''
   const spec = /spec: (?:'([^']*)'|`([\s\S]*?)\n {4}`)/.exec(block)
   return defineSong({ id: 'x', title: 'x', key, spec: spec?.[1] ?? spec?.[2] ?? '' })
@@ -33,8 +32,8 @@ K:Em
 `
 
 describe('the shared note set', () => {
-  // The library is written on these ten and the search aims at them, so a chart edit that changes
-  // the set has to be a deliberate one.
+  // The library is written on these ten and the search aims at them, so a chart edit that moves the
+  // set has to be a deliberate one.
   it('is the D major scale plus C natural', () => {
     expect(SHARED_NOTES).toEqual(['D5', 'E5', 'F#5', 'G5', 'A5', 'B5', 'C6', 'C#6', 'D6', 'E6'])
   })
@@ -47,12 +46,9 @@ describe('the shared note set', () => {
 })
 
 describe('reading a tune into a definition', () => {
-  /*
-   * The tune is in the library already, entered by hand from the same 1651 source. Reproducing it
-   * note for note is the strongest check there is that the whole chain agrees — the octave the shift
-   * lands on, the key it reports, the repeats it plays out, the two endings it picks between, the
-   * bar lines it puts back and the `:beats` it writes out.
-   */
+  // The tune is in the library already, entered by hand from the same 1651 source. Reproducing it
+  // note for note is the strongest check that the whole chain agrees: the octave, the key, the
+  // repeats, the two endings, the bar lines and the `:beats`.
   it('reproduces the library entry for a tune already in it', () => {
     const nonesuch = SONGS.find((song) => song.id === 'nonesuch')
     const definition = define(NONESUCH)
@@ -62,12 +58,9 @@ describe('reading a tune into a definition', () => {
     expect(reparse(definition.block).notes).toEqual(nonesuch?.notes)
   })
 
-  /*
-   * A whole octave up would clear the bottom of the range but push the top past both ocarinas, so
-   * the answer is a fifth, which also pulls the tune out of G and into the whistle's D. That is the
-   * decision worth having a machine make: the smaller move is the one that fits, and it is not the
-   * obvious one.
-   */
+  // An octave up would clear the bottom of the range but push the top past both ocarinas, so the
+  // answer is a fifth, which also pulls the tune into the whistle's D. The smaller move is the one
+  // that fits, and it is not the obvious one — which is why a machine picks it.
   it('moves a tune written below the instruments by the smallest move that fits', () => {
     const definition = define('X:1\nT:Low\nM:4/4\nL:1/4\nK:G\nG A B c|d e f g|')
 
@@ -93,11 +86,8 @@ describe('reading a tune into a definition', () => {
 })
 
 describe('the generated block', () => {
-  /*
-   * The point of the whole thing: a block that parses back into a song every instrument plays
-   * untouched. That is what `tests/data.test.ts` demands of the library, so a definition that
-   * failed here would be one that breaks the suite on being pasted.
-   */
+  // The point of the whole thing: a block that parses back into a song every instrument plays
+  // untouched, which is what `tests/data.test.ts` demands of anything pasted into the library.
   it('plays as written on every instrument', () => {
     const song = reparse(define(NONESUCH).block)
 
@@ -114,8 +104,7 @@ describe('the generated block', () => {
     expect(definition.block).toContain("spec: 'D5 E5 | F#5 G5 | A5 B5'")
   })
 
-  // A note list has no `T:` to take a title from, and a block titled "My own song" pasted into the
-  // library would be wrong in a way nothing downstream would catch.
+  // A note list has no `T:`, and a block titled "My own song" is wrong in a way nothing catches.
   it('flags a paste that brought no title of its own', () => {
     expect(define('D5 E5 F#5').needsTitle).toBe(true)
     expect(define(NONESUCH).needsTitle).toBe(false)
@@ -135,8 +124,8 @@ describe('the generated block', () => {
     for (const line of block.split('\n')) expect(line.length).toBeLessThanOrEqual(98)
   })
 
-  // The packer breaks between bars, so a source with none of them is one bar the width of the whole
-  // melody. Wrapping has to fall back to breaking on notes or the spec comes out as one long line.
+  // The packer breaks between bars, so a source with none is one bar as wide as the melody. Wrapping
+  // has to fall back to breaking on notes, or the spec comes out as one long line.
   it('wraps a long tune that has no bar lines to break on', () => {
     const block = define('D5 E5 F#5 G5 A5 B5 C#6 D6 '.repeat(12)).block
 

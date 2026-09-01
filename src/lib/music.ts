@@ -84,8 +84,7 @@ export function centsFromNote(hz: number, noteStr: string): number {
   return centsBetween(hz, targetHz)
 }
 
-// Display only; the trainer never enforces rhythm. Must stay in descending order, the
-// lookup takes the first entry that fits.
+// Display only; the trainer never enforces rhythm. Descending order — the lookup takes the first fit.
 const DURATION_GLYPHS: readonly (readonly [number, string])[] = [
   [4, '𝅝'],
   [3, '𝅗𝅥.'],

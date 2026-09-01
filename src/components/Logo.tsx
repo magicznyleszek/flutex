@@ -1,9 +1,8 @@
 import { Box, type MantineBreakpoint } from '@mantine/core'
 import type { JSX } from 'react'
 
-// `bundle-text:` returns the built file as a string instead of emitting a separate
-// asset, so the artwork sits in the document where CSS can set its fill. Neither file
-// paints itself — see `Logo.module.css`.
+// `bundle-text:` returns the file as a string rather than a separate asset, so the artwork sits in
+// the document where CSS can set its fill. Neither file paints itself — see `Logo.module.css`.
 import iconMarkup from 'bundle-text:../flutex-icon.svg'
 import logotypeMarkup from 'bundle-text:../flutex-logotype.svg'
 
@@ -34,15 +33,13 @@ export function Logo({
       component="span"
       className={cx(classes.mark)}
       w={width}
-      // Naming the span makes its subtree presentational, so the inlined `<svg>`
-      // needs no title of its own.
+      // Naming the span makes its subtree presentational, so the `<svg>` needs no title.
       role="img"
       aria-label="Flutex"
       hiddenFrom={hiddenFrom}
       visibleFrom={visibleFrom}
-      // Build-time constant from a file in this repo, nothing derived from input.
-      // Redeclaring the paths as JSX would fork the artwork away from the file the
-      // favicon points at.
+      // A build-time constant from this repo, nothing derived from input. Redeclaring the paths as
+      // JSX would fork the artwork away from the file the favicon points at.
       dangerouslySetInnerHTML={{ __html: MARKUP[variant] }}
     />
   )

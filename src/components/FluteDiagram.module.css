@@ -1,19 +1,16 @@
-/* One source for the diagram's geometry, so the legend digits line up with the holes they
-   label and the placeholder is exactly as tall as the diagram it stands in for.
-   `--hole-count` is the one value CSS cannot know, so FluteDiagram.tsx sets it inline.
+/* One source for the diagram's geometry, so the legend digits line up with the holes they label
+   and the placeholder is exactly as tall as the chart it stands in for. `--hole-count` is the one
+   value CSS cannot know, so FluteDiagram.tsx sets it inline.
 
-   Phone sizes are the ones written here, and the media queries below grow them, rather than
-   the other way round. A browser too old for either query then renders the small charts,
-   which merely look cramped on a desktop — the reverse put five full-size charts in a 316px
-   card. The widths scale with the screen because four of these have to fit side by side in
-   the note row and a phone is anywhere from 320 to 430 CSS pixels wide. Measured with the
-   gaps between them included, four recorder charts come to 266px on a 320px screen, which
-   has 276px inside the card, and to 313px on a 390px one, which has 346. Fixed 14px holes
-   overhung the card by 9px a side.
+   Phone sizes are written here and the media queries below grow them, not the other way round: a
+   browser too old for either query then draws small charts, which only look cramped on a desktop,
+   where the reverse put five full-size charts in a 316px card. The widths scale with the screen
+   because four charts must fit abreast and a phone is 320 to 430px wide. Gaps included, four
+   recorder charts come to 266px on a 320px screen, which has 276px inside the card. Fixed 14px
+   holes overhung it by 9px a side.
 
-   The tube also has to stay vertical, because the holes map onto fingers, and 310px of
-   recorder is too much above the fold on a phone. So the gaps and the tube's head and foot
-   are cut harder than the holes themselves. */
+   The tube stays vertical, since the holes map onto fingers, and 310px of recorder is too much
+   above the fold — so the gaps and the tube's head and foot are cut harder than the holes. */
 .wrapper,
 .placeholder,
 .ocarina {
@@ -27,44 +24,37 @@
   --mouthpiece-gap: 4px;
   --chart-gap: clamp(3px, 1vw, 5px);
 
-  /* The one measurement an ocarina chart needs, because its height follows from it. Width is
-     the scarce direction — five charts abreast — and it is set here rather than in `.ocarina`
-     below so that the media queries, which come first in the file, still win. Four of these
+  /* The one measurement an ocarina chart needs; its height follows from it. Set here rather than
+     in `.ocarina` below, so the media queries — earlier in the file — still win. Four of these
      and their gaps come to 264px on a 320px screen, which has 276px inside the card. */
   --ocarina-width: clamp(60px, 18vw, 84px);
 
-  /* The tube is a picture of a wooden instrument rather than a surface of the interface, so
-     it gets its own small palette instead of borrowing Mantine's. What stays constant across
-     the two schemes is the reading, not the colour: the tube is a step away from the card,
-     an open hole is the emptiest thing on it and a covered one is filled green. That flips
-     the holes round — a void is dark on the dark scheme and bare white on the light one —
-     because it is filled-versus-empty that says where your fingers go, not light-versus-dark.
-     `light-dark()` is postcss-preset-mantine's, light value first. */
+  /* The tube is a picture of a wooden instrument, not a surface of the interface, so it gets its
+     own small palette. What holds across the schemes is the reading, not the colour: the tube is a
+     step away from the card, an open hole the emptiest thing on it, a covered one filled green.
+     That flips the voids round — dark on dark, white on light — because filled-versus-empty is
+     what says where your fingers go. `light-dark()` is Mantine's preset, light value first. */
   --tube-face: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-6));
   --tube-edge: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-7));
   --tube-border: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-5));
 
-  /* Rings and the mouthpiece block. On the dark tube dark-3 reads 3.07:1 where the dark-4
-     that borders everything else manages 1.79:1 and all but disappears; gray-5 is the same
-     job on the light one at 3.12:1. */
+  /* Rings and the mouthpiece block. On the dark tube dark-3 reads 3.07:1 where the dark-4 that
+     borders everything else manages 1.79:1; gray-5 does the same job on light at 3.12:1. */
   --tube-trim: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
 
-  /* Green stays green in both, one shade of it per scheme: bright enough to carry on a dark
-     tube, dark enough to carry on a light one. */
+  /* One shade of green per scheme: bright enough for a dark tube, dark enough for a light one. */
   --hole-void: light-dark(var(--mantine-color-white), var(--mantine-color-dark-9));
   --hole-fill: light-dark(var(--mantine-color-accent-8), var(--mantine-color-accent-4));
   --hole-fill-ring: light-dark(var(--mantine-color-accent-9), var(--mantine-color-accent-6));
 
-  /* Measured from the outside of `.body`: border, top padding, mouthpiece, then the
-     mouthpiece's own margin and the column's flex gap. The legend and thumb columns are
-     pushed down by the same amount, which is what aligns them with the holes. */
+  /* From the outside of `.body`: border, top padding, mouthpiece, its margin, the flex gap. The
+     legend and thumb columns are pushed down by the same amount, which aligns them with the holes. */
   --first-hole-offset: calc(
     1px + var(--head-pad) + var(--mouthpiece-height) + var(--mouthpiece-gap) + var(--hole-gap)
   );
 
-  /* Each hole contributes its own height plus the gap above it, including the gap under
-     the mouthpiece. `.placeholder` reuses this so the card does not jump when the song
-     finishes or a fingering is missing. */
+  /* Each hole adds its height plus the gap above it, the one under the mouthpiece included.
+     `.placeholder` reuses this so the card does not jump when a fingering is missing. */
   --diagram-height: calc(
     2px + var(--head-pad) + var(--mouthpiece-height) + var(--mouthpiece-gap)
     + (var(--hole-count, 6) * (var(--hole-size) + var(--hole-gap)))
@@ -72,10 +62,9 @@
   );
 }
 
-/* 48em is Mantine's `sm`, the width at which the note row shows five charts instead of four.
-   Holes and tube go to full size here, but the space between the tube and its numbers does
-   not: five 138px charts and their gaps come to 813px where a 768px screen has 696px inside
-   the card, which hung the outer two off the edge. A 6px gap takes a chart to 110px. */
+/* 48em is Mantine's `sm`, where the note row shows five charts instead of four. Holes and tube go
+   full size, but the space between tube and numbers does not: five 138px charts and their gaps come
+   to 813px where a 768px screen has 696px inside the card. A 6px gap takes a chart to 110px. */
 @media (width >= 48em) {
   .wrapper,
   .placeholder,
@@ -94,9 +83,8 @@
   }
 }
 
-/* Past 62em the card stops growing — Container `md` caps at 960 — so what the card has is
-   what it will ever have, and 5 × 138 plus four gaps of 44 is 866 inside 888. That leaves
-   room to spend on the gap between the tube and the legend again. */
+/* Past 62em the card stops growing — Container `md` caps at 960 — so 5 × 138 plus four 44px gaps
+   is 866 inside 888, which leaves room to spend on the gap between tube and legend again. */
 @media (width >= 62em) {
   .wrapper,
   .placeholder,
@@ -108,14 +96,11 @@
   }
 }
 
-/* Three slots — something beside the tube, the tube, something beside the tube — with the
-   two outer ones the same width. That is what puts the tube in the exact middle of the
-   chart, and the middle is where the note name below it has to line up. Sizing the slots to
-   their contents instead would hang the legend digits off one side only, so every name in
-   the note row would sit a slot's width to the right of its own tube.
+/* Three slots with the outer two the same width, which is what puts the tube in the exact middle
+   — where the note name below it lines up. Sizing the slots to their contents would hang the legend
+   digits off one side only, and every name would sit a slot's width right of its own tube.
 
-   `--side-slot` comes in inline, because only the component knows whether the instrument
-   has a thumb hole to make room for. */
+   `--side-slot` comes in inline: only the component knows about a thumb hole. */
 .wrapper {
   display: grid;
   grid-template-columns: var(--side-slot, 1ch) auto var(--side-slot, 1ch);
@@ -123,8 +108,8 @@
   gap: var(--chart-gap);
 }
 
-/* Stands in for `.wrapper` at the same height when there is no fingering to draw. The
-   inline padding keeps the out-of-range Alert off the card's edge. */
+/* Stands in for `.wrapper` at the same height when there is no fingering to draw. The padding
+   keeps the out-of-range Alert off the card's edge. */
 .placeholder {
   display: flex;
   align-items: center;
@@ -133,12 +118,9 @@
   padding-inline: var(--mantine-spacing-md);
 }
 
-/* An empty neighbour still has to hold its slot open. Without a width the column collapses
-   to the width of its `–`, which pulls the whole row off centre at the start of a song and
-   then makes it jump sideways the moment `previous` stops being null. The inline padding
-   `.placeholder` uses to keep the out-of-range Alert off the card edge is not wanted here,
-   so it goes. It comes after `.placeholder` because both are single classes and the winner
-   on a tie is whichever is written last. */
+/* An empty neighbour still holds its slot open. Without a width the column collapses to its `–`,
+   pulling the row off centre at the start of a song and jumping sideways once `previous` fills. The
+   Alert padding is not wanted here. Written after `.placeholder`: on a tie, the last one wins. */
 .barePlaceholder {
   min-width: calc(
     var(--body-width) + (2 * var(--side-slot, 1ch)) + (2 * var(--chart-gap))
@@ -147,13 +129,11 @@
 }
 
 /* Sizing for a chart that is a drawing rather than a column: the SVG is 100 units wide and
-   `--ocarina-aspect` of that tall, which FluteDiagram.tsx hands in because only the instrument
-   data knows the shape. The same class goes on the placeholders, so an ocarina card keeps its
-   height when a note has no fingering — and it ends up a good deal shorter than a recorder
-   card, because an ocarina is wide and a tube is long.
+   `--ocarina-aspect` of that tall, handed in because only the instrument data knows the shape. The
+   placeholders take this class too, so an ocarina card keeps its height — a good deal shorter than
+   a recorder's, an ocarina being wide where a tube is long.
 
-   Written after `.placeholder` and `.barePlaceholder` on purpose: all three are single classes,
-   so the last one in the file is the one whose `--diagram-height` and `min-width` win. */
+   After `.placeholder` and `.barePlaceholder` on purpose: all single classes, so the last wins. */
 .ocarina {
   --diagram-height: calc(var(--ocarina-width) * var(--ocarina-aspect, 1));
 
@@ -167,14 +147,13 @@
   height: auto;
 }
 
-/* Flat where the tube is a gradient: an SVG gradient needs an id to point at, and five of
-   these are on screen at once. The palette is the tube's, so the two kinds of chart read as
-   the same material.
+/* Flat where the tube is a gradient: an SVG gradient needs an id to point at, and five charts are
+   on screen at once. Same palette as the tube, so both kinds read as one material.
 
-   `.ocarinaBackPad` is the same material for the same reason — it is the bit of instrument a
-   thumb hole is bored through, drawn under a hole that sits outside the front view so that the
-   hole reads as being on the instrument rather than floating beside it. Dashing the hole itself
-   was the other option, and at four viewBox units across a dash pattern came out as a flower. */
+   `.ocarinaBackPad` is the scrap of instrument a thumb hole is bored through, drawn under a hole
+   that sits outside the front view so it reads as on the instrument rather than beside it. Dashing
+   the hole was the other option, and at four viewBox units across a dash pattern looks like a
+   flower. */
 .ocarinaShell,
 .ocarinaBackPad {
   fill: var(--tube-face);
@@ -182,8 +161,8 @@
   stroke-width: 1;
 }
 
-/* Strokes are in viewBox units rather than pixels, so a chart shrunk onto a phone keeps its
-   proportions instead of turning twelve holes into twelve rings of outline. */
+/* Strokes are in viewBox units, so a chart shrunk onto a phone keeps its proportions instead of
+   turning twelve holes into twelve rings of outline. */
 .ocarinaHole {
   fill: var(--hole-void);
   stroke: var(--tube-trim);
@@ -200,15 +179,13 @@
   fill: var(--hole-fill);
 }
 
-/* The covered half of a half-covered hole, drawn over the open one. Filled from the top so it
-   reads the same way round as the gradient on `.holeHalf`. */
+/* Drawn over the open hole, filled from the top so it reads the same way round as `.holeHalf`. */
 .ocarinaHoleHalf {
   fill: var(--hole-fill);
 }
 
-/* The rounded end of a tube, lit down the middle. Everything inside it is measured against
-   the tube rather than against the card, which is why the shades come from the little
-   palette at the top of this file and not from Mantine's surface variables. */
+/* The rounded end of a tube, lit down the middle. Everything on it is read against the tube, not
+   the card, hence the little palette at the top of this file rather than Mantine's surfaces. */
 .body {
   grid-column: 2;
   display: flex;
@@ -261,10 +238,9 @@
   border-color: var(--hole-fill-ring);
 }
 
-/* Explicit slots rather than auto-placement: the thumb column is conditional, so on a
-   whistle the tube would otherwise fall into slot 1 and the whole grid would be pointless.
-   `start`/`end` keep both of these tucked against the tube instead of floating in the
-   middle of a slot that may be wider than they are. */
+/* Explicit slots, not auto-placement: the thumb column is conditional, so on a whistle the tube
+   would fall into slot 1. `start`/`end` tuck these against the tube rather than letting them float
+   in the middle of a slot wider than they are. */
 .legend {
   grid-column: 3;
   justify-self: start;

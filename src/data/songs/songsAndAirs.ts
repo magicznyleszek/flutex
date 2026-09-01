@@ -1,9 +1,6 @@
 /**
  * Longer melodies, held notes, more of a tune to shape. "Concerning Hobbits" is one of the two songs
  * the range tests exempt by name, for the reason `index.ts` gives.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
  */
 import { defineSong, type Song } from '../songUtils'
 

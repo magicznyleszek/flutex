@@ -41,16 +41,15 @@ const asView = (snapshot: TrainerSnapshot): TrainerView => ({
 })
 
 /**
- * One microphone reading per frame in, a throttled view out. `notes` is compared by
- * identity, so a caller that rebuilds the array every render restarts the song.
+ * One microphone reading per frame in, a throttled view out. `notes` is compared by identity, so a
+ * caller that rebuilds the array every render restarts the song.
  */
 export function useSongTrainer({
   notes,
   toleranceCents,
   penaltyMode,
 }: UseSongTrainerOptions): SongTrainer {
-  // Held in state rather than a ref because the initial view below reads it during
-  // render.
+  // In state rather than a ref because the initial view below reads it during render.
   const [engine] = useState<TrainerEngine>(() =>
     createTrainerEngine(notes, { toleranceCents, penaltyMode }),
   )
@@ -117,8 +116,7 @@ export function useSongTrainer({
     setView(next)
   }, [engine])
 
-  // Pushed into the engine instead of captured by the frame loop, so difficulty and
-  // penalty changes take effect mid-song.
+  // Pushed into the engine rather than captured by the frame loop, so changes land mid-song.
   useEffect(() => {
     engine.configure({ toleranceCents, penaltyMode })
   }, [engine, toleranceCents, penaltyMode])

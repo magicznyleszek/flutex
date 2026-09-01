@@ -38,10 +38,9 @@ export function SettingsBar({
 }: SettingsBarProps): JSX.Element {
   return (
     <Stack gap="xs">
-      {/* Uneven spans rather than three equal columns, because the option labels are not
-          remotely the same length: "Soprano recorder (baroque fingering)" is 36 characters and
-          gets cut off mid-word in a third of the card, while the other two are half that. It
-          takes a full row of its own until there is enough width for the 6/3/3 split. */}
+      {/* Uneven spans, because the labels are not the same length: "Soprano recorder (baroque
+          fingering)" is 36 characters and gets cut mid-word in a third of the card, while the
+          other two are half that. It takes a full row until there is width for the 6/3/3 split. */}
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
           <SettingSelect

@@ -22,7 +22,7 @@ export interface SettingSelectProps<T extends string> {
   isValid: (value: string) => value is T
   icon?: ReactNode
   description?: string
-  /** Worth it once a list is too long to scan, which of these lists is only the song one. */
+  /** Worth it once a list is too long to scan — of these, only the song list is. */
   searchable?: boolean
 }
 
@@ -41,15 +41,13 @@ export function SettingSelect<T extends string>({
       label={label}
       description={description}
       leftSection={icon}
-      // Copied group by group because Mantine types a group's `items` as mutable, while everything
-      // handed in here is readonly.
+      // Copied group by group: Mantine types a group's `items` as mutable, ours are readonly.
       data={options.map((option) => ('group' in option ? { ...option, items: [...option.items] } : option))}
       value={value}
       searchable={searchable}
       nothingFoundMessage={searchable ? 'Nothing by that name' : undefined}
-      // A searchable Select opens with the current label sitting in the box as the search term,
-      // so typing would append to it and match nothing. Selecting it means the first keystroke
-      // replaces it, and the label is still readable for anyone who opened the list to browse.
+      // A searchable Select opens with the current label in the box as the search term, so typing
+      // would append to it and match nothing. Selected, the first keystroke replaces it instead.
       onFocus={searchable ? (event) => event.currentTarget.select() : undefined}
       allowDeselect={false}
       checkIconPosition="right"

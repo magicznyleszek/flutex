@@ -1,13 +1,12 @@
 /**
- * Prints the `defineSong` block for an ABC tune, the same one the **Copy song definition** button in
- * the app gives you. Here for tunes that live in a file rather than a paste:
+ * Prints the `defineSong` block for an ABC tune, the same one the app's **Copy song definition**
+ * button gives you. Here for tunes that live in a file rather than a paste:
  *
  *   npm run song -- tune.abc
  *   pbpaste | npm run song
  *
- * The block comes from `songDefinition`; what this adds is the report around it — which instrument
- * would struggle, what each would put in place of a note it cannot finger, and whether the id is
- * already taken.
+ * The block comes from `songDefinition`. What this adds is the report around it: which instrument
+ * would struggle, what each would play instead, and whether the id is taken.
  */
 import { readFileSync } from 'node:fs'
 
@@ -24,8 +23,7 @@ const LABEL = 13
 
 /**
  * Wraps a note so its continuation lines up under the column the labels set. A label wider than the
- * column keeps its one space and pushes the first line right — instrument names are longer than
- * anything else that goes here.
+ * column keeps its one space and pushes the first line right — instrument names do this.
  */
 function say(label: string, text: string): void {
   const lines: string[] = []
@@ -83,7 +81,7 @@ function main(): void {
     + `${new Set(shifted.map((note) => note.note)).size} distinct notes`)
 
   // The check worth having is not "is every note in the shared set" but "does the app arrange it as
-  // written", which is the property `tests/data.test.ts` pins on every song in the library.
+  // written" — the property `tests/data.test.ts` pins on every song.
   const trouble = INSTRUMENT_LIST
     .map((instrument) => ({
       instrument,
@@ -116,8 +114,8 @@ function main(): void {
     }
   }
 
-  // Repeats are played out into the notes rather than marked, so the spec is longer than the source
-  // it came from. Worth saying, since the note count is the first thing you would check against it.
+  // Repeats are played out rather than marked, so the spec is longer than its source. Worth saying,
+  // since the note count is the first thing you would check against it.
   const repeats = text.match(/\|:|:\||::/g) ?? []
   if (repeats.length > 0) {
     say('Repeats', `${repeats.length} repeat marks, played out — the ${song.notes.length} notes `

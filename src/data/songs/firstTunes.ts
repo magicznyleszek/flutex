@@ -1,9 +1,6 @@
 /**
  * Short, near enough stepwise, and probably already in your head — which is what makes a wrong note
  * here obvious without reading anything.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
  */
 import { defineSong, type Song } from '../songUtils'
 

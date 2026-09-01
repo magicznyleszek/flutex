@@ -12,10 +12,9 @@ const README = 'https://github.com/magicznyleszek/flutex#writing-your-own-song'
 const EXAMPLE = 'F#5 F#5 G5 A5 | A5 G5 F#5 E5 | D5:2 E5:2'
 
 /**
- * What copying the block would get you, in the terms the library cares about — whether the entry
- * would play as written on every instrument, which is what the library's own test demands of it.
- * The shift named here is not the one the `+n semitones` badge shows: that one fits the melody to
- * the instrument in your hand, this one fits it to all five at once.
+ * Whether the entry would play as written on every instrument, which is what the library's test
+ * demands. The shift named here is not the `+n semitones` badge's: that one fits the melody to the
+ * instrument in your hand, this one to all five at once.
  */
 function definitionSentence({ semitones, strays, key, needsTitle }: SongDefinition): string {
   if (strays.length > 0) {
@@ -43,9 +42,8 @@ export interface CustomSongEditorProps {
 }
 
 /**
- * The box you write your own melody in, plus the button that turns it into a library entry.
- * Rendered inside the song picker's stack, which is why this is a fragment and sets no gap of its
- * own.
+ * The box you write your own melody in, plus the button that turns it into a library entry. It sits
+ * inside the song picker's stack, hence the fragment and no gap of its own.
  */
 export function CustomSongEditor({
   song,
@@ -53,8 +51,7 @@ export function CustomSongEditor({
   onCustomTextChange,
   customError,
 }: CustomSongEditorProps): JSX.Element {
-  // Only worth the transposition search once the paste parses. Memoised because it runs a shift
-  // search over the whole melody and the text changes on every keystroke.
+  // Memoised: it searches shifts across the whole melody, and the text changes every keystroke.
   const definition = useMemo(
     () => (customError === null && song.notes.length > 0 ? songDefinition(customText, song) : null),
     [customError, customText, song],
@@ -68,8 +65,8 @@ export function CustomSongEditor({
           <>
             Note names with an optional <Code className={classes.token}>:beats</Code>, or paste
             an ABC tune, headers and all. Stays in this browser.{' '}
-            {/* Same colour as the footer link and for the same reason: Mantine's own anchor
-                colour is the filled primary, which reads 3.51:1 at this size. */}
+            {/* Same colour as the footer link: Mantine's own anchor colour is the filled primary,
+                which reads 3.51:1 at this size. */}
             <Anchor
               inherit
               c="var(--flutex-accent-ink)"
@@ -83,8 +80,8 @@ export function CustomSongEditor({
         placeholder={EXAMPLE}
         value={customText}
         onChange={(event) => onCustomTextChange(event.currentTarget.value)}
-        // The message goes where the fingerings would be, which is where you are looking. This
-        // only marks the box it came from — and tells a screen reader the field is invalid.
+        // The message itself goes where the fingerings would be. This just marks the box, and tells
+        // a screen reader the field is invalid.
         error={customError !== null}
         classNames={{ input: classes.editor }}
         autosize
@@ -95,9 +92,9 @@ export function CustomSongEditor({
         autoCorrect="off"
       />
 
-      {/* The way a tune you like gets into the library: paste ABC here, then paste the block into
-          the file under `data/songs/` for its section. Doing it by hand means finding the
-          transposition yourself, and a wrong one fails the test suite rather than looking wrong. */}
+      {/* How a tune gets into the library: paste ABC here, drop the block into the file under
+          `data/songs/` for its section. By hand you would have to find the transposition
+          yourself, and a wrong one fails the test suite rather than looking wrong. */}
       {definition !== null && (
         <Stack gap={4}>
           <Group gap="xs">

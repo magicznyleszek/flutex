@@ -2,9 +2,8 @@ import type { TrainerStatus } from '../lib/trainer'
 
 export interface StatusMeta {
   /**
-   * A CSS colour, not a Mantine palette key. The status shows up as text on a card and as
-   * a ring around the target note, and the shade that carries either one differs between
-   * the colour schemes — so these point at variables `global.css` resolves per scheme.
+   * A CSS colour, not a Mantine palette key. The shade that carries text on a card differs between
+   * the schemes, so these point at variables `global.css` resolves per scheme.
    */
   color: string
   label: string
@@ -14,9 +13,8 @@ export interface StatusMeta {
 /** Single source for status wording and colour. */
 export const STATUS_META: Record<TrainerStatus, StatusMeta> = {
   waiting: {
-    // NoteSequence renders this as 14px semibold, which WCAG does not count as large, and
-    // the neutral one step brighter only reaches 4.36:1 on a card. `dimmed` is 5.91:1 in
-    // the dark scheme and 6.03:1 in the light one.
+    // Drawn at 14px semibold, which WCAG does not count as large; the neutral one step brighter
+    // only reaches 4.36:1 on a card. `dimmed` is 5.91:1 dark, 6.03:1 light.
     color: 'var(--mantine-color-dimmed)',
     label: 'Waiting',
     hint: 'Play the note shown above.',
@@ -49,8 +47,8 @@ export const STATUS_META: Record<TrainerStatus, StatusMeta> = {
 }
 
 /**
- * Playback is not a trainer state — nothing is being scored — so it stays out of
- * `TrainerStatus` and lives here instead, in the same shape, for the note row to swap in.
+ * Playback is not a trainer state — nothing is scored — so it stays out of `TrainerStatus` and sits
+ * here in the same shape, for the note row to swap in.
  */
 export const DEMO_META: StatusMeta = {
   color: 'var(--flutex-signal-ink)',

@@ -23,10 +23,7 @@ function isRecord(value: unknown): value is SongRecord {
     && typeof candidate.bestMistakes === 'number'
 }
 
-/**
- * Every entry is checked on its own, so one bad record from an older version or a hand
- * edit does not wipe the rest.
- */
+/** Every entry is checked on its own, so one bad record does not wipe the rest. */
 function readRecords(): Record<string, SongRecord> {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -55,8 +52,7 @@ function writeRecords(records: Record<string, SongRecord>): void {
 
 export function useSongProgress(): SongProgress {
   const [records, setRecords] = useState<Record<string, SongRecord>>(readRecords)
-  // Mirrors the state because each change writes to storage right away, and a setState
-  // updater is no place for a side effect.
+  // Mirrors the state, since each change writes to storage and a setState updater cannot do that.
   const recordsRef = useRef(records)
 
   const commit = useCallback((next: Record<string, SongRecord>) => {

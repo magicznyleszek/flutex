@@ -6,9 +6,8 @@ import { DEFAULT_SONG } from '../src/data/songs'
 import { theme } from '../src/theme'
 
 /**
- * Server-side rendering needs no jsdom and catches what breaks while assembling UI: a
- * bad Mantine prop, a missing provider, a throw during hook init. There is no `window`
- * here, so it also proves the localStorage access is guarded.
+ * Server rendering needs no jsdom and catches what breaks while assembling UI: a bad Mantine prop, a
+ * missing provider, a throw in a hook. With no `window`, it also proves localStorage is guarded.
  */
 const render = (): string =>
   renderToStaticMarkup(
@@ -33,8 +32,7 @@ describe('App', () => {
     expect(markup).toContain(`>${firstNote}<`)
   })
 
-  // Asserting on the aria-label rather than the visible "Start", which is also a substring
-  // of the "Start over" button sitting right next to it.
+  // The aria-label, not the visible "Start" — which is a substring of "Start over" beside it.
   it('invites the user to start listening rather than showing it live', () => {
     const markup = render()
 

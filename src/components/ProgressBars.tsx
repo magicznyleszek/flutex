@@ -19,9 +19,9 @@ export function ProgressBars({
   mistakeProgress,
   penaltyMode,
 }: ProgressBarsProps): JSX.Element {
-  // Side by side the two gauges cost 33px of a phone rather than 65, and a labelled bar is still
-  // legible at half of 358px. `wait` mode keeps one column, since its second gauge is hidden below
-  // `sm` and a two-column grid with one in-flow child would strand the hold bar at half width.
+  // Side by side the gauges cost 33px of a phone rather than 65, and a labelled bar is still legible
+  // at half of 358px. `wait` mode keeps one column: its second gauge is hidden below `sm`, and a
+  // two-column grid with one in-flow child would strand the hold bar at half width.
   const cols = { base: penaltyMode === 'wait' ? 1 : 2, sm: 1 }
 
   return (
@@ -31,9 +31,8 @@ export function ProgressBars({
           <Text size="xs" c="dimmed">Note hold</Text>
           <Text size="xs" c="dimmed" ff="monospace">{percent(holdProgress)}%</Text>
         </Group>
-        {/* Mantine's stock track reads lighter than the card it sits on, so an empty bar
-            looks like a filled one. The groove shade matches the tuner track above and
-            keeps the fill at 10.37:1 in the dark scheme and 4.80:1 in the light one. */}
+        {/* Mantine's stock track reads lighter than the card, so an empty bar looks filled. This
+            shade matches the tuner track and keeps the fill at 10.37:1 dark, 4.80:1 light. */}
         <Progress
           value={percent(holdProgress)}
           color="var(--flutex-accent-ink)"
@@ -45,14 +44,12 @@ export function ProgressBars({
         />
       </Stack>
 
-      {/* In `wait` mode nothing counts down. The bar snaps to full while a wrong note
-          sounds and decays once it is right, which the status label above already says,
-          so on a phone it is 32px of duplicate. In `back` and `restart` it gauges how
-          close the next mistake is to sending you backwards, so it stays at every width. */}
+      {/* In `wait` mode nothing counts down: the bar just tracks whether the note is wrong, which
+          the status label already says, so a phone drops its 32px. In `back` and `restart` it gauges
+          how close the next mistake is to sending you backwards, so it stays at every width. */}
       <Stack gap={4} visibleFrom={penaltyMode === 'wait' ? 'sm' : undefined}>
         <Group justify="space-between">
-          {/* "Off target" rather than "Wrong notes": this is a percentage of the allowance, and
-              anything plural reads as a tally of the same thing the mistakes badge counts. */}
+          {/* "Off target", not "Wrong notes": a plural reads as the tally the mistakes badge keeps. */}
           <Text size="xs" c="dimmed">
             {penaltyMode === 'wait' ? 'Off target' : PENALTIES[penaltyMode].label}
           </Text>

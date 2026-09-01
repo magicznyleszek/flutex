@@ -14,11 +14,9 @@ export interface TunerProps {
 }
 
 /**
- * How far past the green zone each end of the track reaches, in cents. Added rather than
- * multiplied: a multiplier would draw the zone as the same fraction of the track at every
- * tolerance setting, so only the number underneath would change. Adding keeps the zone's width
- * meaningful — a fifth of the track at ±10, two thirds at ±100 — and still leaves the needle
- * somewhere to go.
+ * How far past the green zone each end of the track reaches, in cents. Added, not multiplied: a
+ * multiplier would draw the zone the same width at every setting. Adding keeps that width meaningful
+ * — a fifth of the track at ±10, two thirds at ±100 — and still leaves the needle somewhere to go.
  */
 const RANGE_MARGIN = 50
 
@@ -51,8 +49,8 @@ export function Tuner({ cents, toleranceCents, active }: TunerProps): JSX.Elemen
 
       <Group justify="space-between" className={classes.scale}>
         <Text size="xs" c="dimmed">flat</Text>
-        {/* Idle, the window you are aiming for; playing, how far off you are. The track carries no
-            numbers, so this is the only thing saying which tolerance setting you are on. */}
+        {/* Idle, the window you are aiming for; playing, how far off you are. The track has no
+            numbers, so this is the only thing naming the tolerance setting. */}
         <Text size="xs" c={inTune ? 'var(--flutex-accent-ink)' : 'dimmed'} ff="monospace">
           {active
             ? `${cents > 0 ? '+' : ''}${Math.round(cents)}¢`

@@ -10,9 +10,8 @@ export type CustomSongResult =
 export const CUSTOM_SONG_TITLE = 'My own song'
 
 /**
- * Stands in whenever the pasted text does not parse. Everything downstream expects a song at
- * all times, and an empty note list is the honest version of "nothing to play yet" — the
- * trainer shows the error in place of the fingerings instead.
+ * Stands in whenever the paste does not parse. Downstream always expects a song, and an empty note
+ * list is the honest "nothing to play yet" — the trainer shows the error where the fingerings go.
  */
 export const EMPTY_CUSTOM_SONG: Song = {
   id: CUSTOM_SONG_ID,
@@ -39,9 +38,8 @@ function fail(error: string): CustomSongResult {
 }
 
 /**
- * The key a note list is read as, guessed from its first note. Only ever a hint for
- * transposing — a melody that already fits the instrument is left alone whatever this says —
- * and melodies do usually start on a note of their own scale.
+ * The key a note list is read as, guessed from its first note — melodies usually start on one of
+ * their own scale. Only a hint for transposing: a melody that already fits is left alone regardless.
  */
 function guessKey(note: string): string {
   const midi = noteToMidi(note)
@@ -112,11 +110,9 @@ function fromAbc(text: string): CustomSongResult {
 }
 
 /**
- * Reads pasted text as a song, in ABC notation or the plain note list the library is written in.
- * Which one is decided by looking for an ABC information field, so a tune copied off the web works
- * unedited and a bare note list needs no header.
- *
- * Failure is a sentence to show the user, never a throw — bad input is the normal case here.
+ * Reads pasted text as a song, in ABC notation or the note list the library is written in — told
+ * apart by looking for an ABC information field, so a tune copied off the web works unedited.
+ * Failure is a sentence to show the user, never a throw: bad input is the normal case here.
  */
 export function parseCustomSong(text: string): CustomSongResult {
   if (text.trim() === '') {

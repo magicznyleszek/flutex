@@ -18,12 +18,9 @@ export type InstrumentId =
   | 'ocarina_12'
 
 /**
- * Where a hole sits, in the diagram's own coordinates: 100 units wide, `y` growing downwards,
- * as tall as `OcarinaLayout.height`.
- *
- * The radius is per hole because on an ocarina it is the open *area* that sets the pitch, and
- * printed charts draw the holes at the sizes they really are. Uniform circles would not match
- * the chart in the box the instrument came in.
+ * Where a hole sits in the diagram's own coordinates: 100 units wide, `y` growing downwards, as tall
+ * as `OcarinaLayout.height`. The radius is per hole because open *area* sets an ocarina's pitch, so
+ * printed charts draw the holes at the sizes they really are.
  */
 export interface HolePlacement {
   x: number
@@ -175,10 +172,10 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
 
   /*
    * German fingering, Peter Harlan's 1920s redesign: a wider hole 4 lets F play straight down the
-   * scale with no fork, and the fork comes back on F#. Still about a third of European sopranos,
-   * and the two look identical in the hand, so a baroque chart on a German recorder just sounds
-   * wrong. Written out in full rather than spread from the table above, because a chart you can
-   * read against its source beats a shorter diff; `tests/data.test.ts` pins the divergences.
+   * scale with no fork, and the fork comes back on F#. Still about a third of European sopranos, and
+   * the two look identical in the hand, so a baroque chart on a German recorder sounds wrong. Written
+   * out in full rather than spread from the table above — a chart you can read against its source
+   * beats a shorter diff, and `tests/data.test.ts` pins the divergences.
    */
   recorder_german: {
     name: 'Soprano recorder (German fingering)',
@@ -227,12 +224,9 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
    * behind. From STL Ocarina's "A Complete Fingering Chart for 6 Hole Ocarina in C Major" (c) 2020.
    *
    * The table checks itself, which is Taylor's trick: sizing the front holes 1, 2, 3, 4 makes every
-   * note from D5 to C6 a different total open area, one unit at a time. A hole transcribed wrong
-   * would break the run.
-   *
-   * The octave is a reading — the chart's staff runs C4 to E5 and only says the real pitch is
-   * higher, and STL's other charts put a tenor an octave above written. That makes this the standard
-   * soprano-C pendant at C5-E6.
+   * note from D5 to C6 a different total open area, one unit at a time, so a hole transcribed wrong
+   * would break the run. The octave is a reading — the chart's staff runs C4 to E5 and only says the
+   * real pitch is higher — which makes this the standard soprano-C pendant at C5-E6.
    */
   ocarina_6: {
     name: 'Ocarina, 6-hole pendant (key of C)',
@@ -282,9 +276,9 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
    * Chart for 12 Hole Tenor and Soprano Ocarinas" (c) 2008, which writes A3 to F5 and puts a tenor
    * an octave above written — hence the A4-F6 here.
    *
-   * The finger names below are not on the chart; they come from matching the order the diagrams lift
-   * holes in against Pure Ocarinas' prose account, which agrees throughout. Being a reading rather
-   * than a quotation is why no hint tells you to move a named finger.
+   * The finger names below are not on the chart: they come from matching the order the diagrams lift
+   * holes in against Pure Ocarinas' prose account. A reading rather than a quotation, which is why no
+   * hint tells you to move a named finger.
    */
   ocarina_12: {
     name: 'Ocarina, 12-hole transverse (alto C)',
@@ -298,8 +292,8 @@ const DEFINITIONS: Record<InstrumentId, InstrumentDefinition> = {
       // body around it.
       body: { cx: 50, cy: 40, rx: 48, ry: 22, rotate: -28 },
       // Positions are the chart's own, scaled equally in both axes; the radii keep its proportions
-      // but are drawn about a fifth smaller. STL prints the four holes of a hand almost touching,
-      // and at the size these diagrams render, faithful spacing made each hand one green sausage.
+      // but are a fifth smaller. STL prints the four holes of a hand almost touching, and at the
+      // size these diagrams render, faithful spacing made each hand one green blob.
       holes: [
         { x: 84, y: 18, r: 4.6, label: 'Right pinky' },
         { x: 74, y: 24, r: 4.6, label: 'Right ring' },
@@ -383,17 +377,16 @@ export function getFingering(instrument: Instrument, note: string): Fingering | 
 }
 
 /**
- * The widest stand-in still worth calling close, in semitones. The case that sets it is A6 on a
- * 6-hole ocarina, a fourth above the top of its chart. Further out than a tritone and the grip is
- * a different tune, so the note is better left with no fingering than a wrong one.
+ * The widest stand-in still worth calling close, in semitones. Set by A6 on a 6-hole ocarina, a
+ * fourth above the top of its chart: past a tritone the grip is a different tune, so no fingering
+ * at all beats a wrong one.
  */
 const NEAREST_LIMIT = 6
 
 /**
- * The note this instrument would put where `note` should go: `note` itself when there is a grip
- * for it, otherwise the nearest note there is a grip for, or null when nothing is within
- * `NEAREST_LIMIT`. Ties go to the lower note, the way `bestShift` breaks its own, since the lower
- * of two equally distant notes is the easier to blow.
+ * What this instrument puts where `note` should go: `note` itself when it has a grip for it, else the
+ * nearest note it does, or null when nothing is within `NEAREST_LIMIT`. Ties go to the lower note,
+ * the easier of the two to blow.
  */
 export function nearestFingered(instrument: Instrument, note: string): string | null {
   if (note in instrument.fingering) return note
@@ -404,8 +397,7 @@ export function nearestFingered(instrument: Instrument, note: string): string | 
   let nearest: string | null = null
   let distance = Number.POSITIVE_INFINITY
 
-  // `notes` runs lowest first, so a strict `<` keeps the first of two equally distant notes —
-  // that is the low-note tie-break, with no comparison of its own.
+  // `notes` runs lowest first, so a strict `<` keeps the lower of two equally distant notes.
   for (const candidate of instrument.notes) {
     const gap = Math.abs((noteToMidi(candidate) ?? 0) - midi)
     if (gap < distance) {

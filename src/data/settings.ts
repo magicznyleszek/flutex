@@ -56,10 +56,9 @@ export const DIFFICULTY_LIST: readonly DifficultyLevel[] = [
 export const DEFAULT_DIFFICULTY_ID: DifficultyId = 'normal'
 
 /*
- * Not `Object.hasOwn`: it is a 2022 built-in Safari only shipped in 15.4, and Parcel transpiles
- * syntax without polyfilling built-ins, so on an older phone this threw a TypeError the moment the
- * select changed. Plain `in` is no substitute either — it would accept inherited keys like
- * "toString" out of localStorage and hand back a function as a difficulty.
+ * Not `Object.hasOwn`: Safari only shipped it in 15.4 and Parcel transpiles syntax without
+ * polyfilling built-ins, so on an older phone this threw the moment the select changed. Plain `in`
+ * is no substitute either — a saved "toString" would pass and hand back a function.
  */
 export function isDifficultyId(value: string): value is DifficultyId {
   return Object.prototype.hasOwnProperty.call(DIFFICULTIES, value)

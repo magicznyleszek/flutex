@@ -1,18 +1,16 @@
 /* Five charts side by side: the one just played, the one to play, and three coming up.
 
-   `stretch` plus `flex: 1` on `.chart` is what puts the note names on one line. The
-   neighbours are half the height of the middle chart, so laying the columns out by their
-   content would leave each name hanging under its own tube at a different height. Instead
-   every column grows to the tallest and the chart slot absorbs the difference, which
-   aligns the names along the bottom while the tubes still line up at the mouthpiece — the
-   end you actually put in your mouth. */
+   `stretch` plus `flex: 1` on `.chart` is what puts the note names on one line. Laid out by their
+   content, each name would hang under its own tube at a different height; instead every column
+   grows to the tallest and the chart slot absorbs the difference, so the names align along the
+   bottom while the tubes still line up at the mouthpiece. */
 .row {
   display: flex;
   align-items: stretch;
   justify-content: center;
 
-  /* Phone spacing, opened up from 48em. Four charts and these three gaps come to 266px on a
-     320px screen, which has 276 inside the card. */
+  /* Phone spacing, opened up from 48em. Four charts and three gaps come to 266px on a 320px
+     screen, which has 276 inside the card. */
   gap: clamp(6px, 2.5vw, 12px);
 }
 
@@ -30,34 +28,30 @@
   align-items: flex-start;
 }
 
-/* The middle note's fingering hint, which used to sit under the chart it belongs to. In the column
-   it widened that column, and `justify-content: center` answered by moving every other chart — so a
-   note that happened to have a hint shifted the fingerings under your eyes. Out here it is the full
-   width of the card and one line tall whether it holds anything or not, so it fills and empties
-   without moving anything. A hint long enough to wrap only pushes the two captions under it down. */
+/* The middle note's fingering hint. Inside the column it widened that column, and
+   `justify-content: center` answered by shifting every other chart. Out here it is the full width
+   of the card and one line tall whether it holds anything or not, so it fills and empties without
+   moving anything; a hint long enough to wrap only pushes the captions below it down. */
 .hint {
   align-self: stretch;
   min-height: calc(var(--mantine-font-size-xs) * var(--mantine-line-height-xs));
 }
 
-/* The neighbours are context, not the thing to read. Dimming the whole column covers the
-   tube and its holes too, which no `c="dimmed"` on the text could reach — and since the dots
-   are the same size as the ones you are playing, this is what separates them. */
+/* The neighbours are context, not the thing to read. Dimming the whole column reaches the tube and
+   its holes, which `c="dimmed"` cannot — and the dots being one size, this is what separates them. */
 .quiet {
   opacity: 0.5;
 }
 
-/* Two and three notes out. Fading further with distance is what makes the row read as a
-   queue rather than as five equally important charts. Written after `.quiet` because both
-   are single classes and a tie goes to whichever comes last. */
+/* Two and three notes out. Fading with distance is what makes the row read as a queue. After
+   `.quiet` because both are single classes and a tie goes to the last one. */
 .distant {
   opacity: 0.32;
 }
 
-/* A phone gets four charts, not five: on a 360px screen the card has 316px inside it and four
-   recorder charts plus their gaps already come to 289. The note behind you is the one to drop
-   — you have just played it. Hidden by default and brought back at 48em, so a browser that
-   cannot read the query shows the four that always fit rather than five that may not. */
+/* A phone gets four charts, not five: a 360px screen has 316px inside the card and four recorder
+   charts plus gaps already come to 289. The note behind you is the one to drop. Hidden by default
+   and brought back at 48em, so a browser that cannot read the query shows the four that fit. */
 .phoneHidden {
   display: none;
 }
@@ -67,10 +61,9 @@
     display: flex;
   }
 
-  /* Room for five charts, and the row spreads across the card instead of huddling in the
-     middle of it. Capped at 44px because the card stops growing at 888px inside: five 138px
-     charts and four 44px gaps come to 866, and 4vw put the outer two into the card's own
-     padding on a wide screen. */
+  /* Room for five charts, spread across the card rather than huddled in the middle. Capped at
+     44px because the card stops growing at 888px inside: five 138px charts and four 44px gaps
+     come to 866, where 4vw pushed the outer two into the card's padding. */
   .row {
     gap: clamp(var(--mantine-spacing-xs), 3vw, 44px);
   }

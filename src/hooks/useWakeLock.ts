@@ -1,11 +1,9 @@
 import { useEffect, useRef } from 'react'
 
 /**
- * Keeps the screen awake while `active` is true — both hands are on the instrument, so nothing is
- * going to tap the phone before it dims.
- *
- * The lock is not taken once and kept: browsers drop it whenever the tab stops being visible and
- * never hand it back, hence the `visibilitychange` listener and the sentinel in a ref.
+ * Keeps the screen awake while `active` is true — both hands are on the instrument, so nothing will
+ * tap the phone before it dims. The lock cannot be taken once and kept: browsers drop it whenever the
+ * tab is hidden and never hand it back, hence the `visibilitychange` listener and the sentinel ref.
  */
 export function useWakeLock(active: boolean): void {
   const sentinelRef = useRef<WakeLockSentinel | null>(null)
@@ -32,8 +30,8 @@ export function useWakeLock(active: boolean): void {
 
       void api.request('screen').then(
         (sentinel) => {
-          // The effect can be torn down while the request is still in flight, and a lock
-          // nobody is holding a reference to would stay up until the page unloads.
+          // The effect can be torn down mid-request, and a lock nobody holds a reference to would
+          // stay up until the page unloads.
           if (cancelled) {
             void sentinel.release().catch(() => undefined)
             return
@@ -44,8 +42,8 @@ export function useWakeLock(active: boolean): void {
             sentinelRef.current = null
           })
         },
-        // Refused outside a user gesture, and refused on a device in battery saver. Neither
-        // is worth surfacing: the trainer works, the screen just sleeps as it always did.
+        // Refused outside a user gesture, and in battery saver. Neither is worth surfacing: the
+        // trainer works, the screen just sleeps as it always did.
         () => undefined,
       )
     }

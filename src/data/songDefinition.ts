@@ -2,10 +2,10 @@
  * Turns a pasted melody back into the source of a library entry: the `defineSong` block to drop into
  * whichever file under `songs/` holds its section.
  *
- * The part worth automating is the arrangement, not the typing. Every library song bar two is
- * written on the ten notes all five charts share, so that `songForInstrument` leaves it exactly as
- * written — see the header of `songs/index.ts`. Finding the transposition that lands a tune there is
- * a search, and getting it wrong is a test failure rather than something anyone spots by eye.
+ * The part worth automating is the arrangement, not the typing. Every library song bar two is written
+ * on the ten notes all five charts share, so `songForInstrument` leaves it exactly as written — see
+ * the header of `songs/index.ts`. Finding the transposition that lands a tune there is a search, and
+ * getting it wrong is a test failure rather than something anyone spots by eye.
  */
 import { CUSTOM_SONG_TITLE, isAbc } from './customSong'
 import { INSTRUMENT_LIST } from './instruments'
@@ -26,8 +26,8 @@ const MODE_NAMES: Record<string, string> = {
 
 /**
  * The notes every chart has a grip for — a tin whistle in D intersected with a 6-hole ocarina, which
- * comes to the D major scale plus C natural. Derived rather than written down so that editing a
- * fingering chart cannot leave this behind.
+ * comes to the D major scale plus C natural. Derived rather than written down, so editing a chart
+ * cannot leave this behind.
  */
 export const SHARED_NOTES: readonly string[] = (() => {
   const [first, ...rest] = INSTRUMENT_LIST
@@ -61,9 +61,9 @@ export interface SongDefinition {
 }
 
 /**
- * The smallest move that lands every note on a grip all five instruments have. Ties go to the
- * downward shift, the lower register being the easier to blow — the same tie-break `bestShift`
- * makes. When nothing fits, the least-bad shift comes back with its strays named.
+ * The smallest move that lands every note on a grip all five instruments have. Ties go downward, the
+ * lower register being easier to blow — the same tie-break `bestShift` makes. When nothing fits, the
+ * least-bad shift comes back with its strays named.
  */
 function bestFit(notes: readonly SongNote[]): { semitones: number, strays: readonly string[] } {
   const ordered = Array.from({ length: SEARCH * 2 + 1 }, (_, step) => step - SEARCH)
@@ -83,8 +83,8 @@ function bestFit(notes: readonly SongNote[]): { semitones: number, strays: reado
     }
 
     if (count === 0) return { semitones, strays }
-    // Ranked on how many *positions* are stranded rather than how many distinct notes: one stray
-    // note in forty places is a worse fit than four in one place each.
+    // Ranked on how many *positions* are stranded, not how many distinct notes: one stray note in
+    // forty places is a worse fit than four in one place each.
     if (best === null || count < best.count) best = { semitones, strays, count }
   }
 
@@ -92,9 +92,8 @@ function bestFit(notes: readonly SongNote[]): { semitones: number, strays: reado
 }
 
 /**
- * How many notes are in each bar of the source, so a generated spec can be broken where the tune
- * was. An ABC tune arrives counted — `parseAbc` plays the repeats out and reports the bars that came
- * of it — and a note list needs no parser at all, its tokens already being note names.
+ * How many notes are in each bar of the source, so a generated spec can be broken where the tune was.
+ * An ABC tune arrives counted from `parseAbc`; a note list needs no parser, its tokens being names.
  */
 function barCounts(text: string): readonly number[] {
   if (isAbc(text)) {
@@ -180,8 +179,8 @@ function renderSpec(groups: readonly (readonly SongNote[])[], semitones: number)
   }
   if (current !== '') lines.push(current)
 
-  // A bar wider than the line survives the packing above, which only ever breaks *between* bars.
-  // That is the ordinary case for a source with no bar lines at all: the whole melody is one bar.
+  // A bar wider than the line survives the packing above, which only breaks *between* bars. That is
+  // the ordinary case for a source with no bar lines at all: the whole melody is one bar.
   const broken = lines.flatMap((line) => wrap(line, WIDTH - INDENT.length))
 
   return ['`', ...broken.map((line) => INDENT + line), '    `'].join('\n')
@@ -222,10 +221,10 @@ function difficulty(notes: readonly SongNote[]): string {
 
 /**
  * The library entry a pasted melody would become. `text` is the paste itself, needed for the bar
- * lines and the mode, and `song` is what `parseCustomSong` already made of it.
+ * lines and the mode; `song` is what `parseCustomSong` already made of it.
  *
- * `subtitle` comes out as a placeholder on purpose: every entry in the library names where its tune
- * came from, and that is the one thing here no amount of parsing can work out.
+ * `subtitle` comes out as a placeholder on purpose: every entry names where its tune came from, and
+ * that is the one thing here no amount of parsing can work out.
  */
 export function songDefinition(text: string, song: Song): SongDefinition {
   const { semitones, strays } = bestFit(song.notes)

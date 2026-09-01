@@ -4,9 +4,8 @@ import type { SongNote } from '../data/songUtils'
 import { noteToFreq } from '../lib/music'
 
 /**
- * One beat is a quarter note everywhere in the song library, so 60 bpm puts a quarter note
- * on the second. Deliberately slow: this is meant to be followed on the instrument, and the
- * gap between two notes is where you find the next fingering.
+ * One beat is a quarter note everywhere in the library, so 60 bpm puts a quarter note on the second.
+ * Deliberately slow: the gap between two notes is where you find the next fingering.
  */
 const DEMO_BPM = 60
 
@@ -50,12 +49,10 @@ export interface SongDemo {
 }
 
 /**
- * Plays the song through the speakers and reports which note is sounding, so the fingering charts
- * can follow along. It demonstrates the tune rather than accompanying you: the rhythm is only ever
- * as good as the `beats` in the song data.
- *
- * Every note is scheduled into the AudioContext in one go and the on-screen position read back off
- * `currentTime` — separate timers for sound and charts would drift apart within a few bars.
+ * Plays the song through the speakers and reports which note is sounding, so the charts can follow
+ * along. It demonstrates the tune rather than accompanying you, and the rhythm is only as good as the
+ * `beats` in the data. Every note is scheduled into the AudioContext in one go and the on-screen
+ * position read back off `currentTime`; separate timers would drift apart within a few bars.
  */
 export function useSongDemo(notes: readonly SongNote[]): SongDemo {
   const [playing, setPlaying] = useState(false)
@@ -77,8 +74,7 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
 
     cancelAnimationFrame(session.frame)
 
-    // Silencing a running oscillator is a click, so the master gain goes down first and the
-    // context is closed once that fade has been heard.
+    // Silencing a running oscillator clicks, so the gain fades first and the context closes after.
     const { context, master } = session
     const now = context.currentTime
     master.gain.cancelScheduledValues(now)
@@ -91,8 +87,8 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     if (sessionRef.current !== null || notes.length === 0) return
 
     const context = new AudioContext()
-    // A context built inside a tap usually starts running on its own; iOS is the one that
-    // hands back a suspended one, where `currentTime` never moves and nothing sounds.
+    // A context built inside a tap usually starts on its own; iOS hands back a suspended one, where
+    // `currentTime` never moves and nothing sounds.
     void context.resume().catch(() => undefined)
 
     const master = context.createGain()
@@ -104,8 +100,7 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     let cursor = 0
 
     for (const entry of notes) {
-      // A song with a bad `beats` would otherwise schedule a note of length NaN and take
-      // every note after it along with it.
+      // A bad `beats` would schedule a note of length NaN and take every note after it with it.
       const beats = Number.isFinite(entry.beats) && entry.beats > 0 ? entry.beats : 1
       const span = beats * beatSeconds
       const offset = cursor
@@ -128,8 +123,8 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
       envelope.connect(master)
 
       const oscillator = context.createOscillator()
-      // Triangle, not sine: its harmonics fall away as 1/n², which is not far off a whistle,
-      // and it still carries through a phone speaker where a sine goes thin.
+      // Triangle, not sine: its harmonics fall away as 1/n², near enough a whistle, and it carries
+      // through a phone speaker where a sine goes thin.
       oscillator.type = 'triangle'
       oscillator.frequency.setValueAtTime(hz, from)
       oscillator.connect(envelope)
@@ -160,8 +155,7 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
         return
       }
 
-      // Walks forward from where it was rather than searching the whole song, which also
-      // means a stalled tab catches up in one frame instead of skipping notes.
+      // Forward from where it was rather than a search, so a stalled tab catches up in one frame.
       let position = indexRef.current
       while (
         position + 1 < active.starts.length
@@ -182,8 +176,8 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     session.frame = requestAnimationFrame(tick)
   }, [notes, stop])
 
-  // Also covers a song change mid-playback, which would otherwise leave the old tune
-  // sounding with nothing on screen following it.
+  // Covers a song change mid-playback, which would leave the old tune sounding with nothing on
+  // screen following it.
   useEffect(() => stop, [notes, stop])
 
   return { playing, index, start, stop }

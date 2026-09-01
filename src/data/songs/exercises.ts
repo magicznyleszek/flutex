@@ -1,9 +1,6 @@
 /**
  * Not tunes: the scale and the arpeggio the rest of the library is written on, for finding where the
  * notes are before there is a melody to shape.
- *
- * A new entry belongs inside the shared note set `index.ts` describes, and this file's order is the
- * order the song list shows.
  */
 import { defineSong, type Song } from '../songUtils'
 

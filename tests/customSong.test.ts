@@ -20,8 +20,8 @@ const HEADER = 'X:1\nL:1/4\nK:C\n'
 
 describe('ABC notation', () => {
   it('reads pitches from the octave that starts at middle C', () => {
-    // The convention that matters most in practice: a whistle tune written `D...d` sounds an
-    // octave below the whistle, and it is the transposer's job to lift it, not the parser's.
+    // A whistle tune written `D...d` sounds an octave below the whistle, and lifting it is the
+    // transposer's job, not the parser's.
     expect(tune(`${HEADER}C D E c d C, c'`)).toEqual(['C4', 'D4', 'E4', 'C5', 'D5', 'C3', 'C6'])
   })
 
@@ -63,19 +63,15 @@ describe('ABC notation', () => {
     expect(beats(`${HEADER}[CE]2`)).toEqual([2])
   })
 
-  /*
-   * The trainer walks a melody from one end to the other, so there is nowhere to put a jump: a
-   * repeat has to become the notes it stands for. Getting this wrong is quiet — a two-part reel
-   * still plays, just half of it, and only someone who knows the tune would notice.
-   */
+  // The trainer walks a melody end to end, so there is nowhere to put a jump: a repeat becomes the
+  // notes it stands for. Getting it wrong is quiet — a two-part reel still plays, just half of it.
   describe('repeats', () => {
     it('plays a repeated section twice', () => {
       expect(tune(`${HEADER}|:C D|E F:|`)).toEqual(['C4', 'D4', 'E4', 'F4', 'C4', 'D4', 'E4', 'F4'])
     })
 
     it('repeats each section of an AABB tune in turn', () => {
-      // Both spellings of the middle: two sections back to back, and the `::` that is both marks
-      // written as one.
+      // Both spellings of the middle: two sections back to back, and the `::` that writes it as one.
       const aabb = ['C4', 'C4', 'D4', 'D4']
       expect(tune(`${HEADER}|:C:|:D:|`)).toEqual(aabb)
       expect(tune(`${HEADER}|:C::D:|`)).toEqual(aabb)
@@ -86,8 +82,8 @@ describe('ABC notation', () => {
     })
 
     it('plays a first ending once and a second in its place on the way back', () => {
-      // `|: A |1 B :|2 C |` is A B A C: the jump back skips the ending it just played. Both the
-      // `|1` shorthand and the `[1` the standard prefers, and either side of the `:|`.
+      // `|: A |1 B :|2 C |` is A B A C: the jump back skips the ending just played. Both the `|1`
+      // shorthand and the `[1` the standard prefers, on either side of the `:|`.
       const variant = ['C4', 'D4', 'E4', 'C4', 'D4', 'F4']
       expect(tune(`${HEADER}|:C D|1 E:|2 F|`)).toEqual(variant)
       expect(tune(`${HEADER}|:C D|[1 E:|[2 F|`)).toEqual(variant)
@@ -104,15 +100,14 @@ describe('ABC notation', () => {
     })
 
     it('re-applies an accidental to the repeat, bar by bar', () => {
-      // The copy is of notes already read, not of the text, so `^F` cannot leak past the bar line
-      // it was written in — on the way through or on the way round again.
+      // The copy is of notes already read, not of the text, so `^F` cannot leak past its bar line.
       expect(tune(`${HEADER}|:^F F|F:|`)).toEqual(['F#4', 'F#4', 'F4', 'F#4', 'F#4', 'F4'])
     })
 
     it('counts the bars it played out', () => {
       const result = parseAbc(`${HEADER}|:C D|E:|F G|`)
       expect(result.ok ? result.tune.bars : null).toEqual([2, 1, 2, 1, 2])
-      // The one invariant every consumer leans on: the bars account for all of the notes.
+      // The invariant every consumer leans on: the bars account for all the notes.
       expect(result.ok ? result.tune.bars.reduce((sum, count) => sum + count, 0) : -1)
         .toBe(result.ok ? result.tune.notes.length : -2)
     })
@@ -127,13 +122,12 @@ describe('ABC notation', () => {
   })
 
   it('ignores a header wrapped onto a bare line of its own', () => {
-    // Straight out of an O'Neill's transcription: a `Z:` field continued on the next line instead of
+    // Straight out of an O'Neill's transcription: a `Z:` field continued on the next line rather than
     // with `+:`, which used to be read as melody and die on the first letter that is not a note.
     const wrapped = 'X:1\nZ:FROM O\'NEILL\'S TO ABC BY VINCE\nBRENNAN July 2003 (HTTP://SOSYOURMOM.COM)'
     expect(tune(`${wrapped}\nL:1/4\nK:C\nC D`)).toEqual(['C4', 'D4'])
 
-    // And the two things it must not swallow: a melody line with no bar line to give it away, and a
-    // mistyped note, which is still worth an error rather than a silently shorter tune.
+    // And what it must not swallow: a melody line with no bar line, and a mistyped note.
     expect(tune(`${HEADER}cdedcAGA`)).toEqual(['C5', 'D5', 'E5', 'D5', 'C5', 'A4', 'G4', 'A4'])
     expect(tune(`${HEADER}C D H`)).toContain('"H"')
   })
@@ -147,8 +141,7 @@ describe('ABC notation', () => {
   })
 
   it('says what it choked on instead of playing half a tune', () => {
-    // The whole point of the error: a tune that silently drops what it cannot read is harder to
-    // fix than one that names the character.
+    // A tune that silently drops what it cannot read is harder to fix than one naming the character.
     expect(tune(`${HEADER}C D H`)).toContain('"H"')
     expect(tune(`${HEADER}C ^^`)).toContain('followed by a note letter')
     expect(tune('X:1\nT:Nothing\nK:C')).toContain('No notes')
@@ -161,9 +154,8 @@ describe('custom songs', () => {
     expect(EMPTY_CUSTOM_SONG.notes).toEqual([])
   })
 
-  // The two formats are told apart by an ABC information field at the start of a line, which our
-  // own note list can never have: its lengths are written `D5:2`, so the colon never lands
-  // second. Nothing else about the text has to be right for the guess to work.
+  // Told apart by an ABC information field at the start of a line, which a note list can never have:
+  // its lengths are written `D5:2`, so the colon never lands second.
   it('tells a note list from an ABC tune', () => {
     const list = parseCustomSong('D5 E5 F#5:2')
     expect(list.ok ? list.song.notes : null).toEqual([
@@ -180,8 +172,7 @@ describe('custom songs', () => {
   })
 
   it('reads the key of a note list off its first note', () => {
-    // A guess, and only ever a hint for transposing: a melody the instrument can already play is
-    // left where it is whatever the key says.
+    // A guess, and only a hint for transposing: a melody that already fits is left where it is.
     const result = parseCustomSong('G5 A5 B5')
     expect(result.ok ? result.song.key : null).toBe('G')
   })
@@ -201,14 +192,13 @@ describe('custom songs', () => {
     const typo = parseCustomSong('D5 H5 E5')
     expect(typo.ok ? '' : typo.error).toContain('"H5"')
 
-    // `Number('x')` is NaN rather than a throw, so a bad length has to be caught by hand.
+    // `Number('x')` is NaN rather than a throw, so a bad length is caught by hand.
     const length = parseCustomSong('D5:x')
     expect(length.ok ? '' : length.error).toContain('how long')
   })
 
   it('lands a pasted tune inside the range of the instrument', () => {
-    // A tin whistle tune as it is written everywhere — from `D` to `d` — sounds an octave below
-    // the whistle itself, so this is the case the transposer exists for.
+    // A whistle tune as written everywhere — `D` to `d` — sounds an octave below the whistle.
     const result = parseCustomSong('X:1\nL:1/4\nK:D\nD E F G A B c d')
     const arrangement = result.ok
       ? songForInstrument(result.song, INSTRUMENTS.whistle_d)

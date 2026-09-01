@@ -1,72 +1,72 @@
 # Flutex
 
-A recorder, tin whistle and ocarina trainer that runs entirely in the browser. It
-listens through the microphone, works out which note you are playing, and waits
-until that note is the one on screen before moving on — a *wait-and-proceed*
-model, so there is no clock to race and no wrong turn to recover from.
+Learn tunes on a recorder, tin whistle or ocarina in your browser. Flutex listens
+through the microphone, works out which note you played, and waits for the note on
+screen before moving on. There is no clock to race and nothing to recover from when
+you miss.
 
 Live at [flutex.zefirefemera.xyz](https://flutex.zefirefemera.xyz).
 
 ## What it does
 
-- **Five instruments** — tin whistle in D, soprano recorder in baroque and in
-  German fingering, and 6-hole and 12-hole ocarinas. Each has its own fingering
-  chart and its own drawing, and the previous, current and next note are all
-  shown at once.
-- **Thirty-one songs** — two exercises, tunes most people already know, carols, and
-  traditional dance tunes and airs, all of them out of copyright — plus one song
-  you write yourself in [either of two formats](#writing-your-own-song).
-- **Hear it** plays the melody through the speakers with an oscillator, so you
-  can check what you are aiming at. The microphone stays off while it runs.
-- **A tuner** and a hold meter: the note counts once you have held it in tune for
-  long enough, and how long that is depends on the tolerance you pick.
-- **Offline** after the first visit, installable, and it holds a screen wake lock
-  while you practise so the phone does not go dark between notes.
+- Five instruments: tin whistle in D, soprano recorder in baroque and in German
+  fingering, and 6-hole and 12-hole ocarinas. Each has its own fingering chart and
+  drawing, and you see the previous, current and next note at once.
+- Thirty-one songs: two exercises, tunes most people already know, carols, and
+  traditional dance tunes and airs, all of them out of copyright. You can add one of
+  your own in [either of two formats](#writing-your-own-song).
+- Hear it plays the melody through the speakers so you know what you are aiming at.
+  The microphone is off while it plays.
+- A tuner and a hold meter. A note counts once you have held it in tune long enough,
+  and the tolerance you pick decides how long that is.
+- It works offline after the first visit, installs like an app, and keeps the screen
+  awake while you practise.
 
-Audio never leaves the machine — there is no backend, and no analytics.
+Audio never leaves your machine. There is no backend and no analytics.
 
 ## How it works
 
-- **Pitch detection** — the McLeod Pitch Method (a normalised square difference
-  function) over a 2048-sample window. The NSDF normalisation uses a prefix sum
-  of squared samples, so it costs O(1) per lag, and the *first* qualifying peak
-  is picked rather than the highest, which is what keeps a strong second
-  harmonic from reading an octave off. Parabolic interpolation on the peak gives
-  sub-cent resolution; a median filter of three frames removes single-frame
-  outliers, and silence clears the history so a release registers immediately.
-- **The trainer** is a pure state machine ([src/lib/trainer.ts](src/lib/trainer.ts)).
-  It takes a note plus a deviation in cents and returns a snapshot. Nothing in
-  it touches React, the DOM or a clock, which is why the whole rule set is
-  covered by fast unit tests.
-- **Transposition** — songs are stored at concert pitch with the key they were
-  written in. Choosing an instrument fits the melody to it
-  ([src/lib/transpose.ts](src/lib/transpose.ts)): the shift that leaves the most
-  notes playable wins, and ties go to a whole octave before a smaller move — so a
-  melody that already fits is left exactly as written, and one that has to move
-  keeps the key it was written in wherever that is possible. A song can also pin
-  a shift for one instrument by hand through `overrides`, which *Concerning
-  Hobbits* uses to stay in D on the ocarinas instead of changing key to buy notes
-  they still could not all reach. The search itself is mostly for the pasted
-  tunes, which arrive in any key and octave.
-- **Notes the instrument does not have** are played at the nearest note it does,
-  within a tritone, and the song card names every swap — `F#6 → E6`. Moving the
-  melody is tried first and this is what is left over; a note further out than
-  that keeps its own name and an empty fingering slot, since there is nothing
-  near enough to be worth offering. The swap goes into the arrangement rather
-  than into the drawing, so the chart, the trainer and **Hear it** agree on what
-  you are being asked to play — without it an unreachable note was a wall the
-  song could not be got past.
-- **Rendering** is throttled deliberately. Detection runs at 60 fps, but only
-  structural changes (a new note, a status change, a counter tick) publish
-  immediately; the tuner and progress bars are limited to ~30 fps, and silence
-  produces no renders at all.
-- **Offline** through a service worker ([src/service-worker.ts](src/service-worker.ts))
-  that precaches the whole build under a per-build cache name. Hashed bundles are
-  served from the cache without asking the network; `index.html`, the one unhashed
-  name, is fetched first and falls back to the cached copy, which is what makes a
-  deploy that changes nothing else still reach an installed app. The worker is
-  TypeScript too, typechecked separately against the worker lib in
-  `tsconfig.worker.json`.
+**Pitch detection** is the McLeod Pitch Method, a normalised square difference
+function over a 2048-sample window. Normalisation reads a prefix sum of squared
+samples, so it costs O(1) per lag. It takes the first qualifying peak rather than the
+tallest, which is what stops a strong second harmonic from reading an octave low.
+Parabolic interpolation on the peak gets it under a cent. A median filter over three
+frames drops single-frame outliers, and silence clears the history so a release shows
+up at once.
+
+**The trainer** is a pure state machine ([src/lib/trainer.ts](src/lib/trainer.ts)).
+Give it a note and how many cents off it was, get a snapshot back. Nothing in it
+touches React, the DOM or a clock, so the whole rule set is covered by fast unit
+tests.
+
+**Transposition** starts from concert pitch: a song stores its notes as written,
+along with the key it was written in. Picking an instrument fits the melody to it
+([src/lib/transpose.ts](src/lib/transpose.ts)). The shift that leaves the most notes
+playable wins, and a tie goes to a whole octave rather than a smaller move. A melody
+that already fits is left exactly as written, and one that has to move keeps its key
+where that is possible. A song can also pin a shift by hand through `overrides`,
+which is how *Concerning Hobbits* stays in D on the ocarinas. The search mostly earns
+its keep on pasted tunes, which arrive in any key and octave.
+
+**Notes the instrument does not have** are played at the nearest note it does, within
+a tritone, and the song card names every swap (`F#6 → E6`). Moving the whole melody is
+tried first, so this is only what is left over. A note further out than a tritone keeps
+its own name and an empty fingering slot, because nothing near enough is worth
+offering. The swap goes into the arrangement rather than the drawing, so the chart,
+the trainer and Hear it all ask for the same note. Without it, one unreachable note
+walled off the rest of the song.
+
+**Rendering** is throttled on purpose. Detection runs at 60fps, but only structural
+changes render straight away: a new note, a status change, a counter tick. The tuner
+and progress bars are capped near 30fps, and silence renders nothing at all.
+
+**Offline** support comes from a service worker
+([src/service-worker.ts](src/service-worker.ts)) that precaches the whole build under
+a per-build cache name. Hashed bundles are served from the cache without asking the
+network. `index.html` is the one unhashed name, so it is fetched first and falls back
+to the cached copy, which is what lets a deploy reach an installed app even when
+nothing else changed. The worker is TypeScript too, typechecked on its own against
+`tsconfig.worker.json`.
 
 ## Stack
 
@@ -83,8 +83,8 @@ Audio never leaves the machine — there is no backend, and no analytics.
 | Linting     | ESLint (typescript-eslint) and Stylelint      |
 | Deployment  | GitHub Actions → GitHub Pages                 |
 
-Every config file is TypeScript or JSON: `eslint.config.ts` is loaded through
-jiti, `jest.config.ts` through ts-node.
+Every config file is TypeScript or JSON. `eslint.config.ts` is loaded through jiti,
+`jest.config.ts` through ts-node.
 
 ## Commands
 
@@ -96,8 +96,8 @@ npm test           # jest
 npm run lint:fix   # eslint --fix
 ```
 
-CI runs `verify` on every push and pull request, then builds and deploys `main`
-to GitHub Pages.
+CI runs `verify` on every push and pull request, then builds and deploys `main` to
+GitHub Pages.
 
 ## Layout
 
@@ -117,13 +117,14 @@ scripts/        abcToSong.ts, which prints a library entry for an ABC tune
 
 ## Adding a song to the library
 
-The songs are in [src/data/songs/](src/data/songs/) and nothing else is: what a
+The songs live in [src/data/songs/](src/data/songs/) and nothing else does. What a
 song *is*, and how one is fitted to an instrument, lives in
-[src/data/songUtils.ts](src/data/songUtils.ts), which the library imports and
-never the other way round. In a spec string a note is `D5` for one beat and
-`D5:2` for two; `|` marks a bar line and is stripped before the note list reaches
-the trainer. `key` is the key it is written in, which is what transposition aims
-from.
+[src/data/songUtils.ts](src/data/songUtils.ts). The library imports from it, never
+the other way round.
+
+In a spec string, `D5` is a note of one beat and `D5:2` one of two. `|` marks a bar
+line and is stripped before the notes reach the trainer. `key` is the key the tune is
+written in, which is where transposition aims from.
 
 ```ts
 defineSong({
@@ -135,87 +136,82 @@ defineSong({
 }),
 ```
 
-One file per section — `exercises.ts`, `firstTunes.ts`, `carols.ts` and so on — so
-a song goes in the file for the section it belongs to and there is no category to
-write out. [songs/index.ts](src/data/songs/index.ts) walks the `SONG_CATEGORIES`
-list of [songUtils.ts](src/data/songUtils.ts) over those files to build `SONGS`,
-stamping each song with its file's category on the way past. That list is
-therefore the only place the order of the sections lives, and it is the order the
-song picker groups them in.
+There is one file per section: `exercises.ts`, `firstTunes.ts`, `carols.ts` and so
+on. A song goes in the file for the section it belongs to, and nowhere do you write
+the category out. [songs/index.ts](src/data/songs/index.ts) walks the
+`SONG_CATEGORIES` list from [songUtils.ts](src/data/songUtils.ts) over those files to
+build `SONGS`, stamping each song with its file's category on the way past. That list
+is the only place the order of the sections lives, and the song picker groups them in
+the same order.
 
-The test suite checks every song against every instrument, and also checks that
-each one plays *as written* — a song that needs transposing on a whistle is a
-song to rewrite, not a transposer to fix, and a song that needs a note
-approximated is one too. Two songs are exempt by name, each with a test of its
-own pinning what every instrument makes of it:
+### Staying in range
 
-- *Concerning Hobbits* is transcribed from the film rather than written to fit,
-  and its high section climbs past both ocarinas, which play it in D anyway and
-  lean on their top notes up there.
-- *A Blast Of Wind* is too wide for any shift to fit — A4 to E6, nineteen
-  semitones against a window of fourteen — and it is in A, whose G# the whistle is
-  the one chart to lack. So each instrument takes its own shift: the whistle a
-  fourth up into D, both recorders and the 6-hole ocarina a minor third up into C,
-  and the 12-hole ocarina in A as printed, being the only chart that reaches A4.
+Every song is written inside D5-E6 on the ten notes all five charts have in common:
+the D major scale plus C natural, which is what a tin whistle in D and a 6-hole
+ocarina share. That is why any instrument can play the library as written. A tune
+that did not fit was transposed until it did, or left out.
 
-Squeezing that one into the shared range would cost a strain either way — up, and
-its top notes push past both ocarinas; down, and most of it falls below D5 — so
-letting each chart find its own key keeps the tune whole on four of the five. The
-6-hole ocarina is the exception, and its shift is chosen to make the loss small
-rather than to avoid it: in C it flattens the top of the high strain, nine notes of
-a hundred and twenty, where staying in A would flatten the bottom of the low one
-and cost fourteen.
+The tests check every song against every instrument, and check that each one plays
+*as written*. A song that needs transposing on a whistle is a song to rewrite rather
+than a transposer to fix, and so is one that needs a note approximated. Two songs are
+exempt by name, each with a test of its own pinning what every instrument makes of it:
 
-Apart from those two the test passes by construction rather than by luck: every
-song is written inside D5–E6 on the ten notes all five charts have in common — the
-D major scale plus C natural, which is what a tin whistle in D and a 6-hole
-ocarina share — so a tune that did not fit was transposed until it did, or left
-out.
+- *Concerning Hobbits* was transcribed from the film rather than written to fit. Its
+  high section climbs past both ocarinas, which play it in D anyway and lean on their
+  top notes up there.
+- *A Blast Of Wind* is too wide for any one shift to fit: A4 to E6 is nineteen
+  semitones against a window of fourteen. It is also in A, and the whistle is the one
+  chart without a G#. So each instrument takes its own shift. The whistle goes up a
+  fourth into D, both recorders and the 6-hole ocarina up a minor third into C, and
+  the 12-hole ocarina plays it in A as printed, being the only chart that reaches A4.
+  Four of the five keep the tune whole. The 6-hole ocarina cannot, and its shift is
+  picked to make the loss small: in C it flattens nine notes at the top of the high
+  strain, where staying in A would flatten fourteen at the bottom of the low one.
 
-The tunes are public domain: traditional, or printed long enough ago that the
-melody is out of copyright — Arbeau's *Orchésographie* (1589), Playford's *English
-Dancing Master* (1651), Thompson's country dances (1779), O'Neill's *Music of
-Ireland* (1903), Stephen Foster, Weber. Most were read off ABC transcriptions in
-the [Nottingham Music
-Database](https://ifdo.ca/~seymour/nottingham/nottingham.html) or
-[abcnotation.com](https://abcnotation.com), and re-encoded here as bare note lists
-in a key the charts can reach; each song's subtitle names where it came from.
+### Where the tunes come from
+
+All of them are public domain, either traditional or printed long enough ago that the
+melody is out of copyright: Arbeau's *Orchésographie* (1589), Playford's *English
+Dancing Master* (1651), Thompson's country dances (1779), O'Neill's *Music of Ireland*
+(1903), Stephen Foster, Weber. Most were read off ABC transcriptions in the
+[Nottingham Music Database](https://ifdo.ca/~seymour/nottingham/nottingham.html) or
+[abcnotation.com](https://abcnotation.com), then re-encoded here as bare note lists in
+a key the charts can reach. Each song's subtitle names where it came from.
 
 ### From an ABC tune
 
-That re-encoding is not done by hand. Paste the tune into **My own song** and a
-**Copy song definition** button appears under the box, giving you the block with
-the transposition already worked out, plus a line saying whether it would pass the
-test above. Paste it into the file for its section, then fill in the subtitle,
-which names the source, and pick its tags.
+The re-encoding is not done by hand. Paste the tune into **My own song** and a
+**Copy song definition** button appears under the box. It hands you the block with the
+transposition already worked out, plus a line saying whether it would pass the range
+test above. Paste that into the file for its section, then fill in the subtitle naming
+the source and pick its tags.
 
-The same for a tune in a file, with the longer report the app has no room for —
-which instrument would struggle, what each would put in place of a note it cannot
-finger, whether the id is already taken:
+For a tune already in a file, the same job with the longer report the app has no room
+for: which instrument would struggle, what each would put in place of a note it
+cannot finger, whether the id is taken.
 
 ```sh
 npm run song -- tune.abc     # or: pbpaste | npm run song
 ```
 
-Both go through [src/data/songDefinition.ts](src/data/songDefinition.ts), which
-searches for the *smallest* move landing every note on those ten. It is rarely the
-move you would guess: a tune written an octave low usually wants a fifth rather
-than an octave, because an octave clears the bottom of the range but pushes the
-top past both ocarinas — and that also pulls the tune into the whistle's D.
+Both go through [src/data/songDefinition.ts](src/data/songDefinition.ts), which looks
+for the *smallest* move that lands every note on those ten. It is rarely the move you
+would guess. A tune written an octave low usually wants a fifth: an octave clears the
+bottom of the range but pushes the top past both ocarinas, and a fifth also pulls the
+tune into the whistle's D.
 
 Repeats are written out rather than marked, because the trainer walks a melody from
-one end to the other and has nowhere to put a jump: an `AABB` tune arrives as all
-four strains, first and second endings in their right places. The one thing the
-tool will not do for you is force a fit — a tune that lands outside those
-ten notes at every shift is reported instead, and it needs editing, an `overrides`
-entry and an exemption, or leaving out.
+one end to the other and has nowhere to put a jump. An `AABB` tune arrives as all four
+strains, with first and second endings in their right places. The one thing the tool
+will not do is force a fit. A tune that lands outside those ten notes at every shift
+is reported instead, and then it wants editing, or an `overrides` entry and an
+exemption, or leaving out.
 
 ## Writing your own song
 
-Pick **My own song** at the top of the song list and a box appears under it. What
-you type is kept in this browser (`localStorage`) and nowhere else, and there is
-room for one custom song at a time. Two formats are accepted, told apart
-automatically.
+Pick **My own song** at the top of the song list and a box appears under it. What you
+type stays in this browser (`localStorage`) and nowhere else, and there is room for one
+custom song at a time. Both formats below are recognised automatically.
 
 ### A note list
 
@@ -225,20 +221,20 @@ The same thing the built-in songs are written in:
 F#5 F#5 G5 A5 | A5 G5 F#5 E5 | D5:2 E5:2
 ```
 
-- A note is a letter `A`–`G`, then `#` or `b` if it needs one, then the octave
+- A note is a letter `A`-`G`, then `#` or `b` if it needs one, then the octave
   number: `F#5`, `Bb4`, `D5`. Middle C is `C4`, so a tin whistle's lowest note is
   `D5`.
-- `:beats` sets the length. One beat is a quarter note, so `D5:2` is a half note
-  and `D5:0.5` an eighth. Without it a note lasts one beat.
-- `|` and line breaks are free — put them wherever the music reads best.
+- `:beats` sets the length. One beat is a quarter note, so `D5:2` is a half note and
+  `D5:0.5` an eighth. Without it, a note lasts one beat.
+- `|` and line breaks are free. Put them wherever the music reads best.
 - No rests. The trainer waits for you, so a silence has nothing to wait for.
-- The key is guessed from the first note. It is only a hint for transposing: a
-  melody the instrument can already play is left exactly where it is.
+- The key is guessed from the first note. It only hints at how to transpose, and a
+  melody the instrument can already play is left where it is.
 
 ### ABC notation
 
-Paste a whole tune, headers and all — anything with an information field
-(`X:`, `T:`, `K:` …) at the start of a line is read as ABC:
+Paste a whole tune, headers and all. Anything with an information field (`X:`, `T:`,
+`K:` and the rest) at the start of a line is read as ABC:
 
 ```abc
 X:1
@@ -249,53 +245,50 @@ K:Edor
 ~B3 EFE ~B3 dBA | ~B3 EFE AFD DFA |
 ```
 
-Read: pitches with their accidentals and octave marks, `K:` including modes
-(`Edor`, `Am`, `Bb`), `L:` and `M:` for note lengths, accidentals holding to the
-end of their bar, broken rhythm (`a>b`), inline key changes (`[K:D]`), and the
-`T:` title, which becomes the song's title.
+Flutex reads pitches with their accidentals and octave marks, `K:` including modes
+(`Edor`, `Am`, `Bb`), `L:` and `M:` for note lengths, accidentals holding to the end
+of their bar, broken rhythm (`a>b`), inline key changes (`[K:D]`), and the `T:` title,
+which becomes the song's title.
 
-Repeats are played out into the notes they stand for, since the trainer has
-nowhere to put a jump. `|: … :|` twice, `::` between two strains, `:|` on its own
-back to the top of the tune, and variant endings either way round — `|1 … :|2 …`
-or the `[1` the standard prefers — so a two-part reel arrives as `AABB` rather
-than `AB`. What is not read is a repeat *count*: `:|3` plays twice like any other.
+Repeats are played out into the notes they stand for, since the trainer has nowhere to
+put a jump. That covers `|: … :|` twice, `::` between two strains, `:|` on its own
+back to the top of the tune, and variant endings written either way, `|1 … :|2 …` or
+the `[1` the standard prefers. A two-part reel arrives as `AABB` rather than `AB`.
+Repeat *counts* are not read: `:|3` plays twice like any other.
 
-Ignored, because a melody trainer has nothing to do with them: rests, grace
-notes, decorations (`!trill!`, `~`), chord symbols and lyrics. Chords collapse to
+Rests, grace notes, decorations (`!trill!`, `~`), chord symbols and lyrics are all
+ignored, because a melody trainer has nothing to do with them. Chords collapse to
 their top note, ties become two notes, and a tuplet's notes keep their written
-lengths. Several voices are read as one line, so an arrangement for two
-instruments comes out interleaved. A header wrapped onto a bare second line — old
-collections do that instead of continuing the field with `+:` — is recognised as
-prose and skipped, rather than read as melody and failing on the first letter that
-is not a note.
+lengths. Several voices are read as one line, so an arrangement for two instruments
+comes out interleaved. A header wrapped onto a bare second line, which old collections
+do instead of continuing the field with `+:`, is recognised as prose and skipped
+rather than read as melody and failing on the first letter that is not a note.
 
-In ABC, `C` is middle C — the same `C4` as above — so a whistle tune written from
-`D` to `d'` sounds an octave below the whistle. Flutex moves it up for you and
-says so.
+In ABC, `C` is middle C, the same `C4` as above, so a whistle tune written from `D` to
+`d'` sounds an octave below the whistle. Flutex moves it up for you and says so.
 
-Anything it cannot read is an error naming the character, shown where the
-fingerings normally are. Rhythm is never enforced anywhere in the app: note
-lengths only feed the beat counts and **Hear it**.
+Anything it cannot read becomes an error naming the character, shown where the
+fingerings normally are. Rhythm is never enforced anywhere in the app: note lengths
+only feed the beat counts and Hear it.
 
 ### Keeping one
 
-Whichever format you pasted, a **Copy song definition** button appears under the
-box once the melody parses. It gives you the tune as a library entry, ready to
-paste into whichever file under `src/data/songs/` holds its section — see [Adding a
-song to the library](#adding-a-song-to-the-library).
+Whichever format you pasted, a **Copy song definition** button appears under the box
+once the melody parses. It gives you the tune as a library entry, ready to paste into
+whichever file under `src/data/songs/` holds its section. See [Adding a song to the
+library](#adding-a-song-to-the-library).
 
 ## Fingering charts
 
-The charts in [src/data/instruments.ts](src/data/instruments.ts) are transcribed
-from published sources, with the source named in a comment above each one, and
-the notes the sources disagree about are left out rather than guessed at. The
-recorders carry both fingering systems separately — baroque and German differ on
-six notes, and a test pins every one of them, because a chart that has quietly
-mixed the two draws a perfectly plausible diagram for a note that will not sound.
+The charts in [src/data/instruments.ts](src/data/instruments.ts) are transcribed from
+published sources, each named in a comment above its chart, and notes the sources
+disagree about are left out rather than guessed at. The recorders carry both fingering
+systems separately. Baroque and German differ on six notes, and a test pins every one
+of them, because a chart that has quietly mixed the two draws a perfectly plausible
+diagram for a note that will not sound.
 
 ## A note on the TypeScript version
 
-`typescript` is pinned to `~6.0.3` on purpose. TypeScript 7 is out, but
-`ts-jest` declares a peer range of `>=4.3 <7` and `typescript-eslint` requires
-`>=4.8.4 <6.1.0`; upgrading breaks both. The pin can go once those two ship
-support.
+`typescript` is pinned to `~6.0.3` on purpose. TypeScript 7 is out, but `ts-jest`
+declares a peer range of `>=4.3 <7` and `typescript-eslint` requires `>=4.8.4
+<6.1.0`, so upgrading breaks both. The pin can go once those two ship support.

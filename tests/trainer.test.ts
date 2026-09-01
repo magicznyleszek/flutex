@@ -32,10 +32,9 @@ const engineWith = (penaltyMode: PenaltyMode = 'wait', song = SONG): TrainerEngi
   createTrainerEngine(song, { ...OPTIONS, penaltyMode })
 
 /**
- * Feeds N frames of the same note and returns the last state. `cents` is measured from
- * whatever the target is on that frame, so leaving it out means "dead in tune for the note
- * named" — which for a wrong note is a hundred cents per semitone away, exactly as the
- * microphone hook would report it. Passing it explicitly detunes the note instead.
+ * Feeds N frames of the same note and returns the last state. `cents` is measured from the target on
+ * that frame, so leaving it out means "dead in tune for the note named" — a hundred cents per
+ * semitone away for a wrong one, as the mic hook would report it. Pass it to detune instead.
  */
 function feed(
   engine: TrainerEngine,
@@ -78,8 +77,7 @@ describe('initial state', () => {
     expect(snapshot.status).toBe('waiting')
   })
 
-  // The UI draws a fixed number of slots off this array, so it has to keep its length at
-  // the end of a song rather than getting shorter and shifting the row sideways.
+  // The UI draws a fixed number of slots off this array, so a shorter one would shift the row.
   it('pads the lookahead with nulls near the end of the song', () => {
     const snapshot = createTrainerEngine(['D5', 'E5'], OPTIONS).snapshot()
 
@@ -87,9 +85,8 @@ describe('initial state', () => {
     expect(snapshot.upcoming).toEqual(['E5', null, null])
   })
 
-  // Playback lays out the note row from `noteWindow` while the engine lays out the same row
-  // from its snapshot. If those two ever disagreed, "next" would mean one note during the
-  // demo and another one while playing.
+  // Playback lays out the note row from `noteWindow`, the trainer from its snapshot. Disagreeing,
+  // "next" would mean one note during the demo and another while playing.
   it('reads the same window the engine puts in its snapshot', () => {
     const engine = engineWith()
     playNote(engine)
@@ -142,11 +139,8 @@ describe('scoring notes', () => {
     expect(snapshot.index).toBe(1)
   })
 
-  /*
-   * The wide tolerances only mean anything if cents alone decide the hit. A whistle a whole
-   * semitone sharp is named as the note above by the pitch detector, so a scoring rule that
-   * also asked for the right name would cap every setting at ±50 and make ±75 and ±100 inert.
-   */
+  // The wide tolerances only mean anything if cents alone decide the hit: a whistle a semitone
+  // sharp is named as the note above, so asking for the name too would cap every setting at ±50.
   it('scores a mistuned note the detector names as its neighbour', () => {
     const engine = engineWith()
     engine.configure({ toleranceCents: 100 })
@@ -162,8 +156,7 @@ describe('scoring notes', () => {
     expect(snapshot.status).toBe('wrong')
   })
 
-  // Silence arrives as zero cents, which is the same number a perfect note carries, so the
-  // only thing telling them apart is the missing note name.
+  // Silence arrives as zero cents, the same as a perfect note. Only the missing name separates them.
   it('never scores silence, however wide the tolerance', () => {
     const engine = engineWith()
     engine.configure({ toleranceCents: 100 })
@@ -278,8 +271,7 @@ describe('penalty modes', () => {
     expect(filled.mistakeProgress).toBe(1)
     expect(filled.mistakes).toBe(1)
 
-    // The bar stays pinned at full, which crosses the threshold again on every one of these
-    // frames. Each used to count as its own mistake.
+    // The bar stays pinned at full, crossing the threshold on every frame. Each used to count.
     expect(feed(engine, 60, 'E5').mistakes).toBe(1)
   })
 

@@ -1,26 +1,20 @@
-/* The leading `html` is load-bearing. MantineProvider derives every `-light` and hover
-   variable for a custom colour at runtime and injects them from a <style> tag under
-   `:root[data-mantine-color-scheme="dark"]` — the same specificity as this selector, and
-   later in the document, so a plain `:root` here ties and loses. Adding the element name
-   makes these win regardless of order. Without it the eight `-light` values below have no
-   effect at all, silently.
+/* The leading `html` is load-bearing. MantineProvider derives every `-light` and hover variable at
+   runtime and injects them from a <style> tag under `:root[data-mantine-color-scheme="dark"]` — the
+   same specificity as this selector and later in the document, so a plain `:root` ties and loses.
+   Without the element name the eight `-light` values below silently do nothing.
 
-   Variables Mantine only writes into its bundled stylesheet, such as
-   `--mantine-color-body`, do not need the extra weight, but they are kept in the same
-   blocks so that one selector describes one colour scheme.
+   Variables Mantine only writes into its bundled stylesheet, `--mantine-color-body` among them, do
+   not need the weight, but they stay here so one selector describes one scheme.
 
-   Overriding `--mantine-color-default-border` would look like it dresses the borders and
-   does nothing: Paper and Divider set `--paper-border-color` and `--divider-color` on the
-   element itself, so the tuples are what fix the border colour. */
+   Overriding `--mantine-color-default-border` would do nothing: Paper and Divider set
+   `--paper-border-color` and `--divider-color` on the element itself. */
 html:root[data-mantine-color-scheme="dark"] {
-  /* Paper is painted from `--mantine-color-body`, the same variable as the page, so dark-8
-     against the page's dark-9 is what separates a card from what it sits on. */
+  /* Paper is painted from this too, so dark-8 against the page's dark-9 separates card from page. */
   --mantine-color-body: var(--mantine-color-dark-8);
 
-  /* `variant="light"` surfaces are computed as `darken(shade 9, 0.5)` in the dark scheme,
-     which for these ramps reads between 1.04:1 and 1.52:1 against the card. Each of these
-     keeps its own tuple's hue and saturation and moves only the lightness, landing near
-     2.15:1 on the card with shade-0 text at 4.89:1 or better. */
+  /* `variant="light"` surfaces are `darken(shade 9, 0.5)` in the dark scheme, which for these ramps
+     reads 1.04:1 to 1.52:1 against the card. Each of these keeps its tuple's hue and saturation and
+     moves only lightness, landing near 2.15:1 with shade-0 text at 4.89:1 or better. */
   --mantine-color-accent-light: hsl(130deg 60% 26%);
   --mantine-color-accent-light-hover: hsl(130deg 60% 33%);
   --mantine-color-alarm-light: hsl(8deg 65% 40%);
@@ -30,88 +24,75 @@ html:root[data-mantine-color-scheme="dark"] {
   --mantine-color-dark-light: hsl(32deg 16% 35%);
   --mantine-color-dark-light-hover: hsl(32deg 16% 42%);
 
-  /* The Select chevron defaults to dark-3, which clears the 3:1 a control affordance wants
-     by a hair at 3.07:1 on a dark-6 input. dark-2 reaches 4.16:1 and is what the hint text
-     around it uses. */
+  /* The Select chevron defaults to dark-3, which clears the 3:1 a control wants by a hair at
+     3.07:1 on a dark-6 input. dark-2 reaches 4.16:1, the same as the hint text around it. */
   --combobox-chevron-color: var(--mantine-color-dark-2);
 
-  /* Elevation and the three hues, named once per scheme so components do not have to ask
-     which one is current. `sunken` is grooves and the bubbles that sit behind the target,
-     `raised` is the target itself, and the `-ink` triplet is each hue at the lightness
-     that carries it as text or a needle against the current surface. */
+  /* Elevation and the three hues, named once per scheme so components need not ask which is on.
+     `sunken` is grooves and the bubbles behind the target, `raised` the target itself, and each
+     `-ink` is that hue at the lightness which carries it as text against the current surface. */
   --flutex-sunken: var(--mantine-color-dark-9);
   --flutex-raised: var(--mantine-color-dark-7);
   --flutex-accent-ink: var(--mantine-color-accent-4);
   --flutex-signal-ink: var(--mantine-color-signal-4);
   --flutex-alarm-ink: var(--mantine-color-alarm-4);
 
-  /* Text on a filled button, which in this scheme is a light green or a light red, so the
-     ink has to be the dark end of the ramp: 10.37:1 on the green Start button and 6.04:1 on
-     the red Stop, where Mantine's own white managed 1.71:1. `theme.ts` points filled
-     variants at this. */
+  /* Text on a filled button, which here is a light green or red, so the ink is the dark end of the
+     ramp: 10.37:1 on Start and 6.04:1 on Stop, where Mantine's own white managed 1.71:1. */
   --flutex-filled-ink: var(--mantine-color-dark-9);
 }
 
 html:root[data-mantine-color-scheme="light"] {
-  /* Mantine hardcodes `#fff` here rather than reading `--mantine-color-white`, so the warm
-     white from the theme has to be pointed at by hand. The page is gray-2 one rule down,
-     which puts a card 1.16:1 above what it sits on. */
+  /* Mantine hardcodes `#fff` here rather than reading `--mantine-color-white`, so the theme's warm
+     white has to be pointed at by hand. Against the gray-2 page below, a card is 1.16:1 above it. */
   --mantine-color-body: var(--mantine-color-white);
 
-  /* `dark` is the dark scheme's ramp, so its shade 1 is a midtone and a neutral badge
-     comes out far heavier than the accent badge beside it. gray-1 with gray-8 text is the
-     same weight as the other light variants, at 10.89:1. */
+  /* `dark` is the dark scheme's ramp, so its shade 1 is a midtone and a neutral badge outweighs the
+     accent badge beside it. gray-1 with gray-8 text matches the other light variants, at 10.89:1. */
   --mantine-color-dark-light: var(--mantine-color-gray-1);
   --mantine-color-dark-light-hover: var(--mantine-color-gray-2);
   --mantine-color-dark-light-color: var(--mantine-color-gray-8);
 
-  /* Elevation runs the other way here: a card is the lightest thing on the page, so the
-     raised bubble can only be a faint tint below it rather than a step above. The `-ink`
-     shades drop to 9, which is what clears 4.5:1 on a white card. */
+  /* Elevation runs the other way here: a card is the lightest thing on the page, so a raised bubble
+     is a faint tint below it rather than a step above. The `-ink` shades drop to 9 to clear 4.5:1. */
   --flutex-sunken: var(--mantine-color-gray-2);
   --flutex-raised: var(--mantine-color-gray-1);
   --flutex-accent-ink: var(--mantine-color-accent-9);
   --flutex-signal-ink: var(--mantine-color-signal-9);
   --flutex-alarm-ink: var(--mantine-color-alarm-9);
 
-  /* A filled button is shade 8 of its ramp, which the red Stop carries with white ink at
-     6.86:1 and the green Start does not: green is the lightest of these hues at any given
-     lightness, and shade 8 left the label at 3.51:1. Shade 9 reads 5.57:1.
+  /* A filled button is shade 8 of its ramp, which the red Stop carries with white ink at 6.86:1 and
+     the green Start does not: green is the lightest of these hues at any lightness, and shade 8 left
+     the label at 3.51:1. Shade 9 reads 5.57:1.
 
-     Hover has to go darker still, and Mantine derives it as shade 8 whenever the fill is
-     shade 9 — which would put the failing green back under the pointer. A shade past the end
-     of the ramp is the one value here that is not in a tuple; 23% is 7.70:1. Only the accent
-     needs any of this, so the other ramps are left to Mantine.
+     Hover has to go darker again, and Mantine derives it as shade 8 whenever the fill is shade 9 —
+     putting the failing green back under the pointer. So hover is a shade past the end of the ramp,
+     the one value here not in a tuple; 23% is 7.70:1. Only the accent needs this.
 
-     `-filled` is also `-text` and the focus ring, and both only gain from the darker green. */
+     `-filled` is also `-text` and the focus ring, and both gain from the darker green. */
   --mantine-color-accent-filled: var(--mantine-color-accent-9);
   --mantine-color-accent-filled-hover: hsl(130deg 60% 23%);
 
-  /* The ink on those fills, white here and the dark end of the neutral ramp in the other
-     scheme. Named the same in both, so `theme.ts` has one variable to point at instead of a
-     rule per scheme. */
+  /* The ink on those fills. Named the same in both schemes, so `theme.ts` points at one variable. */
   --flutex-filled-ink: var(--mantine-color-white);
 }
 
-/* A quieter card outline than Mantine's dark-4, which at 2.54:1 against the card drew the
-   eye to the edges rather than to what is inside them. dark-6 is 1.42:1 — still a visible
-   seam, no longer a frame.
+/* A quieter card outline than Mantine's dark-4, which at 2.54:1 drew the eye to the edges rather
+   than to what is inside them. dark-6 is 1.42:1 — a seam, not a frame.
 
-   The class in the selector is doing real work. Mantine sets `--paper-border-color` on the
-   Paper element itself, from `[data-mantine-color-scheme='dark'] .m_1b7284a3`, and a
-   declaration on the element beats an inherited one no matter how specific the `:root` rule
-   that carried it — which is why this cannot live in the block above. Matching the same
-   element through `html[…] .mantine-Paper-root` scores one point higher and wins. Light
-   scheme is left alone: gray-3 on a white card is already faint. */
+   The class is doing real work. Mantine sets `--paper-border-color` on the Paper element itself, and
+   a declaration on the element beats an inherited one however specific the `:root` rule that carried
+   it — so this cannot live in the block above. Matching the same element through
+   `html[…] .mantine-Paper-root` scores one point higher and wins. Light is left alone: gray-3 on a
+   white card is already faint. */
 html[data-mantine-color-scheme="dark"] .mantine-Paper-root {
   --paper-border-color: var(--mantine-color-dark-6);
 }
 
 /* `gap` is not a style prop on Stack or Group, so `gap={{ base, sm }}` there resolves to
-   `var(--mantine-spacing-[object Object])` and silently collapses to zero. Only Flex, Grid
-   and SimpleGrid take a responsive gap, so responsive spacing has to come from the scale.
-   The attribute is in the selector for weight, since MantineProvider injects the theme
-   variables in a runtime <style> tag after this file. `48em` is Mantine's `sm`. */
+   `var(--mantine-spacing-[object Object])` and collapses to zero. Only Flex, Grid and SimpleGrid
+   take a responsive gap, so responsive spacing comes from the scale instead. The attribute is in the
+   selector for weight, MantineProvider injecting its variables after this file. `48em` is `sm`. */
 @media (width < 48em) {
   :root[data-mantine-color-scheme] {
     --mantine-spacing-xs: calc(0.375rem * var(--mantine-scale));
@@ -123,12 +104,11 @@ html[data-mantine-color-scheme="dark"] .mantine-Paper-root {
 }
 
 body {
-  /* `100vh` on a phone is the viewport with the browser toolbars hidden, some 180px more
-     than is on screen, so it puts a scrollbar on a page that otherwise fits. */
+  /* `100vh` on a phone is the viewport with the toolbars hidden, some 180px more than is on
+     screen, so it scrollbars a page that otherwise fits. */
   min-height: 100dvh;
 
-  /* Mantine's reset paints this from `--mantine-color-body`, which is the card colour, so
-     the page needs its own shade one step away to give the cards something to sit on.
-     `light-dark()` is postcss-preset-mantine's, and it only works off `:root`. */
+  /* Mantine's reset paints this from `--mantine-color-body`, the card colour, so the page needs its
+     own shade a step away. `light-dark()` is Mantine's preset, and it only works off `:root`. */
   background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-9));
 }

@@ -11,8 +11,8 @@ import { theme } from './theme'
 const container = document.getElementById('root')
 if (!container) throw new Error('No #root element in the document')
 
-// `defaultColorScheme` only applies until the user picks one; after that Mantine reads
-// its own localStorage key. color-scheme-boot.ts applies the stored value before paint.
+// `defaultColorScheme` holds until the user picks one, after which Mantine reads its own
+// localStorage key. color-scheme-boot.ts applies the stored value before paint.
 createRoot(container).render(
   <StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="dark">
@@ -22,10 +22,9 @@ createRoot(container).render(
 )
 
 /**
- * Production only. Against the dev server the worker answers from a stale cache while
- * hot reload replaces the same files. `new URL(..., import.meta.url)` with
- * `type: 'module'` is the only form Parcel bundles: the manifest of the other bundles
- * reaches service-worker.ts by import, and a classic worker cannot import.
+ * Production only: against the dev server the worker answers from a stale cache while hot reload
+ * replaces the same files. `new URL(..., import.meta.url)` with `type: 'module'` is the only form
+ * Parcel bundles — the manifest reaches service-worker.ts by import, and a classic worker cannot.
  */
 if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
