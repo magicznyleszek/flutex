@@ -12,7 +12,7 @@ Live at [flutex.zefirefemera.xyz](https://flutex.zefirefemera.xyz).
 - Five instruments: tin whistle in D, soprano recorder in baroque and in German
   fingering, and 6-hole and 12-hole ocarinas. Each has its own fingering chart and
   drawing, and you see the previous, current and next note at once.
-- Thirty-five songs: exercises, tunes most people already know, carols, traditional
+- Fifty songs: exercises, tunes most people already know, carols, traditional
   dance tunes and airs, and a handful written up in the whistle's second octave, all of
   them out of copyright. You can add one of your own in [either of two
   formats](#writing-your-own-song).

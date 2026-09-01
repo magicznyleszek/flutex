@@ -1,6 +1,6 @@
 /**
- * Polkas, jigs, a march and a slip jig. "A Blast Of Wind" is the other song the range tests exempt by
- * name, for the reason `index.ts` gives.
+ * Polkas, jigs, a march, a reel, two song airs and a slip jig. "A Blast Of Wind" is the other song
+ * the range tests exempt by name, for the reason `index.ts` gives.
  */
 import { defineSong, type Song } from '../songUtils'
 
@@ -82,6 +82,56 @@ export const IRISH_SCOTTISH: readonly Song[] = [
       D6 A5:0.5 B5 A5:0.5 | F#5:0.5 G5:0.5 F#5:0.5 F#5:0.5 E5:0.5 D5:0.5 | E5:0.5 F#5:0.5 G5:0.5 A5:0.5 B5:0.5 C#6:0.5
       D6 A5:0.5 B5 A5:0.5 | D6 A5:0.5 B5 A5:0.5 | F#5 F#5:0.5 E5:0.5 F#5:0.5 E5:0.5
       D5:1.5 D5
+    `,
+  }),
+
+  defineSong({
+    id: 'bonnie-kate',
+    title: 'Bonnie Kate',
+    subtitle: 'Traditional Scots reel — D major',
+    tags: ['dance', 'hard'],
+    key: 'D',
+    spec: `
+      C#6 | D6:1.5 E6:0.5 D6 C#6 | D6 A5:2 B5 | A5 G5 F#5 E5 | F#5 D5:2 E5
+      F#5 D5:2 E5:0.5 F#5:0.5 | G5 E5:2 F#5:0.5 G5:0.5 | F#5 A5 G5 F#5 | E5 A5 B5 C#6 | C#6
+      D6:1.5 E6:0.5 D6 C#6 | D6 A5:2 B5 | A5 G5 F#5 E5 | F#5 D5:2 E5 | F#5 D5:2 E5:0.5 F#5:0.5
+      G5 E5:2 F#5:0.5 G5:0.5 | F#5 A5 G5 F#5 | E5:2 E5:2 | F#5 D5:2 E5:0.5 F#5:0.5 | G5 E5 A5 F#5
+      B5 G5:2 A5:0.5 B5:0.5 | C#6 A5 B5:0.5 C#6:0.5 | D6:1.5 E6:0.5 D6 B5 | A5 C#6 D6 F#5
+      G5 B5 A5:0.5 B5:0.5 A5:0.5 G5:0.5 | F#5 D5 D5:2 | C#6 | D6:1.5 E6:0.5 D6 C#6 | D6 A5:2 B5
+      A5 G5 F#5 E5 | F#5 D5:2 E5 | F#5 D5:2 E5:0.5 F#5:0.5 | G5 E5:2 F#5:0.5 G5:0.5
+      F#5 A5 G5 F#5
+    `,
+  }),
+
+  defineSong({
+    id: 'kelvingrove',
+    title: 'Kelvingrove',
+    subtitle: 'Scots song air — G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      G5:0.5 A5:0.5 | B5:2 D6 | A5:2 B5 | G5:2 F#5 | E5:2 D5 | E5:3 | A5:2 B5 | A5:3 | A5 G5 A5
+      B5:2 D6 | A5:2 B5 | G5:2 F#5 | E5:2 D5 | E5:3 | G5:2 A5 | G5:3 | G5 A5 B5 | C6:2 B5
+      C6:2 D6 | E6:3 | E6 B5 C6 | D6:2 B5 | A5:2 G5 | A5:3 | A5 G5 A5 | B5:2 D6 | A5:2 B5
+      G5:2 F#5 | E5:2 D5 | E5:3 | G5:2 A5 | G5:3 | G5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'ho-ro-my-nut-brown-maiden',
+    title: 'Ho Ro My Nut Brown Maiden',
+    subtitle: 'Scottish Gaelic song air — G major',
+    tags: ['folk', 'hard'],
+    key: 'G',
+    spec: `
+      D5 | G5:1.5 F#5:0.5 E5 D5 | G5:2 D5 D5 | G5:1.5 A5:0.5 C6 B5 | A5:3 C6
+      B5:0.5 D6:1.5 B5:0.5 D6:1.5 | D5:2 G5 A5 | B5:1.5 B5:0.5 C6 A5 | G5:3 | D5
+      G5:1.5 F#5:0.5 E5 D5 | G5:2 D5 D5 | G5:1.5 A5:0.5 C6 B5 | A5:3 C6
+      B5:0.5 D6:1.5 B5:0.5 D6:1.5 | D5:2 G5 A5 | B5:1.5 B5:0.5 C6 A5 | G5:3 | B5:0.5 C6:0.5
+      D6 E6 D6 B5 | D6:2 B5 C6 | D6 E6 D6 B5 | A5:2 A5 C6 | B5:0.5 D6:1.5 B5:0.5 D6:1.5
+      D5:2 G5 A5 | B5:1.5 B5:0.5 C6 A5 | G5:3 | B5:0.5 C6:0.5 | D6 E6 D6 B5 | D6:2 B5 C6
+      D6 E6 D6 B5 | A5:2 A5 C6 | B5:0.5 D6:1.5 B5:0.5 D6:1.5 | D5:2 G5 A5 | B5:1.5 B5:0.5 C6 A5
+      G5:3
     `,
   }),
 

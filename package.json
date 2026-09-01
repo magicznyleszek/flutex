@@ -5,7 +5,7 @@
   "description": "A recorder and tin whistle trainer — it listens through the microphone and waits until you play the right note",
   "source": "src/index.html",
   "scripts": {
-    "start": "parcel",
+    "start": "parcel --port 2038",
     "build": "parcel build --public-url ./",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
     "song": "jiti scripts/abcToSong.ts",

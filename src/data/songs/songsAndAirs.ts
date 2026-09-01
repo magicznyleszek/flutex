@@ -65,6 +65,40 @@ export const SONGS_AND_AIRS: readonly Song[] = [
     `,
   }),
 
+  defineSong({
+    id: 'blaenwern',
+    title: 'Blaenwern',
+    subtitle: 'William Penfro Rowlands, Welsh hymn tune, 1905 — G major',
+    tags: ['classical', 'medium'],
+    key: 'G',
+    spec: `
+      D5:2 D5 | E5:2 E5 | D5 G5 B5 | B5:2 A5 | G5:2 F#5 | E5:2 D5 | D5 F#5 E5 | D5:3 | D5:2 D5
+      E5:2 E5 | D5 G5 B5 | B5:2 A5 | G5:2 A5 | B5 C6 A5 | G5:2 F#5 | G5:3 | B5:2 B5 | B5 G5 B5
+      C6 B5 A5 | B5:2 B5 | D6:2 D6 | D6 B5 D6 | E6 D6 C#6 | D6:3 | E6:2 C6 | D6:2 B5 | D6 C6 B5
+      B5:2 A5 | G5:2 A5 | B5 C6 A5 | G5:2 F#5 | G5:3
+    `,
+  }),
+
+  defineSong({
+    id: 'kafoozalum',
+    title: 'Kafoozalum',
+    subtitle: 'Victorian music-hall song — G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      B5:0.5 C6:0.5 | D6 D6:0.5 C6:0.5 B5:0.5 C6:0.5 D6
+      A5:0.5 B5:0.5 C6:0.5 B5:0.5 A5:0.5 B5:0.5 C6 | D6 D6:0.5 C6:0.5 B5:0.5 C6:0.5 D6
+      G5:0.5 A5:0.5 B5:0.5 G5:0.5 A5 | B5:0.5 C6:0.5 | D6 D6:0.5 C6:0.5 B5:0.5 C6:0.5 D6
+      A5:0.5 B5:0.5 C6:0.5 B5:0.5 A5:0.5 B5:0.5 C6 | D6 D6:0.5 C6:0.5 B5:0.5 C6:0.5 D6
+      G5:0.5 A5:0.5 B5:0.5 G5:0.5 A5 | G5:0.5 A5:0.5
+      B5:0.5 G5:0.5 D5:0.5 G5:0.5 B5:0.5 G5:0.5 B5 | C6:0.5 A5:0.5 F#5:0.5 A5:0.5 C6:0.5 A5:0.5 C6
+      B5:0.5 G5:0.5 D5:0.5 G5:0.5 B5:0.5 G5:0.5 B5 | G5:0.5 A5:0.5 B5:0.5 G5:0.5 A5
+      G5:0.5 A5:0.5 | B5:0.5 G5:0.5 D5:0.5 G5:0.5 B5:0.5 G5:0.5 B5
+      C6:0.5 A5:0.5 F#5:0.5 A5:0.5 C6:0.5 A5:0.5 C6 | B5:0.5 G5:0.5 D5:0.5 G5:0.5 B5:0.5 G5:0.5 B5
+      G5:0.5 A5:0.5 B5:0.5 G5:0.5 A5 G5
+    `,
+  }),
+
   // Transcribed from a recording rather than chosen to fit, so it is the one song that outgrows an
   // instrument: the ocarinas play its F#6 and A6 as the nearest notes they have. The lengths are by
   // ear too, in 4/4 — enough for **Hear it** to lilt rather than plod, and rhythm is never enforced.

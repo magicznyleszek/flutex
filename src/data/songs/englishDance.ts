@@ -1,4 +1,4 @@
-/** Printed English dance music — Playford, Thompson — and two morris tunes from the same world. */
+/** Printed English dance music — Playford, Thompson — and morris tunes from the same world. */
 import { defineSong, type Song } from '../songUtils'
 
 export const ENGLISH_DANCE: readonly Song[] = [
@@ -75,6 +75,52 @@ export const ENGLISH_DANCE: readonly Song[] = [
       G5 B5 C#6 B5 | A5 F#5 A5:2 | E5:1.5 G5:0.5 F#5 E5 | D5:2 D5 A5 | D6 C#6 B5 A5
       D6 C#6 B5 A5 | D6 C#6 B5 A5 | G5 F#5 E5:2 | C#6 B5 A5:2 | C#6 B5 A5:2 | A5:2 E5:1.5 G5:0.5
       F#5 D5 D5
+    `,
+  }),
+
+  defineSong({
+    id: 'winster-processional',
+    title: 'Winster Processional',
+    subtitle: 'Derbyshire morris processional — D major',
+    tags: ['dance', 'medium'],
+    key: 'D',
+    spec: `
+      A5 | D6 A5 A5 B5:0.5 C#6:0.5 | D6 A5 A5 B5:0.5 C#6:0.5 | D6 A5 A5 G5 | F#5:2 D5 | A5
+      D6 A5 A5 B5:0.5 C#6:0.5 | D6 A5 A5 B5:0.5 C#6:0.5 | D6 A5 A5 G5 | F#5:2 D5:2
+      G5 B5 B5 A5:0.5 G5:0.5 | F#5 A5 A5 G5:0.5 F#5:0.5 | E5:1.5 F#5:0.5 G5 A5 | F#5:2 D5:2
+      G5 B5 B5 A5:0.5 G5:0.5 | F#5 A5 A5 G5:0.5 F#5:0.5 | E5:1.5 F#5:0.5 G5 A5 | F#5:2 D5:2
+    `,
+  }),
+
+  defineSong({
+    id: 'orange-in-bloom',
+    title: 'Orange in Bloom',
+    subtitle: 'Traditional English dance tune — G major',
+    tags: ['dance', 'medium'],
+    key: 'G',
+    spec: `
+      G5 F#5 G5 B5:2 A5 | G5:2 E5 E5 G5 E5 | D5 E5 D5 G5:2 A5 | B5 G5 G5 G5:2 D5
+      G5 F#5 G5 B5:2 A5 | G5:2 E5 E5 G5 E5 | D5 E5 D5 G5:2 A5 | B5 G5 G5 G5:3 | B5 G5 B5 D6:2 B5
+      A5 G5 A5 B5:3 | B5 D6 B5 A5 G5 A5 | B5 G5 E5 D5:2 D5 | G5 F#5 G5 B5:2 A5 | G5:2 E5 E5 G5 E5
+      D5 E5 D5 G5:2 A5 | B5 G5 G5 G5:3 | B5 G5 B5 D6:3 B5 | A5 G5 A5 B5:3 | B5 D6 B5:2
+      A5 G5 A5:2 | B5 G5 E5:2 | D5:3 D5:3 | G5 F#5 G5 B5:2 A5 | G5:2 E5 E5 G5 E5
+      D5 E5 D5 G5:2 A5 | B5 G5 G5 G5:3
+    `,
+  }),
+
+  defineSong({
+    id: 'never-love-thee-more',
+    title: 'Never Love Thee More',
+    subtitle: 'Playford, The Dancing Master — G major',
+    tags: ['dance', 'medium'],
+    key: 'G',
+    spec: `
+      D5:0.5 E5:0.5 D5:0.5 G5 A5:0.5 | B5:0.5 C6:0.5 B5:0.5 A5 G5:0.5 | D6:0.5 B5 A5 G5:0.5
+      E5:1.5 E5:1.5 | D5:0.5 E5:0.5 D5:0.5 G5 A5:0.5 | B5:0.5 C6:0.5 B5:0.5 A5 G5:0.5
+      D6:0.5 B5 C6 D6:0.5 | E6:1.5 E6 E6:0.5 | D6:0.5 B5 A5 G5:0.5
+      C6 D6:0.5 E6:0.5 D6:0.5 C6:0.5 | D6:0.5 B5:0.5 C6:0.5 A5 G5:0.5 | E5:1.5 G5 E5:0.5
+      D5:0.5 E5:0.5 D5:0.5 G5 A5:0.5 | B5:0.5 C6:0.5 D6:0.5 E6:0.5 D6:0.5 C6:0.5
+      D6:0.5 B5:0.5 C6:0.5 A5 G5:0.5 | G5:1.5 G5
     `,
   }),
 ]

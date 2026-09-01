@@ -111,4 +111,18 @@ export const FIRST_TUNES: readonly Song[] = [
       D5 | G5:2 B5:0.5 G5:0.5 | B5:2 A5 | G5:3
     `,
   }),
+
+  defineSong({
+    id: 'this-old-man',
+    title: 'This Old Man',
+    subtitle: 'Nick Nack Paddy Whack, traditional — D major',
+    tags: ['folk', 'medium'],
+    key: 'D',
+    spec: `
+      A5 F#5 A5:2 | A5 F#5 A5:2 | B5 A5 G5 F#5 | E5 F#5 G5 F#5:0.5 G5:0.5 | A5 D5 D5 D5
+      D5:0.5 E5:0.5 F#5:0.5 G5:0.5 A5:2 | A5 E5 E5 G5 | F#5 E5 D5 | A5 F#5 A5:2 | A5 F#5 A5:2
+      B5 A5 G5 F#5 | E5 F#5 G5 F#5:0.5 G5:0.5 | A5 D5 D5 D5 | D5:0.5 E5:0.5 F#5:0.5 G5:0.5 A5:2
+      A5 E5 E5 G5 | F#5 E5 D5
+    `,
+  }),
 ]
