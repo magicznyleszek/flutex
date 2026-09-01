@@ -20,6 +20,13 @@ const VALID_HOLE_STATES: readonly HoleState[] = [0, 0.5, 1]
 const WIDE_RANGE: ReadonlySet<string> = new Set(['concerning-hobbits', 'a-blast-of-wind'])
 const SHARED_RANGE = SONGS.filter((song) => !WIDE_RANGE.has(song.id))
 
+/**
+ * The second-octave songs are playable everywhere, but not as written: they sit above the shared
+ * window on purpose, and the ocarinas take them down an octave. Excluded by category rather than by
+ * id, since that file is meant to be added to, and pinned by its own test below.
+ */
+const AS_WRITTEN = SHARED_RANGE.filter((song) => song.category !== 'second-octave')
+
 describe('instruments', () => {
   it.each(INSTRUMENT_LIST)('$id has a consistent fingering chart', (instrument) => {
     const entries = Object.entries(instrument.fingering)
@@ -227,11 +234,33 @@ describe('songs', () => {
   // The stronger claim, which catches a song drifting out of the shared range: these are written to
   // fit every chart as they stand, so the transposer should find nothing to do. A failure is a song
   // to fix, not a bug in the shift search — the test above would still pass.
-  it.each(SHARED_RANGE)('$title plays as written on every instrument', (song) => {
+  it.each(AS_WRITTEN)('$title plays as written on every instrument', (song) => {
     for (const instrument of INSTRUMENT_LIST) {
       expect(songForInstrument(song, instrument).semitones).toBe(0)
     }
   })
+
+  // The point of the second-octave section is the register, so what matters is that the instruments
+  // that have it keep it and the ones that do not get a plain octave rather than an odd shift into a
+  // new key. Written inside D6-A6 for exactly that reason: anything wider and `bestShift` starts
+  // preferring smaller moves that leave a note or two behind.
+  it.each(SONGS.filter((song) => song.category === 'second-octave'))(
+    '$title stays up an octave where it can and drops a whole one where it cannot',
+    (song) => {
+      for (const id of ['whistle_d', 'recorder', 'recorder_german'] as const) {
+        expect(songForInstrument(song, INSTRUMENTS[id]).semitones).toBe(0)
+      }
+
+      for (const id of ['ocarina_6', 'ocarina_12'] as const) {
+        const arrangement = songForInstrument(song, INSTRUMENTS[id])
+
+        expect(arrangement.semitones).toBe(-12)
+        expect(arrangement.key).toBe('D')
+        expect(arrangement.approximations).toEqual([])
+        expect(unplayableNotes(INSTRUMENTS[id], songNoteNames(arrangement))).toEqual([])
+      }
+    },
+  )
 
   // The exceptions, pinned note for note. If a chart gains the notes it lacks, or an override stops
   // holding, that is worth being told about.

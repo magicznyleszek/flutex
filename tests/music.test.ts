@@ -1,5 +1,4 @@
 import {
-  beatsToGlyph,
   centsBetween,
   centsFromNote,
   freqToNearestNote,
@@ -80,20 +79,5 @@ describe('centsFromNote', () => {
   it('returns 0 when there is nothing to measure', () => {
     expect(centsFromNote(0, 'D5')).toBe(0)
     expect(centsFromNote(600, 'not-a-note')).toBe(0)
-  })
-})
-
-describe('beatsToGlyph', () => {
-  it('maps durations onto note symbols', () => {
-    expect(beatsToGlyph(1)).toBe('♩')
-    expect(beatsToGlyph(0.5)).toBe('♪')
-    expect(beatsToGlyph(2)).toBe('𝅗𝅥')
-    expect(beatsToGlyph(4)).toBe('𝅝')
-    expect(beatsToGlyph(8)).toBe('𝅝')
-  })
-
-  it('returns an empty string when there is no duration', () => {
-    expect(beatsToGlyph(0)).toBe('')
-    expect(beatsToGlyph(-1)).toBe('')
   })
 })

@@ -45,6 +45,9 @@ const MODES: Record<string, number> = {
 /** A whole tune is one melody here, so a paste of an entire book is worth naming as a mistake. */
 const MAX_NOTES = 2000
 
+/** How much of a melody line an error quotes. A line of ABC can run to several bars. */
+const EXCERPT = 60
+
 const FIELD_LINE = /^([A-Za-z]):(.*)$/
 const KEY_FIELD = /^([A-Ga-g])([#b]?)\s*([A-Za-z]*)/
 const FRACTION = /^(\d+)(?:\/(\d+))?$/
@@ -53,6 +56,23 @@ interface AbcKey {
   tonic: string
   /** Positive for sharps, negative for flats. */
   sharps: number
+}
+
+/** A line of melody and where it came from, so an error can point at it. */
+interface BodyLine {
+  /** 1-based, counted in the text as pasted, headers and blank lines included. */
+  number: number
+  text: string
+}
+
+/** The line as an error should quote it: whole if it is short, else a window round the spot. */
+function excerpt(text: string, column: number): string {
+  if (text.length <= EXCERPT) return text
+
+  const from = Math.max(0, Math.min(column - EXCERPT / 2, text.length - EXCERPT))
+  const to = from + EXCERPT
+
+  return `${from > 0 ? '…' : ''}${text.slice(from, to)}${to < text.length ? '…' : ''}`
 }
 
 /**
@@ -143,14 +163,16 @@ function isProse(line: string): boolean {
  * dropped, so rests vanish, chords collapse to their top note and several voices interleave into one
  * line. Repeats are played out, since the trainer walks a melody end to end with nowhere to jump.
  *
- * Anything it cannot place is an error naming the character: a tune that half works is harder to fix
- * than one that says what is wrong.
+ * Anything it cannot place is an error naming the character and the line it sits on: a tune that half
+ * works is harder to fix than one that says what is wrong.
  */
 export function parseAbc(text: string): AbcResult {
   const fields = new Map<string, string>()
-  const bodyLines: string[] = []
+  const bodyLines: BodyLine[] = []
+  let lineNumber = 0
 
   for (const raw of text.split('\n')) {
+    lineNumber += 1
     const line = stripComment(raw).trim()
     if (line === '') continue
 
@@ -166,7 +188,7 @@ export function parseAbc(text: string): AbcResult {
     // the header block, so no music can go missing behind it.
     if (bodyLines.length === 0 && isProse(line)) continue
 
-    bodyLines.push(line)
+    bodyLines.push({ number: lineNumber, text: line })
   }
 
   const unit = unitLength(fields)
@@ -174,7 +196,14 @@ export function parseAbc(text: string): AbcResult {
   let signature = keySignature(tuneKey.sharps)
 
   // Joined with a space so a note ending one line and one starting the next cannot read as one token.
-  const body = bodyLines.join(' ')
+  const body = bodyLines.map((line) => line.text).join(' ')
+
+  /** Where each of those lines starts in `body`, which is what maps a failure back onto its source. */
+  const lineStarts: number[] = []
+  for (let start = 0, index = 0; index < bodyLines.length; index += 1) {
+    lineStarts.push(start)
+    start += (bodyLines[index]?.text.length ?? 0) + 1
+  }
   const notes: AbcNote[] = []
   /** Accidentals written on a note, held per letter and octave until the next bar line. */
   const accidentals = new Map<string, number>()
@@ -191,6 +220,20 @@ export function parseAbc(text: string): AbcResult {
   let at = 0
 
   const fail = (message: string): AbcResult => ({ ok: false, error: message })
+
+  /**
+   * `message`, followed by the line the offset falls on. The offsets are into the joined body, and one
+   * bad character in a long tune is otherwise a hunt: the line number is what you scroll to.
+   */
+  const failAt = (offset: number, message: string): AbcResult => {
+    let index = 0
+    while (index + 1 < lineStarts.length && (lineStarts[index + 1] ?? 0) <= offset) index += 1
+
+    const line = bodyLines[index]
+    if (line === undefined) return fail(message)
+
+    return fail(`${message} (Line ${line.number}: ${excerpt(line.text, offset - (lineStarts[index] ?? 0))})`)
+  }
 
   /** Ends the bar being filled, if it holds anything. Two bar lines in a row make one bar, not two. */
   const closeBar = (): void => {
@@ -397,6 +440,7 @@ export function parseAbc(text: string): AbcResult {
 
     // What is left has to be a note: accidentals, letter, octave marks, length. `=` is a natural, so
     // it cancels the key signature rather than adding to it.
+    const tokenAt = at
     let alter: number | null = null
     for (;;) {
       const mark = body[at] ?? ''
@@ -410,10 +454,11 @@ export function parseAbc(text: string): AbcResult {
     const letter = body[at] ?? ''
     if (!/[A-Ga-g]/.test(letter)) {
       if (alter !== null) {
-        return fail(`In the melody, "${ch}" has to be followed by a note letter A-G.`)
+        return failAt(tokenAt, `In the melody, "${ch}" has to be followed by a note letter A-G.`)
       }
 
-      return fail(
+      return failAt(
+        tokenAt,
         `I cannot read "${ch}" in the melody. Notes, rests, bar lines, ties and the usual `
         + 'decorations are understood — anything else is probably not ABC.',
       )

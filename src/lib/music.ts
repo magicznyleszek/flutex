@@ -83,21 +83,3 @@ export function centsFromNote(hz: number, noteStr: string): number {
   if (targetHz === null || !(hz > 0)) return 0
   return centsBetween(hz, targetHz)
 }
-
-// Display only; the trainer never enforces rhythm. Descending order — the lookup takes the first fit.
-const DURATION_GLYPHS: readonly (readonly [number, string])[] = [
-  [4, '𝅝'],
-  [3, '𝅗𝅥.'],
-  [2, '𝅗𝅥'],
-  [1.5, '♩.'],
-  [1, '♩'],
-  [0.75, '♪.'],
-  [0.5, '♪'],
-  [0.25, '♬'],
-]
-
-export function beatsToGlyph(beats: number): string {
-  if (!(beats > 0)) return ''
-  const match = DURATION_GLYPHS.find(([value]) => beats >= value)
-  return match ? match[1] : '♬'
-}

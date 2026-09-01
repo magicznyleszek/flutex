@@ -10,9 +10,11 @@
     <!-- The manifest's single `theme_color` cannot follow a toggle, so an installed app
          would keep one status bar colour in both schemes. These two override it per system
          preference, which is as close as a declaration gets: someone who overrides the
-         scheme in-app against their system setting still sees the other bar. -->
-    <meta name="theme-color" content="hsl(32, 16%, 92%)" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="hsl(32, 16%, 8%)" media="(prefers-color-scheme: dark)" />
+         scheme in-app against their system setting still sees the other bar.
+         gray-2 and dark-9 of theme.ts, written out in hex: the manifest is read by the
+         installer rather than the CSS engine, and these three want the same value. -->
+    <meta name="theme-color" content="#eeeae7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#181311" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="./flutex-icon.svg" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta

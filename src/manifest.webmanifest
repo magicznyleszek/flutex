@@ -6,8 +6,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "hsl(32, 16%, 8%)",
-  "theme_color": "hsl(32, 16%, 8%)",
+  "background_color": "#181311",
+  "theme_color": "#181311",
   "categories": ["education", "music"],
   "icons": [
     {

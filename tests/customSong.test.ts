@@ -146,6 +146,20 @@ describe('ABC notation', () => {
     expect(tune(`${HEADER}C ^^`)).toContain('followed by a note letter')
     expect(tune('X:1\nT:Nothing\nK:C')).toContain('No notes')
   })
+
+  // Numbered in the text as pasted, blank lines and headers included, since that is what you scroll
+  // to. The body offsets it counts from are into the joined lines, hence the test on the second one.
+  it('names the line it choked on', () => {
+    const error = tune('X:1\nL:1/4\nK:C\nC D E\nF G H\n')
+    expect(error).toContain('Line 5')
+    expect(error).toContain('F G H')
+
+    // A long line is quoted round the spot rather than whole.
+    const long = tune(`X:1\nL:1/8\nK:C\n${'CDEF GABc '.repeat(9)}H`)
+    expect(long).toContain('Line 4')
+    expect(long).toContain('…')
+    expect(long).toContain('H')
+  })
 })
 
 describe('custom songs', () => {

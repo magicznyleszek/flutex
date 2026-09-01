@@ -12,9 +12,10 @@ Live at [flutex.zefirefemera.xyz](https://flutex.zefirefemera.xyz).
 - Five instruments: tin whistle in D, soprano recorder in baroque and in German
   fingering, and 6-hole and 12-hole ocarinas. Each has its own fingering chart and
   drawing, and you see the previous, current and next note at once.
-- Thirty-one songs: two exercises, tunes most people already know, carols, and
-  traditional dance tunes and airs, all of them out of copyright. You can add one of
-  your own in [either of two formats](#writing-your-own-song).
+- Thirty-five songs: exercises, tunes most people already know, carols, traditional
+  dance tunes and airs, and a handful written up in the whistle's second octave, all of
+  them out of copyright. You can add one of your own in [either of two
+  formats](#writing-your-own-song).
 - Hear it plays the melody through the speakers so you know what you are aiming at.
   The microphone is off while it plays.
 - A tuner and a hold meter. A note counts once you have held it in tune long enough,
@@ -146,10 +147,10 @@ the same order.
 
 ### Staying in range
 
-Every song is written inside D5-E6 on the ten notes all five charts have in common:
-the D major scale plus C natural, which is what a tin whistle in D and a 6-hole
-ocarina share. That is why any instrument can play the library as written. A tune
-that did not fit was transposed until it did, or left out.
+Almost every song is written inside D5-E6 on the ten notes all five charts have in
+common: the D major scale plus C natural, which is what a tin whistle in D and a
+6-hole ocarina share. That is why any instrument can play the library as written. A
+tune that did not fit was transposed until it did, or left out.
 
 The tests check every song against every instrument, and check that each one plays
 *as written*. A song that needs transposing on a whistle is a song to rewrite rather
@@ -167,6 +168,15 @@ exempt by name, each with a test of its own pinning what every instrument makes 
   Four of the five keep the tune whole. The 6-hole ocarina cannot, and its shift is
   picked to make the loss small: in C it flattens nine notes at the top of the high
   strain, where staying in A would flatten fourteen at the bottom of the low one.
+
+The *Second octave* section is exempt as a section rather than by name, because sitting
+above that window is the whole point of it. On a whistle the top octave uses the same
+grips as the bottom one and the breath does the work, so those tunes are written where
+they are meant to be played instead of being transposed into it. The whistle and both
+recorders take them as written; the ocarinas, which stop short of D6, take the lot down
+a whole octave and play the same tunes in the register they have. Everything in the
+section stays inside D6-A6 so that stays true: any wider and the shift search starts
+preferring a smaller move that leaves a note or two behind.
 
 ### Where the tunes come from
 
@@ -267,9 +277,9 @@ rather than read as melody and failing on the first letter that is not a note.
 In ABC, `C` is middle C, the same `C4` as above, so a whistle tune written from `D` to
 `d'` sounds an octave below the whistle. Flutex moves it up for you and says so.
 
-Anything it cannot read becomes an error naming the character, shown where the
-fingerings normally are. Rhythm is never enforced anywhere in the app: note lengths
-only feed the beat counts and Hear it.
+Anything it cannot read becomes an error naming the character and quoting the line it
+sits on, shown where the fingerings normally are. Rhythm is never enforced anywhere in
+the app: note lengths only feed the beat counts and Hear it.
 
 ### Keeping one
 

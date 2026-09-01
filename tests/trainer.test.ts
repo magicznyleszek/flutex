@@ -284,6 +284,16 @@ describe('penalty modes', () => {
     expect(feed(engine, 8, 'E5').mistakes).toBe(2)
   })
 
+  it('"wait" rides out a one-frame gap in the middle of a held wrong note', () => {
+    const engine = engineWith('wait')
+    expect(feed(engine, 8, 'E5').mistakes).toBe(1)
+
+    // A single dropped detection frame is not the player correcting themselves, so the same wrong
+    // note refilling the bar is still the one mistake.
+    feed(engine, 1, null)
+    expect(feed(engine, 8, 'E5').mistakes).toBe(1)
+  })
+
   it('"back" rewinds by the configured number of notes', () => {
     const engine = engineWith('back')
     for (let i = 0; i < 5; i++) playNote(engine)

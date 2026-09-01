@@ -29,6 +29,7 @@ export const SONG_CATEGORIES = [
   { slug: 'english-dance', label: 'English dance tunes' },
   { slug: 'irish-scottish', label: 'Irish and Scottish' },
   { slug: 'old-time', label: 'American old-time' },
+  { slug: 'second-octave', label: 'Second octave' },
 ] as const
 
 export type SongCategory = typeof SONG_CATEGORIES[number]['slug']

@@ -19,6 +19,7 @@ import { EXERCISES } from './exercises'
 import { FIRST_TUNES } from './firstTunes'
 import { IRISH_SCOTTISH } from './irishScottish'
 import { OLD_TIME } from './oldTime'
+import { SECOND_OCTAVE } from './secondOctave'
 import { SONGS_AND_AIRS } from './songsAndAirs'
 
 /**
@@ -33,16 +34,19 @@ const BY_CATEGORY: Readonly<Record<SongCategory, readonly Song[]>> = {
   'english-dance': ENGLISH_DANCE,
   'irish-scottish': IRISH_SCOTTISH,
   'old-time': OLD_TIME,
+  'second-octave': SECOND_OCTAVE,
 }
 
-// All but two of these are written inside D5-E6 on the ten notes all five charts share — the D major
-// scale plus C natural, a tin whistle in D intersected with a 6-hole ocarina. That is what lets every
-// instrument play the library as written, since `songForInstrument` leaves a melody alone when the
-// instrument can already play it. A tune that did not fit was transposed until it did, or left out.
+// Every song outside the "Second octave" section is written inside D5-E6 on the ten notes all five
+// charts share — the D major scale plus C natural, a tin whistle in D intersected with a 6-hole
+// ocarina. That is what lets every instrument play them as written, since `songForInstrument` leaves a
+// melody alone when the instrument can already play it. A tune that did not fit was transposed until
+// it did, or left out.
 //
-// The two are "Concerning Hobbits", transcribed from the film rather than chosen to fit, whose high
+// Bar two: "Concerning Hobbits", transcribed from the film rather than chosen to fit, whose high
 // section reaches F#6 and A6 past both ocarinas; and "A Blast Of Wind", nineteen semitones wide
-// against a window of fourteen, so each instrument takes its own shift.
+// against a window of fourteen, so each instrument takes its own shift. The second-octave section sits
+// above the window on purpose, and the ocarinas take all of it an octave down.
 //
 // Walked in `SONG_CATEGORIES` order, so the picker's grouping and the order songs are listed in both
 // follow from that list — there is no order here to get wrong. Each song's `category` is stamped on

@@ -36,6 +36,11 @@ export interface TrainerOptions {
   penaltyCooldownFrames: number
   /** How many notes the "back" mode rewinds. */
   backSteps: number
+  /**
+   * Frames of not-wrong playing that end a run of wrong ones. More than one, because the detector
+   * drops the odd frame mid-note and a single-frame gap would count one held note twice.
+   */
+  wrongResetFrames: number
 }
 
 /** How far ahead the snapshot reads, so the UI can show what is coming, not just what is next. */
@@ -93,6 +98,9 @@ export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
   cooldownFrames: 20,
   penaltyCooldownFrames: 30,
   backSteps: 3,
+  // 50ms at 60fps: short enough that a real correction still reads as one, long enough to ride out
+  // a dropped frame.
+  wrongResetFrames: 3,
 }
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value))
@@ -112,6 +120,8 @@ export function createTrainerEngine(
   let awaitingRelease = false
   /** Whether the wrong note now sounding has already been counted. See `registerPenalty`. */
   let wrongCounted = false
+  /** Frames since the wrong playing stopped, against `wrongResetFrames`. */
+  let recoveredFrames = 0
   let finished = false
   let mistakes = 0
   let hits = 0
@@ -151,6 +161,7 @@ export function createTrainerEngine(
     holdFrames = 0
     mistakeFrames = 0
     wrongCounted = false
+    recoveredFrames = 0
   }
 
   const reset = (): TrainerSnapshot => {
@@ -246,8 +257,15 @@ export function createTrainerEngine(
       status = 'waiting'
     }
 
-    // Playing the right note or stopping ends the run, so the next fill is a fresh mistake.
-    if (status !== 'wrong') wrongCounted = false
+    // Playing the right note or stopping ends the run, so the next fill is a fresh mistake — but not
+    // on the first frame of it. A dropped detection frame in the middle of one held wrong note used to
+    // end the run there, and the frame after it counted a second mistake for the same note.
+    if (status === 'wrong') {
+      recoveredFrames = 0
+    } else {
+      recoveredFrames += 1
+      if (recoveredFrames >= config.wrongResetFrames) wrongCounted = false
+    }
 
     // A finished hold wins when both bars fill on the same frame.
     if (holdFrames >= config.holdFrames) {

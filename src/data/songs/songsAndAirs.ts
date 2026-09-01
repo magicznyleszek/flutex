@@ -66,8 +66,8 @@ export const SONGS_AND_AIRS: readonly Song[] = [
   }),
 
   // Transcribed from a recording rather than chosen to fit, so it is the one song that outgrows an
-  // instrument: the ocarinas play its F#6 and A6 as the nearest notes they have. No lengths,
-  // because the transcription is a list of pitches, and `beats` only feeds the count and playback.
+  // instrument: the ocarinas play its F#6 and A6 as the nearest notes they have. The lengths are by
+  // ear too, in 4/4 — enough for **Hear it** to lilt rather than plod, and rhythm is never enforced.
   defineSong({
     id: 'concerning-hobbits',
     title: 'Concerning Hobbits',
@@ -79,18 +79,18 @@ export const SONGS_AND_AIRS: readonly Song[] = [
     // and the song card names the swaps.
     overrides: { ocarina_6: 0, ocarina_12: 0 },
     spec: `
-      D5 E5 F#5 A5 F#5 E5 D5
-      F#5 A5 B5 D6 C#6 A5 F#5 E5
-      D5 E5 F#5 A5 F#5 E5 D5
-      F#5 A5 B5 A5 F#5 E5 D5
-      D6 E6 F#6 F#6 F#6 A6 E6 D6 E6
-      A5 B5 C#6 C#6 D6 A5 F#5 A5 E5
-      D6 E6 F#6 F#6 A6 F#6 E6 E6
-      F#6 E6 D6 D6 D6 F#6
-      D6 E6 F#6 E6 D6 E6
-      D5 E5 F#5
-      F#5 B5 C#6 D6 C#6 A5 F#5 E5
-      D5 E5 F#5 B5 C#6 D6 C#6 B5 A5 E5 D5
+      D5 E5 F#5:1.5 A5:0.5 | F#5 E5 D5:2
+      F#5 A5 B5:1.5 D6:0.5 | C#6 A5 F#5 E5
+      D5 E5 F#5:1.5 A5:0.5 | F#5 E5 D5:2
+      F#5 A5 B5:1.5 A5:0.5 | F#5 E5 D5:2
+      D6:0.5 E6:0.5 F#6 F#6 F#6 | A6:1.5 E6:0.5 D6 E6
+      A5 B5:0.5 C#6:0.5 C#6 D6 | A5 F#5 A5 E5
+      D6:0.5 E6:0.5 F#6 F#6 A6 | F#6 E6 E6:2
+      F#6:1.5 E6:0.5 D6 D6 | D6 F#6:3
+      D6 E6 F#6 E6 | D6 E6:3
+      D5 E5 F#5:2
+      F#5 B5 C#6:1.5 D6:0.5 | C#6 A5 F#5 E5
+      D5 E5 F#5:1.5 B5:0.5 | C#6 D6 C#6:0.5 B5:0.5 A5 | E5 D5:3
     `,
   }),
 ]
