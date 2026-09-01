@@ -87,4 +87,19 @@ export const CAROLS: readonly Song[] = [
       D5 G5:0.5 A5:0.5 | B5:1.5 C6 D6:0.5 | E5:1.5 G5 G5:0.5 | G5:0.5 B5 A5:0.5 F#5 | E5:1.5 E5
     `,
   }),
+
+  // Verse repeat trimmed, same as the wassail above.
+  defineSong({
+    id: 'good-christian-men-rejoice',
+    title: 'Good Christian Men, Rejoice',
+    subtitle: 'In Dulci Jubilo, 14th century German carol — G major',
+    tags: ['seasonal', 'medium'],
+    key: 'G',
+    spec: `
+      G5:0.5 | G5 G5:0.5 B5 C6:0.5 | D6 E6:0.5 D6 D6:0.5 | G5 G5:0.5 B5 C6:0.5 | D6 E6:0.5 D6:1.5
+      D6 E6:0.5 D6 C6:0.5 | B5 A5:0.5 G5:1.5 | G5:1.5 G5:1.5 | A5 A5:0.5 B5 A5:0.5
+      G5 A5:0.5 B5:1.5 | D6 E6:0.5 D6 C6:0.5 | B5 A5:0.5 G5 G5:0.5 | A5 A5:0.5 B5 A5:0.5
+      G5 A5:0.5 B5:1.5 | E5 E5:0.5 F#5 F#5:0.5 | G5:1.5 D6:1.5 | B5 B5:0.5 A5 A5:0.5 | G5:1.5 G5
+    `,
+  }),
 ]

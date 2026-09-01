@@ -1,6 +1,6 @@
 /**
- * Polkas, jigs, a march, a reel, two song airs and a slip jig. "A Blast Of Wind" is the other song
- * the range tests exempt by name, for the reason `index.ts` gives.
+ * Polkas, jigs, reels, a march, song airs, two slip jigs and a waltz. "A Blast Of Wind" is the other
+ * song the range tests exempt by name, for the reason `index.ts` gives.
  */
 import { defineSong, type Song } from '../songUtils'
 
@@ -132,6 +132,98 @@ export const IRISH_SCOTTISH: readonly Song[] = [
       D5:2 G5 A5 | B5:1.5 B5:0.5 C6 A5 | G5:3 | B5:0.5 C6:0.5 | D6 E6 D6 B5 | D6:2 B5 C6
       D6 E6 D6 B5 | A5:2 A5 C6 | B5:0.5 D6:1.5 B5:0.5 D6:1.5 | D5:2 G5 A5 | B5:1.5 B5:0.5 C6 A5
       G5:3
+    `,
+  }),
+
+  defineSong({
+    id: 'drops-of-brandy',
+    title: 'Drops of Brandy',
+    subtitle: 'Traditional slip jig — D major',
+    tags: ['dance', 'hard'],
+    key: 'D',
+    spec: `
+      F#5:0.25 G5:0.25 | A5 G5:0.5 F#5:0.5 D5:0.5 F#5:0.5 F#5:0.5 D5:0.5 F#5:0.5
+      A5 G5:0.5 F#5:0.5 D5:0.5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      A5 G5:0.5 F#5:0.5 D5:0.5 F#5:0.5 F#5:0.5 D5:0.5 F#5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 E5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      A5 G5:0.5 F#5:0.5 D5:0.5 F#5:0.5 F#5:0.5 D5:0.5 F#5:0.5
+      A5 G5:0.5 F#5:0.5 D5:0.5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      A5 G5:0.5 F#5:0.5 D5:0.5 F#5:0.5 F#5:0.5 D5:0.5 F#5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 E5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      D5:0.5 F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:0.5 D6:0.5 A5:0.5 F#5:0.5
+      D5:0.5 F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      D5:0.5 F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:0.5 D6:0.5 A5:0.5 F#5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 E5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      D5:0.5 F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:0.5 D6:0.5 A5:0.5 F#5:0.5
+      D5:0.5 F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      D5:0.5 F#5:0.5 A5:0.5 D6:0.5 A5:0.5 F#5:0.5 D6:0.5 A5:0.5 F#5:0.5
+      G5:0.5 F#5:0.5 G5:0.5 E5 F#5:0.5 G5:0.5 F#5:0.5 E5:0.5
+    `,
+  }),
+
+  // Long, but every leap is slow and the whole tune is quarters and halves — easier than its length.
+  defineSong({
+    id: 'roddy-mccawley',
+    title: 'Roddy McCawley',
+    subtitle: 'Roddy McCorley, Irish ballad — G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      G5 A5 | B5:2 A5 B5 | D5:2 G5 A5 | B5:1.5 C6:0.5 B5 A5 | G5:2 D5:2 | E5:2 G5:2 | G5:2 A5:2
+      G5:4 | B5:2 B5 C6 | D6:2 D6:2 | D6:2 B5 D6 | E6:2 E6:2 | D6:2 B5 A5 | G5:2 E5:2 | C6:2 B5:2
+      A5:4 | A5:2 B5 C6 | D6:2 D6:2 | D6:2 B5 D6 | E6:2 E6:2 | D6:2 B5 A5 | G5:2 E5:2 | C6:2 B5:2
+      A5:4 | A5:2 G5 A5 | B5:2 A5 B5 | D5:2 G5 A5 | B5:1.5 C6:0.5 B5 A5 | G5:2 D5:2 | E5:2 G5:2
+      G5:2 A5:2 | G5:4 | G5:4
+    `,
+  }),
+
+  defineSong({
+    id: 'aiken-drum',
+    title: 'Aiken Drum',
+    subtitle: 'Scots nursery song — G major',
+    tags: ['folk', 'hard'],
+    key: 'G',
+    spec: `
+      G5:0.5 A5:0.5 | B5 B5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 | E5:2 G5:1.5 E5:0.5 | D5:1.5 E5:0.5 G5 D5
+      B5 A5 A5 G5:0.5 A5:0.5 | B5 B5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 | E5:2 G5:1.5 E5:0.5
+      D5 D5 E5 F#5 | G5:3 | G5:0.5 A5:0.5 | B5 B5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 | E5:2 G5:1.5 E5:0.5
+      D5:1.5 E5:0.5 G5 D5 | B5 A5 A5 G5:0.5 A5:0.5 | B5 B5 C6:0.5 B5:0.5 A5:0.5 G5:0.5
+      E5:2 G5:1.5 E5:0.5 | D5 D5 E5 F#5 | G5:3 | G5:0.5 A5:0.5 | B5 B5 B5 A5:0.5 G5:0.5
+      C6 C6 E6:1.5 C6:0.5 | B5 D6 B5 G5 | B5 A5 A5 G5:0.5 A5:0.5
+      B5 B5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 | E5:2 G5:1.5 E5:0.5 | D5 D5 E5 F#5 | G5:3 | G5:0.5 A5:0.5
+      B5 B5 B5 A5:0.5 G5:0.5 | C6 C6 E6:1.5 C6:0.5 | B5 D6 B5 G5 | B5 A5 A5 G5:0.5 A5:0.5
+      B5 B5 C6:0.5 B5:0.5 A5:0.5 G5:0.5 | E5:2 G5:1.5 E5:0.5 | D5 D5 E5 F#5 | G5:3
+    `,
+  }),
+
+  defineSong({
+    id: 'rattling-bog',
+    title: 'Rattling Bog',
+    subtitle: 'Irish cumulative song — G major',
+    tags: ['folk', 'hard'],
+    key: 'G',
+    spec: `
+      G5:0.5 A5:0.5 | B5:2 B5:1.5 A5:0.5 | G5 E5 E5:1.5 E5:0.5
+      D5 G5 G5:0.5 F#5:0.5 G5:0.5 A5:0.5 | B5 A5 A5:2 | B5:2 B5:1.5 A5:0.5 | G5 E5 E5:1.5 E5:0.5
+      D5 D6 D6 B5 | A5 G5 G5 | G5:0.5 A5:0.5 | B5:2 B5:1.5 A5:0.5 | G5 E5 E5:1.5 E5:0.5
+      D5 G5 G5:0.5 F#5:0.5 G5:0.5 A5:0.5 | B5 A5 A5:2 | B5:2 B5:1.5 A5:0.5 | G5 E5 E5:1.5 E5:0.5
+      D5 D6 D6 B5 | A5 G5 G5 | G5:0.5 A5:0.5 | B5 G5 A5 G5 | B5 G5 A5 G5:0.5 A5:0.5 | B5 D6 D6 B5
+      A5 G5 A5 G5:0.5 A5:0.5 | B5 G5 A5 G5 | B5 G5 A5 G5:0.5 A5:0.5 | B5 D6 D6 B5 | A5 G5 G5
+      G5:0.5 A5:0.5 | B5 G5 A5 G5 | B5 G5 A5 G5:0.5 A5:0.5 | B5 D6 D6 B5 | A5 G5 A5 G5:0.5 A5:0.5
+      B5 G5 A5 G5 | B5 G5 A5 G5:0.5 A5:0.5 | B5 D6 D6 B5 | A5 G5 G5
+    `,
+  }),
+
+  // The shortest tune outside the exercises: thirty-one notes, none of them quick.
+  defineSong({
+    id: 'i-went-to-pick-some-blaeberries',
+    title: 'I Went to Pick Some Blaeberries',
+    subtitle: 'Traditional waltz — G major',
+    tags: ['folk', 'easy'],
+    key: 'G',
+    spec: `
+      D5 | G5:2 G5 | B5:2 B5 | D6:2 D6 | B5:3 | D6:2 D6 | B5:3 | D6:1.5 C6:0.5 B5 | A5:2 D5
+      G5:2 G5 | B5:2 B5 | D6:2 D6 | B5:2 D5 | G5:2 G5 | A5:2 B5 | A5:2 A5 | G5:2
     `,
   }),
 

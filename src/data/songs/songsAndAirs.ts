@@ -99,6 +99,57 @@ export const SONGS_AND_AIRS: readonly Song[] = [
     `,
   }),
 
+  defineSong({
+    id: 'drunken-sailor',
+    title: 'Drunken Sailor',
+    subtitle: 'Traditional sea shanty — G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      G5:0.5 E5:0.5 | D5 D5:0.5 E5:0.5 D5 D5:0.5 E5:0.5 | D5 G5 G5 F#5
+      E5 E5:0.5 F#5:0.5 E5 E5:0.5 F#5:0.5 | E5 A5 A5:0.5 G5:0.5 F#5:0.5 E5:0.5
+      D5 D5:0.5 E5:0.5 D5 D5:0.5 E5:0.5 | D5 G5 G5 F#5 | E5 A5 E5 F#5 | G5:3 | G5:0.5 E5:0.5
+      D5 D5:0.5 E5:0.5 D5 D5:0.5 E5:0.5 | D5 G5 G5 F#5 | E5 E5:0.5 F#5:0.5 E5 E5:0.5 F#5:0.5
+      E5 A5 A5:0.5 G5:0.5 F#5:0.5 E5:0.5 | D5 D5:0.5 E5:0.5 D5 D5:0.5 E5:0.5 | D5 G5 G5 F#5
+      E5 A5 E5 F#5 | G5:3 | G5:0.5 A5:0.5 | B5:2 B5:2 | A5 E5 E5:2
+      E5 E5:0.5 F#5:0.5 E5 E5:0.5 F#5:0.5 | G5 D5 D5:2 | B5:2 B5:2 | A5 E5 E5:2 | E5 A5 E5 F#5
+      G5:3 | G5:0.5 A5:0.5 | B5:2 B5:2 | A5 E5 E5:2 | E5 E5:0.5 F#5:0.5 E5 E5:0.5 F#5:0.5
+      G5 D5 D5:2 | B5:2 B5:2 | A5 E5 E5:2 | E5 A5 E5 F#5 | G5:3
+    `,
+  }),
+
+  defineSong({
+    id: 'blaydon-races',
+    title: 'Blaydon Races',
+    subtitle: 'George Ridley, Tyneside, 1862 — G major',
+    tags: ['folk', 'medium'],
+    key: 'G',
+    spec: `
+      D5:0.5 | G5 G5:0.5 G5 G5:0.5 | G5 G5:0.5 G5 G5:0.5 | A5 A5:0.5 A5 A5:0.5 | B5:1.5 G5:1.5
+      C6:0.5 C6:0.5 C6:0.5 C6 C6:0.5 | B5 B5:0.5 B5 B5:0.5 | A5 B5:0.5 A5 G5:0.5 | F#5:1.5 D5:1.5
+      G5 G5:0.5 G5 G5:0.5 | G5 G5:0.5 G5 G5:0.5 | A5 A5:0.5 A5 A5:0.5 | B5:1.5 G5:1.5
+      C6:0.5 C6:0.5 C6:0.5 C6 C6:0.5 | B5 C6:0.5 D6 D6:0.5 | D6 C6:0.5 B5 A5:0.5
+      G5 A5:0.5 B5 C6:0.5 | D6:1.5 D6 B5:0.5 | G5:1.5 G5 G5:0.5 | A5 A5:0.5 A5 A5:0.5
+      B5:1.5 G5:1.5 | C6 C6:0.5 C6 C6:0.5 | B5 B5:0.5 B5 B5:0.5 | A5 B5:0.5 A5 G5:0.5
+      F#5:1.5 D5:1.5 | G5 G5:0.5 G5 G5:0.5 | G5:1.5 G5 G5:0.5 | A5 A5:0.5 A5 A5:0.5
+      B5:1.5 G5:1.5 | C6 C6:0.5 C6 C6:0.5 | B5 C6:0.5 D6 D6:0.5 | D6 C6:0.5 B5 A5:0.5 | G5:1.5 G5
+    `,
+  }),
+
+  defineSong({
+    id: 'my-old-man',
+    title: 'My Old Man',
+    subtitle: 'Traditional song — D major',
+    tags: ['folk', 'medium'],
+    key: 'D',
+    spec: `
+      D5:0.5 E5:0.5 | F#5 F#5 F#5:1.5 F#5:0.5 | F#5 F#5:2 F#5 | F#5 F#5 G5 F#5 | E5:3 E5
+      E5 E5 E5:1.5 E5:0.5 | E5 E5:2 E5:0.5 E5:0.5 | A5 G5 F#5 E5 | D5:2 A5:2
+      F#5 F#5 F#5:1.5 F#5:0.5 | F#5 F#5:2 F#5:0.5 E5:0.5 | D5 D5 E5 F#5 | G5:3 G5
+      A5 A5 A5 A5:0.5 A5:0.5 | A5 A5 A5 A5:0.5 A5:0.5 | A5 G5 F#5 E5 | D5:3
+    `,
+  }),
+
   // Transcribed from a recording rather than chosen to fit, so it is the one song that outgrows an
   // instrument: the ocarinas play its F#6 and A6 as the nearest notes they have. The lengths are by
   // ear too, in 4/4 — enough for **Hear it** to lilt rather than plod, and rhythm is never enforced.

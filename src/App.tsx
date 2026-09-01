@@ -175,6 +175,10 @@ export default function App(): JSX.Element {
   const demoRow = useMemo(() => noteWindow(notes, demo.index), [notes, demo.index])
   const row = demo.playing ? demoRow : view
 
+  // Notes counted while you play, notes gone by while it plays back: either way, how much of the song
+  // is behind you. Not `view.index`, which a mistake can send backwards without uncounting a hit.
+  const played = demo.playing ? demo.index : view.hits
+
   const startDemo = (): void => {
     mic.stop()
     demo.start()
@@ -221,7 +225,7 @@ export default function App(): JSX.Element {
             {/* `color="dark"` rather than `dark.4`: an explicit shade turns a light
                 badge from a tint into an opaque fill, which drops the text to 4.14:1. */}
             <Badge variant="light" color="dark" leftSection={<MusicNoteIcon size={12} />}>
-              {view.hits} / {view.total}
+              {played} / {view.total}
             </Badge>
             <Badge variant="light" color={view.mistakes > 0 ? 'alarm' : 'dark'}>
               mistakes: {view.mistakes}
@@ -430,7 +434,7 @@ export default function App(): JSX.Element {
             .
           </Text>
           <Text size="xs" c="dimmed" ta="center">
-            Made by Yann &amp; Zefir
+            Made by Yann &amp; <Anchor target='_blank' href="https://zefirefemera.xyz">Zefir</Anchor>
           </Text>
         </Stack>
       </Stack>
