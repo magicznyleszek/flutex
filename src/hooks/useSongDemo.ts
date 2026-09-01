@@ -46,6 +46,8 @@ export interface SongDemo {
   index: number
   start: () => void
   stop: () => void
+  /** Back to the first note. Does nothing when nothing is playing. */
+  restart: () => void
 }
 
 /**
@@ -176,9 +178,18 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     session.frame = requestAnimationFrame(tick)
   }, [notes, stop])
 
+  // Every note is scheduled up front, so there is no cursor to move: the only way back to the top is
+  // a fresh session. `stop` clears the ref synchronously, which is what lets `start` proceed here.
+  const restart = useCallback(() => {
+    if (sessionRef.current === null) return
+
+    stop()
+    start()
+  }, [start, stop])
+
   // Covers a song change mid-playback, which would leave the old tune sounding with nothing on
   // screen following it.
   useEffect(() => stop, [notes, stop])
 
-  return { playing, index, start, stop }
+  return { playing, index, start, stop, restart }
 }

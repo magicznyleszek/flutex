@@ -3,7 +3,6 @@ import {
   Alert,
   Anchor,
   Badge,
-  Box,
   Button,
   Container,
   Divider,
@@ -181,6 +180,17 @@ export default function App(): JSX.Element {
     demo.start()
   }
 
+  // While the song is playing back, "over" means the playback: sending the trainer to its first note
+  // would change nothing on screen, since playback owns the note row for as long as it runs.
+  const startOver = (): void => {
+    if (demo.playing) demo.restart()
+    else reset()
+  }
+
+  // A live session is restartable by definition; once it ends the counters keep the button awake.
+  // Deliberately not the progress bars, which would flicker the button on every breath.
+  const canStartOver = demo.playing || listening || view.hits > 0 || view.mistakes > 0
+
   const demoHint = demo.playing
     ? 'Playing the song. The microphone stays off until it stops.'
     : listening
@@ -298,44 +308,29 @@ export default function App(): JSX.Element {
 
         <Paper p="lg" withBorder>
           <Stack gap="sm">
-            {/* Beside the microphone button rather than in the header, which wraps on a 360px
-                phone. Fullscreen has to be on screen anyway: the browser only grants it from a tap. */}
-            <Group gap="xs" align="flex-start" wrap="nowrap">
-              <Box flex={1}>
-                <MicButton
-                  status={mic.status}
-                  error={mic.error}
-                  // Playback comes out of the speakers, which the mic would hear and score as your
-                  // playing. Whichever button you press last wins.
-                  onStart={() => {
-                    demo.stop()
-                    void mic.start()
-                  }}
-                  onStop={mic.stop}
-                />
-              </Box>
-              <ColorSchemeToggle />
-              {fullscreen.available && (
-                <Tooltip label={fullscreen.active ? 'Leave fullscreen' : 'Fullscreen'}>
-                  <ActionIcon
-                    variant="default"
-                    size={42}
-                    onClick={fullscreen.toggle}
-                    aria-label={fullscreen.active ? 'Leave fullscreen' : 'Go fullscreen'}
-                  >
-                    {fullscreen.active
-                      ? <ArrowsInIcon size={20} />
-                      : <ArrowsOutIcon size={20} />}
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </Group>
-            {/* `miw` is what wraps the two buttons onto their own line on a phone: without it
-                `flex={1}` squeezes the sentence to a word a line and the buttons stay wedged. */}
-            <Group justify="space-between" gap="sm">
-              <Text size="xs" c="dimmed" flex={1} miw={180}>
-                {demoHint}
-              </Text>
+            {/* Start on its own row and full width: it is the one control you reach for without
+                looking, and the sentence under it explains whatever it just did. */}
+            <MicButton
+              status={mic.status}
+              error={mic.error}
+              // Playback comes out of the speakers, which the mic would hear and score as your
+              // playing. Whichever button you press last wins.
+              onStart={() => {
+                demo.stop()
+                void mic.start()
+              }}
+              onStop={mic.stop}
+            />
+
+            <Text size="xs" c="dimmed">
+              {demoHint}
+            </Text>
+
+            {/* The two toggles are wedged in here rather than in the header, which wraps on a 360px
+                phone. Fullscreen has to be on screen anyway: the browser only grants it from a tap.
+                Split into two nowrap groups, so a narrow screen drops them below the buttons
+                together instead of tearing "Start over" off on its own. */}
+            <Group gap="sm" justify="space-between">
               <Group gap="sm" wrap="nowrap">
                 {/* `signal` is the colour of the note you are asked to play, which is what playback
                     is doing — and it keeps this off the green of Start. */}
@@ -360,10 +355,31 @@ export default function App(): JSX.Element {
                   size="md"
                   variant="default"
                   leftSection={<ArrowCounterClockwiseIcon size={18} />}
-                  onClick={reset}
+                  onClick={startOver}
+                  disabled={!canStartOver}
+                  aria-label={demo.playing
+                    ? 'Play the song again from the beginning'
+                    : 'Start the song over'}
                 >
                   Start over
                 </Button>
+              </Group>
+              <Group gap="xs" wrap="nowrap">
+                <ColorSchemeToggle />
+                {fullscreen.available && (
+                  <Tooltip label={fullscreen.active ? 'Leave fullscreen' : 'Fullscreen'}>
+                    <ActionIcon
+                      variant="default"
+                      size={42}
+                      onClick={fullscreen.toggle}
+                      aria-label={fullscreen.active ? 'Leave fullscreen' : 'Go fullscreen'}
+                    >
+                      {fullscreen.active
+                        ? <ArrowsInIcon size={20} />
+                        : <ArrowsOutIcon size={20} />}
+                    </ActionIcon>
+                  </Tooltip>
+                )}
               </Group>
             </Group>
           </Stack>

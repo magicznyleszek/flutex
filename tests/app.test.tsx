@@ -39,4 +39,9 @@ describe('App', () => {
     expect(markup).toContain('Start listening through the microphone')
     expect(markup).not.toContain('Stop listening through the microphone')
   })
+
+  // Nothing has been played and nothing is sounding, so there is no run and no playback to put back.
+  it('holds Start over disabled until there is something to restart', () => {
+    expect(render()).toContain('disabled="" aria-label="Start the song over"')
+  })
 })
