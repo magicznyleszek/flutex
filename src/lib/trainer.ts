@@ -37,8 +37,8 @@ export interface TrainerOptions {
   /** How many notes the "back" mode rewinds. */
   backSteps: number
   /**
-   * Frames of not-wrong playing that end a run of wrong ones. More than one, because the detector
-   * drops the odd frame mid-note and a single-frame gap would count one held note twice.
+   * Frames of not-wrong playing that end a run of wrong ones. More than one, since the detector drops the odd
+   * frame mid-note and a single-frame gap would count one held note twice.
    */
   wrongResetFrames: number
 }
@@ -54,8 +54,8 @@ export interface NoteWindow {
 }
 
 /**
- * The stretch of song the note row draws: one behind, the one to play, and the lookahead. Exported
- * because playback lays out the same row from its own position, and two ideas of "next" would drift.
+ * The stretch of song the note row draws: one behind, the one to play, and the lookahead. Exported because
+ * playback lays out the same row from its own position, and two ideas of "next" would drift.
  */
 export function noteWindow(song: readonly string[], index: number): NoteWindow {
   const at = (position: number): string | null => song[position] ?? null
@@ -98,8 +98,7 @@ export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
   cooldownFrames: 20,
   penaltyCooldownFrames: 30,
   backSteps: 3,
-  // 50ms at 60fps: short enough that a real correction still reads as one, long enough to ride out
-  // a dropped frame.
+  // 50ms at 60fps: long enough to ride out a dropped frame, short enough that a real correction reads as one.
   wrongResetFrames: 3,
 }
 
@@ -130,9 +129,9 @@ export function createTrainerEngine(
   const noteAt = (position: number): string | null => song[position] ?? null
 
   /**
-   * Scored on cents from the target, not on which semitone the pitch is nearest: a whistle 70 cents
-   * sharp is named as the semitone above, and correct fingering should not be called wrong. `note`
-   * only says whether anything is sounding — silence arrives as 0 cents and would score as a hit.
+   * Scored on cents from the target, not on which semitone the pitch is nearest: a whistle 70 cents sharp is
+   * named as the semitone above, and correct fingering should not be called wrong. `note` only says whether
+   * anything is sounding — silence arrives as 0 cents and would score as a hit.
    */
   const isOnTarget = (frame: TrainerFrame): boolean =>
     noteAt(index) !== null
@@ -202,7 +201,7 @@ export function createTrainerEngine(
 
   const registerPenalty = (): void => {
     if (config.penaltyMode === 'wait') {
-      // The index does not move: the bar is pinned full until the wrong note stops. Every frame after
+      // The index does not move and the bar stays pinned full until the wrong note stops. Every frame after
       // this one crosses the threshold too, so without the flag one held note would count on each.
       if (!wrongCounted) mistakes += 1
       wrongCounted = true
@@ -233,8 +232,8 @@ export function createTrainerEngine(
     }
 
     if (awaitingRelease) {
-      // The same test as scoring, or a wide tolerance would call a sustained note released and then
-      // score it again on the very next frame. The frame that breaks the sound still counts below.
+      // The same test as scoring, or a wide tolerance would call a sustained note released and score it again
+      // on the very next frame. The frame that breaks the sound still counts below.
       if (isOnTarget(frame)) {
         status = 'release'
         return snapshot()
@@ -257,9 +256,9 @@ export function createTrainerEngine(
       status = 'waiting'
     }
 
-    // Playing the right note or stopping ends the run, so the next fill is a fresh mistake — but not
-    // on the first frame of it. A dropped detection frame in the middle of one held wrong note used to
-    // end the run there, and the frame after it counted a second mistake for the same note.
+    // Playing the right note or stopping ends the run, so the next fill is a fresh mistake — but not on the
+    // first frame of it. A dropped frame mid-note used to end the run there, and the next frame counted a
+    // second mistake for the same held note.
     if (status === 'wrong') {
       recoveredFrames = 0
     } else {

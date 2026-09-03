@@ -12,9 +12,9 @@ const README = 'https://github.com/magicznyleszek/flutex#writing-your-own-song'
 const EXAMPLE = 'F#5 F#5 G5 A5 | A5 G5 F#5 E5 | D5:2 E5:2'
 
 /**
- * Whether the entry would play as written on every instrument, which is what the library's test
- * demands. The shift named here is not the `+n semitones` badge's: that one fits the melody to the
- * instrument in your hand, this one to all five at once.
+ * Whether the entry would play as written on every instrument, which is what the library's test demands. The
+ * shift named here is not the `+n semitones` badge's: that one fits the melody to the instrument in your
+ * hand, this one to every chart at once.
  */
 function definitionSentence({ semitones, strays, key, needsTitle }: SongDefinition): string {
   if (strays.length > 0) {
@@ -42,8 +42,8 @@ export interface CustomSongEditorProps {
 }
 
 /**
- * The box you write your own melody in, plus the button that turns it into a library entry. It sits
- * inside the song picker's stack, hence the fragment and no gap of its own.
+ * The box you write your own melody in, plus the button that turns it into a library entry. It sits inside
+ * the song picker's stack, hence the fragment and no gap of its own.
  */
 export function CustomSongEditor({
   song,
@@ -80,8 +80,8 @@ export function CustomSongEditor({
         placeholder={EXAMPLE}
         value={customText}
         onChange={(event) => onCustomTextChange(event.currentTarget.value)}
-        // The message itself goes where the fingerings would be. This just marks the box, and tells
-        // a screen reader the field is invalid.
+        // The message itself goes where the fingerings would be; this only marks the box and tells a screen
+        // reader the field is invalid.
         error={customError !== null}
         classNames={{ input: classes.editor }}
         autosize
@@ -92,9 +92,9 @@ export function CustomSongEditor({
         autoCorrect="off"
       />
 
-      {/* How a tune gets into the library: paste ABC here, drop the block into the file under
-          `data/songs/` for its section. By hand you would have to find the transposition
-          yourself, and a wrong one fails the test suite rather than looking wrong. */}
+      {/* How a tune gets into the library: paste ABC here, drop the block into the file under `data/songs/`
+          for its section. By hand you would have to find the transposition yourself, and a wrong one fails
+          the test suite rather than looking wrong. */}
       {definition !== null && (
         <Stack gap={4}>
           <Group gap="xs">

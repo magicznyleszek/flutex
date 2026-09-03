@@ -13,8 +13,8 @@ const render = (instrument: Instrument, note: string): string =>
   )
 
 describe('FluteDiagram', () => {
-  // The screen-reader labels are the only description of a fingering that does not depend on CSS, and
-  // they read out in the holes array's order — which is how a shifted array becomes a wrong finger.
+  // The screen-reader labels are the only description of a fingering that does not depend on CSS, and they
+  // read out in the holes array's order — which is how a shifted array becomes a wrong finger.
   it('names every hole of a first-register fingering', () => {
     const markup = render(INSTRUMENTS.recorder, 'F5')
 
@@ -36,15 +36,15 @@ describe('FluteDiagram', () => {
     expect(render(INSTRUMENTS.recorder_german, 'F5')).toContain('on the German recorder')
   })
 
-  // C7 is on the baroque chart and deliberately not on the German one, so the German diagram has to
-  // fall through to the out-of-range message rather than draw something.
+  // C7 is on the baroque chart and deliberately not on the German one, so the German diagram has to fall
+  // through to the out-of-range message rather than draw something.
   it('says so when the instrument cannot reach the note', () => {
     expect(render(INSTRUMENTS.recorder_german, 'C7')).toContain('No fingering for C7')
     expect(render(INSTRUMENTS.recorder, 'C7')).not.toContain('No fingering')
   })
 
-  // An ocarina takes the other branch: an SVG of the body with the holes in their places, named by
-  // finger. C5 is the one fingering where both subholes are open and nothing else is.
+  // An ocarina takes the other branch: an SVG of the body with the holes in their places, named by finger. C5
+  // is the one fingering where both subholes are open and nothing else is.
   it('names the holes of an ocarina by finger', () => {
     const markup = render(INSTRUMENTS.ocarina_12, 'C5')
 
@@ -58,7 +58,24 @@ describe('FluteDiagram', () => {
   it('draws a half-covered ocarina hole as its own arc', () => {
     const markup = render(INSTRUMENTS.ocarina_6, 'C#5')
 
-    expect(markup).toContain('Front upper right: half covered')
+    expect(markup).toContain('Right middle: half covered')
     expect(markup).toContain('<path')
+  })
+
+  // The pendant's four front holes differ only in size, so the chart is unusable unless it says which finger
+  // each one is for. Without the mouthpiece the drawing is an oval that could be held either way up.
+  it('gives the pendant a mouthpiece to orient it by', () => {
+    const markup = render(INSTRUMENTS.ocarina_6, 'C5')
+
+    expect(markup).toContain('Left middle: covered')
+    expect(markup).toContain('Left index: covered')
+    expect(markup).toContain('Right thumb, on the back: covered')
+    expect(markup).toContain('<rect')
+  })
+
+  // Both ocarinas, so neither ends up the odd one out. `neck` is optional on the layout, which makes dropping
+  // one a change that type-checks.
+  it.each(['ocarina_6', 'ocarina_12'] as const)('draws %s with its mouthpiece', (id) => {
+    expect(render(INSTRUMENTS[id], 'C5')).toContain('<rect')
   })
 })

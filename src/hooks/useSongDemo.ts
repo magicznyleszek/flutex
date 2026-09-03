@@ -3,10 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SongNote } from '../data/songUtils'
 import { noteToFreq } from '../lib/music'
 
-/**
- * One beat is a quarter note everywhere in the library, so 60 bpm puts a quarter note on the second.
- * Deliberately slow: the gap between two notes is where you find the next fingering.
- */
+/** A beat is a quarter note throughout the library. Slow on purpose: the gap is where you find the grip. */
 const DEMO_BPM = 60
 
 /** Fraction of each note left silent at its end, so the same note twice is heard as two. */
@@ -16,13 +13,12 @@ const GAP_RATIO = 0.18
 const ATTACK_S = 0.015
 const RELEASE_S = 0.05
 
-/** Peak gain of one note. Notes never overlap, so this is the whole output level. */
+/** Notes never overlap, so one note's peak is the whole output level. */
 const NOTE_GAIN = 0.18
 
 /** Seconds of silence before the first note, so it is not clipped by its own scheduling. */
 const LEAD_IN_S = 0.12
 
-/** Seconds to fade the master gain on stop, rather than cutting a running oscillator. */
 const FADE_OUT_S = 0.03
 
 /** Enough for the fade above to have been heard before the context goes away. */
@@ -33,7 +29,6 @@ interface DemoSession {
   master: GainNode
   /** Seconds from the first note at which each note begins. */
   starts: readonly number[]
-  /** Seconds the song takes, its silent tail included. */
   duration: number
   /** The `currentTime` the first note was scheduled for. */
   origin: number
@@ -51,10 +46,10 @@ export interface SongDemo {
 }
 
 /**
- * Plays the song through the speakers and reports which note is sounding, so the charts can follow
- * along. It demonstrates the tune rather than accompanying you, and the rhythm is only as good as the
- * `beats` in the data. Every note is scheduled into the AudioContext in one go and the on-screen
- * position read back off `currentTime`; separate timers would drift apart within a few bars.
+ * Plays the song and reports which note is sounding, so the charts can follow along. It demonstrates the tune
+ * rather than accompanying you, and the rhythm is only as good as the `beats` in the data. Every note is
+ * scheduled into the AudioContext at once and the on-screen position read off `currentTime`; separate timers
+ * would drift apart within a few bars.
  */
 export function useSongDemo(notes: readonly SongNote[]): SongDemo {
   const [playing, setPlaying] = useState(false)
@@ -89,8 +84,8 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     if (sessionRef.current !== null || notes.length === 0) return
 
     const context = new AudioContext()
-    // A context built inside a tap usually starts on its own; iOS hands back a suspended one, where
-    // `currentTime` never moves and nothing sounds.
+    // A context built inside a tap usually starts on its own; iOS hands back a suspended one, where nothing
+    // sounds and `currentTime` never moves.
     void context.resume().catch(() => undefined)
 
     const master = context.createGain()
@@ -125,8 +120,8 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
       envelope.connect(master)
 
       const oscillator = context.createOscillator()
-      // Triangle, not sine: its harmonics fall away as 1/n², near enough a whistle, and it carries
-      // through a phone speaker where a sine goes thin.
+      // Triangle, not sine: harmonics falling away as 1/n² is near enough a whistle, and it carries through a
+      // phone speaker where a sine goes thin.
       oscillator.type = 'triangle'
       oscillator.frequency.setValueAtTime(hz, from)
       oscillator.connect(envelope)
@@ -178,8 +173,8 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     session.frame = requestAnimationFrame(tick)
   }, [notes, stop])
 
-  // Every note is scheduled up front, so there is no cursor to move: the only way back to the top is
-  // a fresh session. `stop` clears the ref synchronously, which is what lets `start` proceed here.
+  // With every note scheduled up front there is no cursor to move, so the way back to the top is a fresh
+  // session. `stop` clears the ref synchronously, which is what lets `start` proceed here.
   const restart = useCallback(() => {
     if (sessionRef.current === null) return
 
@@ -187,8 +182,7 @@ export function useSongDemo(notes: readonly SongNote[]): SongDemo {
     start()
   }, [start, stop])
 
-  // Covers a song change mid-playback, which would leave the old tune sounding with nothing on
-  // screen following it.
+  // A song change mid-playback would otherwise leave the old tune sounding with nothing following it.
   useEffect(() => stop, [notes, stop])
 
   return { playing, index, start, stop, restart }

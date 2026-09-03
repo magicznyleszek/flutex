@@ -56,23 +56,22 @@ function NoteColumn({
         <FluteDiagram instrument={instrument} note={note} bare={quiet} />
       </div>
 
-      {/* `lh={1}` or the default line height adds 10px of empty space under the middle name and
-          breaks the row the columns align on. Charts are all one size, so the name size plus the
-          dimming is what marks out the note to play. */}
+      {/* `lh={1}` or the default adds 10px of empty space under the middle name and breaks the row the
+          columns align on. Charts are one size, so name size and dimming mark out the note to play. */}
       <Text fw={700} fz={quiet ? { base: 18, sm: 22 } : { base: 26, sm: 32 }} lh={1} c={nameColor}>
         {note ?? '–'}
       </Text>
 
-      {/* On a phone the order, size and dimming already say which column is which, and the row
-          saves 23px. All three hide together or it goes lopsided. */}
+      {/* On a phone the order, size and dimming already say which column is which, and the row saves 23px.
+          All three hide together or it goes lopsided. */}
       <Text size="xs" c="dimmed" visibleFrom="sm">{caption}</Text>
     </div>
   )
 }
 
 /**
- * One caption per lookahead column, and the length is what decides how many get drawn. Keep it at
- * `LOOKAHEAD` in `trainer.ts`: a fourth entry draws an empty chart the engine never fills.
+ * One caption per lookahead column, and the length decides how many get drawn. Keep it at `LOOKAHEAD` in
+ * `trainer.ts`: a fourth entry draws an empty chart the engine never fills.
  */
 const UPCOMING_CAPTIONS = ['next', '+2', '+3']
 
@@ -86,8 +85,8 @@ export function NoteSequence({
 }: NoteSequenceProps): JSX.Element {
   const meta = demo ? DEMO_META : STATUS_META[status]
 
-  // `waiting`'s quiet grey is the wrong colour for the largest type on screen, so the name keeps the
-  // card's own. Every other status just happened, and colour reads faster than the label.
+  // `waiting`'s quiet grey is the wrong colour for the largest type on screen, so the name keeps the card's
+  // own. Every other status just happened, and colour reads faster than the label.
   const nameColor = !demo && status === 'waiting' ? undefined : meta.color
 
   // What the chart cannot draw: the register, or a half-covered hole. Only the played note shows it.
@@ -95,8 +94,8 @@ export function NoteSequence({
 
   return (
     <Stack align="center" gap="xs">
-      {/* Three notes of lookahead, because a fingering you see coming is one you can start moving
-          towards. The note just played earns a slot too, and is first to go on a phone. */}
+      {/* Three notes of lookahead, a fingering you see coming being one you can start moving towards. The
+          note just played earns a slot too, and is first to go on a phone. */}
       <div className={classes.row}>
         <NoteColumn
           instrument={instrument}
@@ -123,9 +122,9 @@ export function NoteSequence({
         ))}
       </div>
 
-      {/* Under the whole row, not under the chart it belongs to: inside the column it widened that
-          column, and a centred flex row answers by shoving every other chart sideways. The slot is
-          always here at the same height, so it fills and empties without moving anything. */}
+      {/* Under the whole row, not under the chart it belongs to: inside the column it widened that column,
+          and a centred flex row answers by shoving every other chart sideways. The slot keeps its height
+          either way, so it fills and empties without moving anything. */}
       <Text size="xs" c="dimmed" ta="center" className={classes.hint}>{hint}</Text>
 
       <Text size="sm" c={meta.color} fw={600}>{meta.label}</Text>

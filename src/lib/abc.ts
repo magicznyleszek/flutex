@@ -144,11 +144,9 @@ function stripComment(line: string): string {
 }
 
 /**
- * Whether a line is prose rather than music. Old collections wrap a long `Z:` or `N:` field onto a
- * bare second line instead of continuing it with `+:`, leaving a sentence where melody should be.
- *
- * Three letters together that are not all note names cannot be music, and prose carries no bar line.
- * A single stray letter is left alone, so a mistyped note is still reported rather than dropped.
+ * Whether a line is prose rather than music. Old collections wrap a long `Z:` or `N:` onto a bare
+ * second line instead of continuing it with `+:`. Three letters together that are not all note names
+ * cannot be music; a single stray letter is left alone, so a mistyped note is still reported.
  */
 function isProse(line: string): boolean {
   if (line.includes('|')) return false
@@ -158,13 +156,11 @@ function isProse(line: string): boolean {
 }
 
 /**
- * Reads the melody out of an ABC tune — the subset a melody trainer can use. Pitches, lengths, key
- * signatures, accidentals and broken rhythm are kept; anything about printing or accompaniment is
- * dropped, so rests vanish, chords collapse to their top note and several voices interleave into one
- * line. Repeats are played out, since the trainer walks a melody end to end with nowhere to jump.
- *
- * Anything it cannot place is an error naming the character and the line it sits on: a tune that half
- * works is harder to fix than one that says what is wrong.
+ * The melody of an ABC tune — the subset a trainer can use. Pitches, lengths, key signatures,
+ * accidentals and broken rhythm are kept; printing and accompaniment are dropped, so rests vanish,
+ * chords collapse to their top note and several voices interleave. Repeats are played out, the trainer
+ * having nowhere to jump. Anything unreadable is an error naming the character and its line, since a
+ * tune that half works is harder to fix than one that says what is wrong.
  */
 export function parseAbc(text: string): AbcResult {
   const fields = new Map<string, string>()
@@ -184,8 +180,7 @@ export function parseAbc(text: string): AbcResult {
       continue
     }
 
-    // Only before the melody starts, which is what makes it safe: a line dropped here is still inside
-    // the header block, so no music can go missing behind it.
+    // Only before the melody starts, so a dropped line is still inside the header block.
     if (bodyLines.length === 0 && isProse(line)) continue
 
     bodyLines.push({ number: lineNumber, text: line })
@@ -221,10 +216,7 @@ export function parseAbc(text: string): AbcResult {
 
   const fail = (message: string): AbcResult => ({ ok: false, error: message })
 
-  /**
-   * `message`, followed by the line the offset falls on. The offsets are into the joined body, and one
-   * bad character in a long tune is otherwise a hunt: the line number is what you scroll to.
-   */
+  /** `message`, plus the source line the offset falls on — offsets are into the joined body. */
   const failAt = (offset: number, message: string): AbcResult => {
     let index = 0
     while (index + 1 < lineStarts.length && (lineStarts[index + 1] ?? 0) <= offset) index += 1
@@ -293,9 +285,8 @@ export function parseAbc(text: string): AbcResult {
       continue
     }
 
-    // Bar lines in all their forms — `|`, `||`, `|]`, `[|`, `:|`, `|:`, `::` — and the variant endings
-    // that hang off them, `|1` and `[2`. Three things happen here: an accidental stops holding, a bar
-    // ends, and a repeat is played out into the notes it stands for.
+    // Bar lines in every form — `|`, `||`, `|]`, `[|`, `:|`, `|:`, `::` — and the variant endings that
+    // hang off them. Accidentals stop holding, the bar ends, and a repeat is played out.
     if (
       ch === '|'
       || ch === ':'
@@ -307,8 +298,7 @@ export function parseAbc(text: string): AbcResult {
       const glyph = /^[:|\]]*/.exec(body.slice(at))?.[0] ?? ''
       at += glyph.length
 
-      // Which ending this is does not matter, only where the endings start — that being the point a
-      // repeat sends you back from. So `[1,3` and `[2` are read the same way.
+      // Only where the endings start matters, not which one this is, so `[1,3` and `[2` read alike.
       const ending = /^\s*\[?\s*[0-9][0-9,-]*/.exec(body.slice(at))?.[0] ?? null
       if (ending !== null) at += ending.length
 
@@ -322,8 +312,7 @@ export function parseAbc(text: string): AbcResult {
       accidentals.clear()
 
       if (closes) {
-        // The section again, up to its first variant ending — with no endings that is all of it, and
-        // with them ending 1 is exactly what the jump back skips over.
+        // The section again, up to its first variant ending — which is exactly what a jump back skips.
         const upTo = endingAt === -1 ? notes.length : endingAt
         const offset = notes.length - sectionAt
 
@@ -332,8 +321,7 @@ export function parseAbc(text: string): AbcResult {
           const note = notes[index]
           if (note !== undefined) notes.push({ ...note })
         }
-        // The bar lines inside the section come with it. Its own start needs no copy: `closeBar` above
-        // already opened a bar where the copy lands.
+        // The bar lines inside the section come with it; `closeBar` above opened the first one.
         for (const start of [...barsAt]) {
           if (start > sectionAt && start < upTo) barsAt.push(start + offset)
         }
@@ -343,8 +331,7 @@ export function parseAbc(text: string): AbcResult {
           return fail(`That comes to over ${MAX_NOTES} notes with the repeats played out.`)
         }
 
-        // A section with no variant endings is finished here. One with them is not: the next ending
-        // repeats the same section again, so both marks stay where they are.
+        // With variant endings the section is not finished: the next ending repeats it again.
         if (endingAt === -1) sectionAt = notes.length
       }
 
@@ -353,10 +340,9 @@ export function parseAbc(text: string): AbcResult {
         endingAt = -1
       }
 
-      // Only a mark that is not itself closing a repeat can open an ending group. `:|2` after a `|1`
-      // is the second ending of a group already open, and after nothing at all it is a repeat count we
-      // do not read — taking it for an ending would leave the group open over the section after it,
-      // whose own `:|` would then repeat nothing.
+      // A mark that closes a repeat cannot open an ending group: `:|2` is either the second ending of a
+      // group already open or a repeat count. Read as an ending, it would leave the group open over the
+      // next section, whose own `:|` would then repeat nothing.
       if (ending !== null && endingAt === -1 && !closes) endingAt = notes.length
 
       continue
@@ -392,16 +378,16 @@ export function parseAbc(text: string): AbcResult {
       continue
     }
 
-    // A tuplet marker such as `(3` respells the printed rhythm of the notes after it. We keep the
-    // notes and let their written lengths stand, so the digits go with the bracket.
+    // A tuplet marker such as `(3` only respells the printed rhythm, so the digits go with the bracket
+    // and the written lengths stand.
     if (ch === '(') {
       at += 1
       while (/[0-9:]/.test(body[at] ?? '')) at += 1
       continue
     }
 
-    // Slur ends, ties, staccato dots, rolls, bowings, overlays, line continuations. A tie becomes two
-    // notes of the written length, which is a rhythm the trainer never enforces anyway.
+    // Slur ends, ties, staccato dots, rolls, bowings, overlays, line continuations. A tie comes out as
+    // two notes of the written length, a rhythm the trainer never enforces anyway.
     if (')-.~uv\\&$]'.includes(ch)) {
       at += 1
       continue
@@ -438,8 +424,8 @@ export function parseAbc(text: string): AbcResult {
       continue
     }
 
-    // What is left has to be a note: accidentals, letter, octave marks, length. `=` is a natural, so
-    // it cancels the key signature rather than adding to it.
+    // What is left has to be a note: accidentals, letter, octave marks, length. `=` is a natural and
+    // cancels the key signature rather than adding to it.
     const tokenAt = at
     let alter: number | null = null
     for (;;) {
@@ -465,8 +451,7 @@ export function parseAbc(text: string): AbcResult {
     }
     at += 1
 
-    // A capital is the octave from middle C up, lower case the one above it, and `'` and `,` move
-    // further in either direction.
+    // Capital is the octave from middle C up, lower case the one above; `'` and `,` move further.
     let octave = letter === letter.toUpperCase() ? 4 : 5
     while (body[at] === "'" || body[at] === ',') {
       octave += body[at] === "'" ? 1 : -1
@@ -476,8 +461,7 @@ export function parseAbc(text: string): AbcResult {
     const upper = letter.toUpperCase()
     const memory = `${upper}${octave}`
     if (alter !== null) accidentals.set(memory, alter)
-    // The order is the rule: an accidental earlier in the bar beats the key signature, and one written
-    // on this note beats both.
+    // The order is the rule: this note's own accidental, then one earlier in the bar, then the key.
     const alteration = alter ?? accidentals.get(memory) ?? signature[upper] ?? 0
     const midi = (octave + 1) * 12 + (LETTER_SEMITONES[upper] ?? 0) + alteration
     const length = readLength()

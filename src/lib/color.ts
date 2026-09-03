@@ -1,7 +1,6 @@
 /**
- * The arithmetic behind the palette. `theme.ts` writes each colour down as a hue and a saturation,
- * and this turns one into a CSS string, or works out how light it has to be to stand off what it
- * sits on.
+ * The arithmetic behind the palette. `theme.ts` writes each colour down as a hue and a saturation; this turns
+ * one into a CSS string, or works out how light it has to be to stand off what it sits on.
  */
 
 /** A hue in degrees and a saturation in percent, with the lightness left open. */
@@ -16,17 +15,17 @@ export interface Hsl extends Tint {
 }
 
 /**
- * The commas are not a style choice. Mantine's `toRgba` matches only the legacy `hsl(h, s%, l%)`
- * form, answers black for the space-separated one, and derives every `-light`, `-outline` and hover
- * variable from these strings. Modern syntax turns all of those black without warning.
+ * The commas are not a style choice. Mantine's `toRgba` matches only the legacy `hsl(h, s%, l%)` form and
+ * answers black for the space-separated one, which silently blackens every `-light`, `-outline` and hover
+ * variable derived from these strings.
  */
 export function hsl({ hue, saturation, lightness }: Hsl): string {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
 
 /**
- * One channel as a 0-1 fraction, `offset` picking which: 0 red, 8 green, 4 blue. The conversion
- * given in CSS Color 4, which is shorter than the textbook six-way branch and agrees with it.
+ * One channel as a 0-1 fraction, `offset` picking which: 0 red, 8 green, 4 blue. The CSS Color 4 conversion,
+ * shorter than the textbook six-way branch and in agreement with it.
  */
 function channel({ hue, saturation, lightness }: Hsl, offset: number): number {
   const light = lightness / 100
@@ -55,14 +54,12 @@ export function contrastRatio(one: Hsl, other: Hsl): number {
 }
 
 /**
- * The darkest whole-percent lightness at which `tint` reads `ratio` or better against `against`.
+ * The darkest whole-percent lightness at which `tint` reads `ratio` or better against `against`. Hue decides
+ * how light that is — a saturated orange has to go well past a green to stand the same distance off a dark
+ * card — which is the sort of number that goes stale once written down by hand.
  *
- * Which lightness that is depends on the hue: a saturated orange has to go a good deal lighter than a
- * green to stand the same distance off a dark card. That is exactly what goes stale when such a
- * number is written down by hand, so it is worked out instead.
- *
- * Scanning up from black works because contrast against a dark background only rises with lightness.
- * A ratio no lightness reaches comes back as white.
+ * Scanning up from black works because contrast against a dark background only rises with lightness. A ratio
+ * no lightness reaches comes back as white.
  */
 export function lightnessForContrast(tint: Tint, against: Hsl, ratio: number): number {
   for (let lightness = 0; lightness < 100; lightness += 1) {

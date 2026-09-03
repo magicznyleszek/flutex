@@ -32,9 +32,8 @@ const engineWith = (penaltyMode: PenaltyMode = 'wait', song = SONG): TrainerEngi
   createTrainerEngine(song, { ...OPTIONS, penaltyMode })
 
 /**
- * Feeds N frames of the same note and returns the last state. `cents` is measured from the target on
- * that frame, so leaving it out means "dead in tune for the note named" — a hundred cents per
- * semitone away for a wrong one, as the mic hook would report it. Pass it to detune instead.
+ * Feeds N frames of the same note and returns the last state. Leaving `cents` out means "dead in tune for the
+ * note named" — a hundred cents per semitone away for a wrong one, as the mic hook would report it.
  */
 function feed(
   engine: TrainerEngine,
@@ -85,8 +84,8 @@ describe('initial state', () => {
     expect(snapshot.upcoming).toEqual(['E5', null, null])
   })
 
-  // Playback lays out the note row from `noteWindow`, the trainer from its snapshot. Disagreeing,
-  // "next" would mean one note during the demo and another while playing.
+  // Playback lays out the note row from `noteWindow`, the trainer from its snapshot. Should they disagree,
+  // "next" means one note during the demo and another while playing.
   it('reads the same window the engine puts in its snapshot', () => {
     const engine = engineWith()
     playNote(engine)
@@ -139,8 +138,8 @@ describe('scoring notes', () => {
     expect(snapshot.index).toBe(1)
   })
 
-  // The wide tolerances only mean anything if cents alone decide the hit: a whistle a semitone
-  // sharp is named as the note above, so asking for the name too would cap every setting at ±50.
+  // Cents alone decide the hit: a whistle a semitone sharp is named as the note above, so asking for the name
+  // too would cap every tolerance setting at ±50.
   it('scores a mistuned note the detector names as its neighbour', () => {
     const engine = engineWith()
     engine.configure({ toleranceCents: 100 })
@@ -288,8 +287,7 @@ describe('penalty modes', () => {
     const engine = engineWith('wait')
     expect(feed(engine, 8, 'E5').mistakes).toBe(1)
 
-    // A single dropped detection frame is not the player correcting themselves, so the same wrong
-    // note refilling the bar is still the one mistake.
+    // A single dropped detection frame is not the player correcting themselves.
     feed(engine, 1, null)
     expect(feed(engine, 8, 'E5').mistakes).toBe(1)
   })

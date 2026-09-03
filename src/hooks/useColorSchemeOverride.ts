@@ -10,13 +10,12 @@ export interface ColorSchemeOverride {
 }
 
 /**
- * The device decides, with the toggle as an override that does not outlive its reason. Two things end
- * it: the session, since `colorSchemeManager` keeps it in `sessionStorage`; and the device changing
- * its own mind, so a phone that goes light at sunrise takes the app with it rather than holding on to
- * what was picked the evening before.
+ * The device decides, with the toggle as an override that does not outlive its reason. Two things end it: the
+ * session, `colorSchemeManager` keeping it in `sessionStorage`; and the device changing its own mind, so a
+ * phone that goes light at sunrise takes the app with it rather than holding last evening's choice.
  *
- * Mantine follows the device by itself while its scheme is `auto`, so all of this is a matter of
- * getting back to `auto` — `clearColorScheme` is what does that.
+ * Mantine follows the device by itself while its scheme is `auto`, so all of this is a matter of getting back
+ * to `auto` — `clearColorScheme` is what does that.
  */
 export function useColorSchemeOverride(): ColorSchemeOverride {
   const { colorScheme, setColorScheme, clearColorScheme } = useMantineColorScheme()
@@ -24,8 +23,8 @@ export function useColorSchemeOverride(): ColorSchemeOverride {
   const device = useColorScheme('dark', { getInitialValueInEffect: false })
   const scheme = colorScheme === 'auto' ? device : colorScheme
 
-  // What the device said when the override was made, so that only a *change* to it retires the
-  // override. The effect runs on the toggle itself too, and there the two still agree.
+  // What the device said when the override was made, so only a *change* to it retires the override. The
+  // effect runs on the toggle itself too, and there the two still agree.
   const deviceAtOverride = useRef(device)
 
   useEffect(() => {
@@ -38,8 +37,8 @@ export function useColorSchemeOverride(): ColorSchemeOverride {
 
   const toggle = (): void => {
     const next = scheme === 'dark' ? 'light' : 'dark'
-    // Asking for what the device already says is not an override. Pinning it would stop the app
-    // following the device for the rest of the session, which is not what the tap meant.
+    // Asking for what the device already says is not an override — pinning it would stop the app following
+    // the device for the rest of the session.
     if (next === device) clearColorScheme()
     else setColorScheme(next)
   }

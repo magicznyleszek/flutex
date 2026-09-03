@@ -58,8 +58,8 @@ describe('bestShift', () => {
   const whistle = (note: string): boolean => note in INSTRUMENTS.whistle_d.fingering
 
   it('leaves a melody that already fits exactly where it is', () => {
-    // Both zero and the preferred shift are playable, and the tie goes to the smaller move —
-    // otherwise choosing a whistle would rename a song written in D.
+    // Zero and the preferred shift are both playable, and the tie goes to the smaller move — otherwise
+    // choosing a whistle would rename a song written in D.
     expect(bestShift(['D5', 'A5'], keyShift('D', 'D'), whistle).semitones).toBe(0)
     expect(bestShift(['D5', 'A5'], 5, whistle).semitones).toBe(0)
   })
@@ -73,8 +73,7 @@ describe('bestShift', () => {
   })
 
   it('prefers the instrument key when that is what buys the notes', () => {
-    // C major on a whistle in D: C5 and F5 have no grip, and the same tune a tone up is all
-    // white notes of D major, which the whistle has.
+    // C major on a whistle in D: C5 and F5 have no grip, and a tone up is all D major, which it has.
     const notes = ['C5', 'D5', 'E5', 'F5', 'G5', 'A5', 'B5', 'C6']
     const choice = bestShift(notes, keyShift('C', 'D'), whistle)
 
@@ -82,8 +81,8 @@ describe('bestShift', () => {
     expect(choice.playable).toBe(notes.length)
   })
 
-  // The other half: when the instrument key buys nothing, it is not taken. Half the whistle
-  // repertoire is in E dorian and needs only the octave, so an octave beats a smaller move into D.
+  // The other half: half the whistle repertoire is in E dorian and needs only the octave, so an octave beats
+  // the smaller move into D.
   it('keeps the written key when moving an octave is enough', () => {
     const notes = ['B4', 'E4', 'F#4', 'E4', 'B4', 'D5', 'B4', 'A4']
     const choice = bestShift(notes, keyShift('E', 'D'), whistle)
@@ -92,8 +91,8 @@ describe('bestShift', () => {
     expect(choice.playable).toBe(notes.length)
   })
 
-  // No shift makes an A#5 playable on a whistle, so the answer is the best of a bad set rather than
-  // an error — the trainer shows the missing grips instead of refusing the song.
+  // No shift makes an A#5 playable on a whistle, so the answer is the best of a bad set rather than an error
+  // — the trainer shows the missing grips instead of refusing the song.
   it('returns the closest fit when nothing plays everything', () => {
     const choice = bestShift(['D5', 'A#5'], 0, whistle)
 
@@ -139,16 +138,16 @@ describe('songForInstrument', () => {
     expect(songForInstrument(written, INSTRUMENTS.recorder).semitones).toBe(0)
   })
 
-  // A zero override is a decision — "play it as written even though moving it would help" — and it
-  // only survives because the lookup falls through on undefined rather than on falsiness.
+  // A zero override means "as written even though moving it would help", and only survives because the lookup
+  // falls through on undefined rather than on falsiness.
   it('treats an override of zero as an instruction', () => {
     const written = song('D', 'D3 A3', { whistle_d: 0 })
 
     expect(songForInstrument(written, INSTRUMENTS.whistle_d).semitones).toBe(0)
   })
 
-  // A whistle has no A#5, and `bestShift` only tries octaves and the key shift, so no move buys it.
-  // What is left is the second step: put the nearest grip there and say what it stands for.
+  // A whistle has no A#5, and `bestShift` only tries octaves and the key shift, so no move buys it. What is
+  // left is the second step: the nearest grip, and a note saying what it stands for.
   it('stands a near note in for one with no grip', () => {
     const arrangement = songForInstrument(song('D', 'A#5 D5 A#5'), INSTRUMENTS.whistle_d)
 

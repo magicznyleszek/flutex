@@ -2,13 +2,13 @@ import { manifest, version } from '@parcel/service-worker'
 
 /** Offline cache. Nothing here talks to a backend, so a cached build needs no network at all. */
 
-// No TypeScript lib narrows a service worker's global scope, hence the redeclaration and the
-// separate tsconfig.worker.json.
+// No TypeScript lib narrows a service worker's global scope, hence the redeclaration and the separate
+// tsconfig.worker.json.
 declare const self: ServiceWorkerGlobalScope
 
 /**
- * Parcel's `version` changes whenever any bundle does, so each build fills a new cache and the old
- * one is dropped whole. One build's JavaScript can never run against another's CSS.
+ * Parcel's `version` changes whenever any bundle does, so each build fills a new cache and the old one is
+ * dropped whole. One build's JavaScript can never run against another's CSS.
  */
 const CACHE = `flutex-${version}`
 
@@ -41,9 +41,9 @@ async function fromNetwork(request: Request): Promise<Response | null> {
 async function respond(request: Request): Promise<Response> {
   const cache = await caches.open(CACHE)
 
-  // Network first for the document: index.html is the only unhashed name, so a deploy that changes
-  // nothing else fires no worker update. The cache still answers offline. The fresh copy is not
-  // written back — it belongs to a build precached under another version.
+  // Network first for the document: index.html is the only unhashed name, so a deploy that changes nothing
+  // else fires no worker update. The cache still answers offline. The fresh copy is not written back — it
+  // belongs to a build precached under another version.
   if (request.mode === 'navigate') {
     return (await fromNetwork(request))
       ?? (await cache.match(DOCUMENT))

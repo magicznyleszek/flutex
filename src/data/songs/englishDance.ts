@@ -1,7 +1,4 @@
-/**
- * Printed English dance music — Playford, Thompson — with morris and Northumbrian tunes from the
- * same world.
- */
+/** Printed English dance music — Playford, Thompson — with morris and Northumbrian tunes from that world. */
 import { defineSong, type Song } from '../songUtils'
 
 export const ENGLISH_DANCE: readonly Song[] = [

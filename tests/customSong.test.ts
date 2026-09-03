@@ -20,8 +20,7 @@ const HEADER = 'X:1\nL:1/4\nK:C\n'
 
 describe('ABC notation', () => {
   it('reads pitches from the octave that starts at middle C', () => {
-    // A whistle tune written `D...d` sounds an octave below the whistle, and lifting it is the
-    // transposer's job, not the parser's.
+    // A whistle tune written `D...d` sounds an octave below the whistle; lifting it is the transposer's job.
     expect(tune(`${HEADER}C D E c d C, c'`)).toEqual(['C4', 'D4', 'E4', 'C5', 'D5', 'C3', 'C6'])
   })
 
@@ -63,8 +62,8 @@ describe('ABC notation', () => {
     expect(beats(`${HEADER}[CE]2`)).toEqual([2])
   })
 
-  // The trainer walks a melody end to end, so there is nowhere to put a jump: a repeat becomes the
-  // notes it stands for. Getting it wrong is quiet — a two-part reel still plays, just half of it.
+  // The trainer walks a melody end to end with nowhere to put a jump, so a repeat becomes the notes it stands
+  // for. Getting it wrong is quiet: a two-part reel still plays, just half of it.
   describe('repeats', () => {
     it('plays a repeated section twice', () => {
       expect(tune(`${HEADER}|:C D|E F:|`)).toEqual(['C4', 'D4', 'E4', 'F4', 'C4', 'D4', 'E4', 'F4'])
@@ -82,8 +81,8 @@ describe('ABC notation', () => {
     })
 
     it('plays a first ending once and a second in its place on the way back', () => {
-      // `|: A |1 B :|2 C |` is A B A C: the jump back skips the ending just played. Both the `|1`
-      // shorthand and the `[1` the standard prefers, on either side of the `:|`.
+      // `|: A |1 B :|2 C |` is A B A C: the jump back skips the ending just played. Both the `|1` shorthand
+      // and the `[1` the standard prefers.
       const variant = ['C4', 'D4', 'E4', 'C4', 'D4', 'F4']
       expect(tune(`${HEADER}|:C D|1 E:|2 F|`)).toEqual(variant)
       expect(tune(`${HEADER}|:C D|[1 E:|[2 F|`)).toEqual(variant)
@@ -147,8 +146,8 @@ describe('ABC notation', () => {
     expect(tune('X:1\nT:Nothing\nK:C')).toContain('No notes')
   })
 
-  // Numbered in the text as pasted, blank lines and headers included, since that is what you scroll
-  // to. The body offsets it counts from are into the joined lines, hence the test on the second one.
+  // Numbered in the text as pasted, blank lines and headers included, since that is what you scroll to —
+  // while the offsets it counts from are into the joined body lines.
   it('names the line it choked on', () => {
     const error = tune('X:1\nL:1/4\nK:C\nC D E\nF G H\n')
     expect(error).toContain('Line 5')
@@ -168,8 +167,8 @@ describe('custom songs', () => {
     expect(EMPTY_CUSTOM_SONG.notes).toEqual([])
   })
 
-  // Told apart by an ABC information field at the start of a line, which a note list can never have:
-  // its lengths are written `D5:2`, so the colon never lands second.
+  // Told apart by an ABC information field at the start of a line, which a note list can never have: its
+  // lengths are written `D5:2`, so the colon never lands second.
   it('tells a note list from an ABC tune', () => {
     const list = parseCustomSong('D5 E5 F#5:2')
     expect(list.ok ? list.song.notes : null).toEqual([

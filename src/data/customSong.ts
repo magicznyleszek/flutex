@@ -10,8 +10,8 @@ export type CustomSongResult =
 export const CUSTOM_SONG_TITLE = 'My own song'
 
 /**
- * Stands in whenever the paste does not parse. Downstream always expects a song, and an empty note
- * list is the honest "nothing to play yet" — the trainer shows the error where the fingerings go.
+ * Stands in whenever the paste does not parse. Downstream always expects a song, and no notes is the honest
+ * "nothing to play yet" — the trainer shows the error where the fingerings go.
  */
 export const EMPTY_CUSTOM_SONG: Song = {
   id: CUSTOM_SONG_ID,
@@ -22,24 +22,28 @@ export const EMPTY_CUSTOM_SONG: Song = {
 }
 
 /**
- * An ABC information field — `X:`, `T:`, `K:` — at the start of any line. Our own note list
- * cannot look like this: its lengths are written `D5:2`, so the colon never lands second.
+ * An ABC information field — `X:`, `T:`, `K:` — at the start of any line. A note list cannot look like this:
+ * its lengths are written `D5:2`, so the colon never lands second.
  */
 const ABC_FIELD = /^[A-Za-z]:/m
 
 /** Which of the two formats a paste is in. Exported so nothing else has to guess the same way. */
 export const isAbc = (text: string): boolean => ABC_FIELD.test(text)
 
-/** One melody, not a tune book. Long enough for anything you would sit down and learn. */
-const MAX_NOTES = 2000
+/**
+ * One melody, not a tune book — long enough for anything you would sit down and learn. Exported so the song
+ * scripts can tell a melody that is merely too long from one this cannot read at all; a soundtrack medley
+ * reaches it easily, which is a limit rather than a fault in the melody.
+ */
+export const MAX_NOTES = 2000
 
 function fail(error: string): CustomSongResult {
   return { ok: false, error }
 }
 
 /**
- * The key a note list is read as, guessed from its first note — melodies usually start on one of
- * their own scale. Only a hint for transposing: a melody that already fits is left alone regardless.
+ * The key a note list is read as, guessed from its first note — melodies usually start on one of their own
+ * scale. Only a hint for transposing: a melody that already fits is left alone regardless.
  */
 function guessKey(note: string): string {
   const midi = noteToMidi(note)
@@ -98,8 +102,7 @@ function fromAbc(text: string): CustomSongResult {
     ok: true,
     song: {
       id: CUSTOM_SONG_ID,
-      // A tune's own `T:` is better than "My own song" everywhere the title is shown, including
-      // the message you get for playing it all the way through.
+      // A tune's own `T:` beats "My own song" everywhere the title shows, the finished message included.
       title: title ?? CUSTOM_SONG_TITLE,
       subtitle: `Yours — ABC notation, key of ${key}`,
       tags: [],
@@ -110,9 +113,9 @@ function fromAbc(text: string): CustomSongResult {
 }
 
 /**
- * Reads pasted text as a song, in ABC notation or the note list the library is written in — told
- * apart by looking for an ABC information field, so a tune copied off the web works unedited.
- * Failure is a sentence to show the user, never a throw: bad input is the normal case here.
+ * Reads pasted text as a song, in ABC notation or the note list the library is written in — told apart by
+ * looking for an ABC information field, so a tune copied off the web works unedited. Failure is a sentence to
+ * show the user, never a throw: bad input is the normal case here.
  */
 export function parseCustomSong(text: string): CustomSongResult {
   if (text.trim() === '') {

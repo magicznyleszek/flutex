@@ -1,4 +1,5 @@
 import {
+  BASE_INSTRUMENTS,
   INSTRUMENT_LIST,
   INSTRUMENTS,
   instrumentFreqRange,
@@ -8,22 +9,20 @@ import {
 } from '../src/data/instruments'
 import { DEFAULT_SONG_ID, SONGS, findSong } from '../src/data/songs'
 import { SONG_CATEGORIES, songForInstrument, songNoteNames } from '../src/data/songUtils'
-import { noteToMidi } from '../src/lib/music'
+import { midiToNote, noteToMidi } from '../src/lib/music'
 
 const VALID_HOLE_STATES: readonly HoleState[] = [0, 0.5, 1]
 
 /**
- * The library fits every chart bar two songs — one too high for the ocarinas, one too wide for
- * anything. Each has a test further down pinning what every instrument makes of it. Named here
- * rather than detected, so a song that drifts out of range by accident still fails.
+ * The two songs that do not fit every chart — one too high for the ocarinas, one too wide for anything.
+ * Each has its own test below. Named rather than detected, so a song that drifts out of range fails.
  */
 const WIDE_RANGE: ReadonlySet<string> = new Set(['concerning-hobbits', 'a-blast-of-wind'])
 const SHARED_RANGE = SONGS.filter((song) => !WIDE_RANGE.has(song.id))
 
 /**
- * The second-octave songs are playable everywhere, but not as written: they sit above the shared
- * window on purpose, and the ocarinas take them down an octave. Excluded by category rather than by
- * id, since that file is meant to be added to, and pinned by its own test below.
+ * Playable everywhere but not as written: these sit above the shared window on purpose and the ocarinas
+ * take them down an octave. By category, since that file is meant to be added to.
  */
 const AS_WRITTEN = SHARED_RANGE.filter((song) => song.category !== 'second-octave')
 
@@ -48,8 +47,8 @@ describe('instruments', () => {
     expect(midis).toEqual(sorted)
   })
 
-  // An ocarina's chart and its drawing are separate lists, and nothing else stops a hole being
-  // added to one and not the other — which draws a fingering with a hole missing rather than throws.
+  // Chart and drawing are separate lists, and a hole added to one and not the other draws a fingering
+  // with a hole missing rather than throwing.
   it('draws every hole an ocarina fingers', () => {
     for (const instrument of INSTRUMENT_LIST) {
       const { layout } = instrument
@@ -69,7 +68,77 @@ describe('instruments', () => {
         expect(hole.y - hole.r).toBeGreaterThanOrEqual(0)
         expect(hole.y + hole.r).toBeLessThanOrEqual(layout.height)
       }
+
+      // The mouthpiece hangs below the body, so it is the part most easily pushed off the bottom edge —
+      // where it reads as a chart that got cut off.
+      const { neck } = layout
+      if (neck === undefined) continue
+
+      expect(neck.bottom).toBeGreaterThan(neck.top)
+      expect(neck.bottom).toBeLessThanOrEqual(layout.height)
+      expect(neck.cx - (neck.width / 2)).toBeGreaterThanOrEqual(0)
+      expect(neck.cx + (neck.width / 2)).toBeLessThanOrEqual(100)
     }
+  })
+
+  /*
+   * The bug this exists for: radii copied off the printed chart's schematic put the two big holes at the
+   * bottom when on the instrument they are the two on the left. It looked right and played wrong.
+   *
+   * Pitch rises with total open area, so the chart itself says what the sizes are — walk its notes
+   * lowest first and the drawn area has to go up every time. Whole covers only: a half cover is set by
+   * ear and leaves rather less than half, so at face value D#5 comes out level with E5.
+   */
+  it('draws the 6-hole pendant at sizes that order its own chart', () => {
+    const ocarina = INSTRUMENTS.ocarina_6
+    const { layout } = ocarina
+    if (layout.kind !== 'ocarina') throw new Error('the 6-hole pendant needs an ocarina layout')
+
+    const openArea = (note: string): number => layout.holes.reduce((total, hole, position) => {
+      const state = ocarina.fingering[note]?.holes[position] ?? 0
+      return state === 0 ? total + (hole.r * hole.r) : total
+    }, 0)
+
+    const whole = ocarina.notes.filter(
+      (note) => !(ocarina.fingering[note]?.holes ?? []).includes(0.5),
+    )
+    // Fifteen of the seventeen, so the two half-hole notes are the only ones sitting this out.
+    expect(whole).toHaveLength(15)
+
+    const areas = whole.map(openArea)
+    for (let index = 1; index < areas.length; index += 1) {
+      expect(areas[index] ?? 0).toBeGreaterThan(areas[index - 1] ?? 0)
+    }
+  })
+
+  // Derived rather than typed out, so what needs checking is that the octave is the only difference:
+  // every grip in the same place, nothing lost or gained.
+  it('gives the soprano pendant the alto\'s grips an octave up', () => {
+    const alto = INSTRUMENTS.ocarina_6
+    const soprano = INSTRUMENTS.ocarina_6_soprano
+
+    expect(soprano.variantOf).toBe('ocarina_6')
+    expect(soprano.layout).toBe(alto.layout)
+    expect(soprano.notes).toHaveLength(alto.notes.length)
+    expect(soprano.notes[0]).toBe('C6')
+    expect(soprano.notes[soprano.notes.length - 1]).toBe('E7')
+
+    for (const note of alto.notes) {
+      const up = midiToNote((noteToMidi(note) ?? 0) + 12)
+      expect(soprano.fingering[up]).toEqual(alto.fingering[note])
+    }
+  })
+
+  // Why it is a separate instrument and not the alto transposed on paper: the tuner has to search where
+  // it sounds. E7 is 2637 Hz, past the alto's 1568 Hz ceiling, so its top read as subharmonics before.
+  it('searches for the soprano pendant where it sounds', () => {
+    const alto = instrumentFreqRange(INSTRUMENTS.ocarina_6)
+    const soprano = instrumentFreqRange(INSTRUMENTS.ocarina_6_soprano)
+
+    expect(alto.maxFreq).toBeLessThan(2637)
+    expect(soprano.maxFreq).toBeGreaterThan(2637)
+    // What the recorded one sounds with every hole covered, so it has to be inside the band.
+    expect(soprano.minFreq).toBeLessThan(1040)
   })
 
   it('computes a frequency range with headroom for intonation', () => {
@@ -92,8 +161,8 @@ describe('instruments', () => {
     expect(nearestFingered(INSTRUMENTS.whistle_d, 'H5')).toBeNull()
   })
 
-  // Where this is actually used: everything above the highest grip collapses onto it, so the two
-  // notes the ocarinas are short of both come back as the top note, not as an octave drop.
+  // Everything above the highest grip collapses onto it, so the two notes the ocarinas are short of both
+  // come back as the top note rather than an octave drop.
   it('reaches down to the nearest note it does have', () => {
     expect(nearestFingered(INSTRUMENTS.ocarina_6, 'F#6')).toBe('E6')
     expect(nearestFingered(INSTRUMENTS.ocarina_6, 'A6')).toBe('E6')
@@ -103,8 +172,8 @@ describe('instruments', () => {
     expect(nearestFingered(INSTRUMENTS.whistle_d, 'C5')).toBe('D5')
   })
 
-  // F5 is one semitone from two notes the whistle has, so the answer falls out of the order `notes`
-  // is in rather than a comparison — a change to how that list is built would flip it silently.
+  // F5 is one semitone from two notes the whistle has, so the answer falls out of the order `notes` is
+  // in — a change to how that list is built would flip it silently.
   it('breaks a tie towards the lower note', () => {
     expect(nearestFingered(INSTRUMENTS.whistle_d, 'F5')).toBe('E5')
   })
@@ -115,18 +184,16 @@ describe('instruments', () => {
     expect(nearestFingered(INSTRUMENTS.ocarina_6, 'C7')).toBeNull()
   })
 
-  // Literal arrays rather than a relationship between the two: the relationship is what went wrong
-  // before, when F5 was written the German way and "F# is F with the last finger lifted" held for
-  // that mistake but not for baroque. As published by Mollenhauer, Moeck, Yamaha, the American
-  // Recorder Society and Dolmetsch, in the order [thumb, 1, 2, 3, 4, 5, 6, 7].
+  // Literal arrays, not a relationship between the two: a relationship is what went wrong before, when
+  // F5 was written the German way and "F# is F with the last finger lifted" held for that mistake but not
+  // for baroque. Per Mollenhauer, Moeck, Yamaha, the ARS and Dolmetsch, in [thumb, 1, 2, 3, 4, 5, 6, 7].
   it('keeps the recorder on baroque fingering for F and F#', () => {
     expect(INSTRUMENTS.recorder.fingering.F5?.holes).toEqual([1, 1, 1, 1, 1, 0, 1, 1])
     expect(INSTRUMENTS.recorder.fingering['F#5']?.holes).toEqual([1, 1, 1, 1, 0, 1, 1, 0])
   })
 
-  // The German F5 runs straight down the scale and its F#5 is the forked one, the mirror of baroque.
-  // Either one here means the systems got mixed, which a player would meet as a note that will not
-  // sound.
+  // German mirrors baroque here: its F5 runs straight down the scale and its F#5 is the forked one.
+  // Either array on the baroque chart means the systems got mixed — a note that will not sound.
   it('does not use German fingerings for F or F#', () => {
     expect(INSTRUMENTS.recorder.fingering.F5?.holes).not.toEqual([1, 1, 1, 1, 1, 0, 0, 0])
     expect(INSTRUMENTS.recorder.fingering['F#5']?.holes).not.toEqual([1, 1, 1, 1, 0, 1, 1, 1])
@@ -137,9 +204,8 @@ describe('instruments', () => {
     expect(INSTRUMENTS.recorder_german.fingering['F#5']?.holes).toEqual([1, 1, 1, 1, 0, 1, 1, 1])
   })
 
-  // The two charts are written out separately so each can be read against its own source, and this
-  // is what stops them drifting: every German note matches baroque unless the systems really differ.
-  // Iterating the German notes also catches a note added to one chart and not the other.
+  // The charts are written out separately so each reads against its own source; this is what stops them
+  // drifting. Iterating the German notes also catches a note added to one chart and not the other.
   it('differs from baroque only where German fingering really does', () => {
     // G#5 is the only one of the six not about F: German closes hole 6, baroque half-covers it.
     const divergent = ['F5', 'F#5', 'G#5', 'F6', 'F#6', 'G#6']
@@ -154,9 +220,8 @@ describe('instruments', () => {
     }
   })
 
-  // Three of the four accidentals need a half hole, and which hole is halved is the whole content of
-  // those fingerings — C#5 halves 7, D#5 and baroque G#5 halve 6. A half in the wrong slot draws a
-  // diagram that looks right and sounds a semitone off.
+  // Which hole is halved is the whole content of these fingerings — C#5 halves 7, D#5 and baroque G#5
+  // halve 6. A half in the wrong slot draws a diagram that looks right and sounds a semitone off.
   it.each(['recorder', 'recorder_german'] as const)('%s plays the first octave chromatically', (id) => {
     const { fingering } = INSTRUMENTS[id]
 
@@ -170,8 +235,8 @@ describe('instruments', () => {
     expect(fingering['A#5']?.holes).toEqual([1, 1, 0, 1, 1, 0, 0, 0])
   })
 
-  // The thumb switches register in two steps, and the boundary fails silently: a half-covered thumb
-  // at D6 or an open one at E6 both draw a plausible diagram for a note that will not sound.
+  // The thumb switches register in two steps and the boundary fails silently: a half-covered thumb at D6
+  // or an open one at E6 both draw a plausible diagram for a note that will not sound.
   it.each(['recorder', 'recorder_german'] as const)('%s opens the thumb before it pinches it', (id) => {
     const { fingering } = INSTRUMENTS[id]
 
@@ -183,8 +248,8 @@ describe('instruments', () => {
     }
   })
 
-  // A#6 has four competing grips across the charts consulted, so it is absent rather than
-  // forgotten. Same for German C7, which no German chart consulted prints.
+  // A#6 has four competing grips across the charts consulted, so it is absent rather than forgotten.
+  // Same for German C7, which no German chart consulted prints.
   it('leaves out the notes the sources disagree on', () => {
     expect(INSTRUMENTS.recorder.fingering['A#6']).toBeUndefined()
     expect(INSTRUMENTS.recorder_german.fingering['A#6']).toBeUndefined()
@@ -205,8 +270,8 @@ describe('songs', () => {
     expect(findSong(null)).toBeNull()
   })
 
-  // Order and grouping need no test: `songs/index.ts` walks `SONG_CATEGORIES` over one file each, so
-  // both follow from that list. What it cannot know is that a file has anything in it.
+  // Order and grouping follow from `SONG_CATEGORIES` and need no test. What that list cannot know is
+  // whether a file has anything in it.
   it.each(SONG_CATEGORIES)('$label has songs in it', (category) => {
     expect(SONGS.some((song) => song.category === category.slug)).toBe(true)
   })
@@ -221,8 +286,8 @@ describe('songs', () => {
     }
   })
 
-  // Through `songForInstrument`, the arrangement being what a player is shown. `approximations` is
-  // the half with teeth: it swaps a near note in, so `unplayableNotes` alone comes back empty.
+  // Through `songForInstrument`, the arrangement being what a player is shown. `approximations` is the
+  // half with teeth: it swaps a near note in, so `unplayableNotes` alone comes back empty.
   it.each(SHARED_RANGE)('$title is playable on every instrument', (song) => {
     for (const instrument of INSTRUMENT_LIST) {
       const arrangement = songForInstrument(song, instrument)
@@ -231,23 +296,35 @@ describe('songs', () => {
     }
   })
 
-  // The stronger claim, which catches a song drifting out of the shared range: these are written to
-  // fit every chart as they stand, so the transposer should find nothing to do. A failure is a song
-  // to fix, not a bug in the shift search — the test above would still pass.
+  // The stronger claim, which catches a song drifting out of the shared range: these fit every chart as
+  // they stand, so the transposer should find nothing to do. A failure is a song to fix, not a bug in the
+  // shift search — the test above would still pass. Base instruments only; a variant is one of these in
+  // another size and cannot play the written octave, which is the test below.
   it.each(AS_WRITTEN)('$title plays as written on every instrument', (song) => {
-    for (const instrument of INSTRUMENT_LIST) {
+    for (const instrument of BASE_INSTRUMENTS) {
       expect(songForInstrument(song, instrument).semitones).toBe(0)
     }
   })
 
-  // The point of the second-octave section is the register, so what matters is that the instruments
-  // that have it keep it and the ones that do not get a plain octave rather than an odd shift into a
-  // new key. Written inside D6-A6 for exactly that reason: anything wider and `bestShift` starts
-  // preferring smaller moves that leave a note or two behind.
+  // A variant should cost a whole octave and nothing else. The failure guarded against is `bestShift`
+  // preferring a smaller move that fits most of a tune and approximates the rest — which would still
+  // leave every note fingered, so the two tests above would pass.
+  it.each(AS_WRITTEN)('$title moves by the octave the soprano pendant is up', (song) => {
+    const arrangement = songForInstrument(song, INSTRUMENTS.ocarina_6_soprano)
+
+    expect(arrangement.semitones).toBe(12)
+    expect(arrangement.key).toBe(song.key)
+    expect(arrangement.approximations).toEqual([])
+  })
+
+  // The register is the point of this section, so the charts that have it must keep it and the rest must
+  // get a plain octave rather than an odd shift into a new key. Written inside D6-A6 for that reason:
+  // anything wider and `bestShift` starts preferring smaller moves that leave a note or two behind.
   it.each(SONGS.filter((song) => song.category === 'second-octave'))(
     '$title stays up an octave where it can and drops a whole one where it cannot',
     (song) => {
-      for (const id of ['whistle_d', 'recorder', 'recorder_german'] as const) {
+      // The soprano pendant groups with these, not the ocarinas: D6-A6 is the middle of its range.
+      for (const id of ['whistle_d', 'recorder', 'recorder_german', 'ocarina_6_soprano'] as const) {
         expect(songForInstrument(song, INSTRUMENTS[id]).semitones).toBe(0)
       }
 
@@ -262,8 +339,8 @@ describe('songs', () => {
     },
   )
 
-  // The exceptions, pinned note for note. If a chart gains the notes it lacks, or an override stops
-  // holding, that is worth being told about.
+  // The exceptions, pinned note for note: a chart gaining the notes it lacks, or an override stopping
+  // holding, is worth being told about.
   it('keeps the one transcribed song in its own key everywhere', () => {
     const song = findSong('concerning-hobbits')
     expect(song).not.toBeNull()
@@ -277,8 +354,8 @@ describe('songs', () => {
       expect(arrangement.approximations).toEqual([])
     }
 
-    // The ocarinas keep it in D through `overrides`, standing in for the two notes they lack rather
-    // than moving into C to recover one of them, which is the trade the search would take.
+    // The ocarinas keep it in D through `overrides`, standing in for the two notes they lack rather than
+    // moving into C to recover one — the trade the search would otherwise take.
     expect(songForInstrument(song, INSTRUMENTS.ocarina_6).approximations).toEqual([
       { written: 'F#6', played: 'E6' },
       { written: 'A6', played: 'E6' },
@@ -294,21 +371,19 @@ describe('songs', () => {
 
       expect(arrangement.semitones).toBe(0)
       expect(arrangement.key).toBe('D')
-      // Nothing left without a grip: every note can be shown and heard.
       expect(unplayableNotes(INSTRUMENTS[id], songNoteNames(arrangement))).toEqual([])
     }
   })
 
-  // The other exception, and a different problem: too wide rather than too high. A4 to E6 is
-  // nineteen semitones against a window of fourteen, and it is in A, whose G# only the whistle
-  // lacks. No key holds it on all five, so each takes its own shift — hence the exemption.
+  // The other exception, and a different problem: too wide rather than too high. A4 to E6 is nineteen
+  // semitones against a window of fourteen, in A, whose G# only the whistle lacks. No one key holds it
+  // everywhere, so each chart takes its own shift.
   it('lets every instrument take its own shift for the widest song', () => {
     const song = findSong('a-blast-of-wind')
     expect(song).not.toBeNull()
     if (song === null) return
 
-    // Four of the five play it complete, in different keys: the whistle a fourth up into D, both
-    // recorders a minor third up into C, and the 12-hole in A as printed, being the only chart that
+    // Four play it complete in different keys. The 12-hole keeps A as printed, being the only chart that
     // reaches the A4 the first bar ends on.
     const fits = [
       ['whistle_d', 5, 'D'],
@@ -325,8 +400,8 @@ describe('songs', () => {
       expect(arrangement.approximations).toEqual([])
     }
 
-    // The 6-hole is the one that gives something up, and takes the recorders' shift to give up as
-    // little as possible: nine notes of a hundred and twenty in C, against fourteen if it stayed in A.
+    // The 6-hole is the one that gives something up, and takes the recorders' shift to give up as little
+    // as possible: nine notes of a hundred and twenty in C, against fourteen if it stayed in A.
     const ocarina = songForInstrument(song, INSTRUMENTS.ocarina_6)
     expect(ocarina.semitones).toBe(3)
     expect(ocarina.key).toBe('C')

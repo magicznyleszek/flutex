@@ -2,13 +2,13 @@
  * Turns a pasted melody back into the source of a library entry: the `defineSong` block to drop into
  * whichever file under `songs/` holds its section.
  *
- * The part worth automating is the arrangement, not the typing. Every library song bar two is written
- * on the ten notes all five charts share, so `songForInstrument` leaves it exactly as written — see
- * the header of `songs/index.ts`. Finding the transposition that lands a tune there is a search, and
- * getting it wrong is a test failure rather than something anyone spots by eye.
+ * The arrangement is the part worth automating, not the typing. Every library song bar two is written on
+ * the ten notes all the charts share, so `songForInstrument` leaves it as written — see the header of
+ * `songs/index.ts`. Finding the transposition that lands a tune there is a search, and getting it wrong is
+ * a test failure rather than something anyone spots by eye.
  */
 import { CUSTOM_SONG_TITLE, isAbc } from './customSong'
-import { INSTRUMENT_LIST } from './instruments'
+import { BASE_INSTRUMENTS } from './instruments'
 import { type Song, type SongNote } from './songUtils'
 import { parseAbc } from '../lib/abc'
 import { noteToMidi } from '../lib/music'
@@ -17,7 +17,9 @@ import { transposeKey, transposeNote } from '../lib/transpose'
 /** Three octaves either way, well past any tune a chart could be made to reach. */
 const SEARCH = 36
 
-const KEY_MODE = /^K:\s*[A-Ga-g][#b]?\s*([A-Za-z]*)/m
+// Spaces and tabs, not `\s`: `\s*` crosses the newline, and then a header line below — `M:4/4` — reads
+// as the mode word, `m` for minor.
+const KEY_MODE = /^K:[ \t]*[A-Ga-g][#b]?[ \t]*([A-Za-z]*)/m
 
 const MODE_NAMES: Record<string, string> = {
   m: 'minor', min: 'minor', aeo: 'minor', maj: 'major', ion: 'major',
@@ -25,12 +27,12 @@ const MODE_NAMES: Record<string, string> = {
 }
 
 /**
- * The notes every chart has a grip for — a tin whistle in D intersected with a 6-hole ocarina, which
- * comes to the D major scale plus C natural. Derived rather than written down, so editing a chart
- * cannot leave this behind.
+ * The notes every chart has a grip for — the D major scale plus C natural, being a tin whistle in D
+ * intersected with a 6-hole ocarina. Derived so that editing a chart cannot leave it behind. Base
+ * instruments only: a variant is one of them in another size, and shares almost nothing with it.
  */
 export const SHARED_NOTES: readonly string[] = (() => {
-  const [first, ...rest] = INSTRUMENT_LIST
+  const [first, ...rest] = BASE_INSTRUMENTS
   if (first === undefined) return []
 
   return first.notes.filter((note) => rest.every((instrument) => note in instrument.fingering))
@@ -52,8 +54,8 @@ export interface SongDefinition {
    */
   strays: readonly string[]
   /**
-   * Whether the title is still the placeholder every custom song falls back to. True for a note
-   * list, which carries no title, and for an ABC tune with no `T:` field.
+   * Whether the title is still the placeholder custom songs fall back to. True for a note list, which
+   * carries no title, and for an ABC tune with no `T:` field.
    */
   needsTitle: boolean
   /** `defineSong({ ... }),`, indented ready to drop into the `SONGS` array. */
@@ -61,9 +63,9 @@ export interface SongDefinition {
 }
 
 /**
- * The smallest move that lands every note on a grip all five instruments have. Ties go downward, the
- * lower register being easier to blow — the same tie-break `bestShift` makes. When nothing fits, the
- * least-bad shift comes back with its strays named.
+ * The smallest move that lands every note on a grip every chart has. Ties go downward, the lower register
+ * being easier to blow — the same tie-break `bestShift` makes. When nothing fits, the least-bad shift comes
+ * back with its strays named.
  */
 function bestFit(notes: readonly SongNote[]): { semitones: number, strays: readonly string[] } {
   const ordered = Array.from({ length: SEARCH * 2 + 1 }, (_, step) => step - SEARCH)
@@ -83,8 +85,8 @@ function bestFit(notes: readonly SongNote[]): { semitones: number, strays: reado
     }
 
     if (count === 0) return { semitones, strays }
-    // Ranked on how many *positions* are stranded, not how many distinct notes: one stray note in
-    // forty places is a worse fit than four in one place each.
+    // Ranked on stranded *positions*, not distinct notes: one stray note in forty places is a worse fit
+    // than four in one place each.
     if (best === null || count < best.count) best = { semitones, strays, count }
   }
 
@@ -92,8 +94,8 @@ function bestFit(notes: readonly SongNote[]): { semitones: number, strays: reado
 }
 
 /**
- * How many notes are in each bar of the source, so a generated spec can be broken where the tune was.
- * An ABC tune arrives counted from `parseAbc`; a note list needs no parser, its tokens being names.
+ * Notes per bar of the source, so a generated spec breaks where the tune did. An ABC tune arrives counted
+ * from `parseAbc`; a note list needs no parser, its tokens being names.
  */
 function barCounts(text: string): readonly number[] {
   if (isAbc(text)) {
@@ -126,8 +128,7 @@ function groupIntoBars(
 
 /** `1` is the default and stays unwritten; anything else gets a `:beats` suffix. */
 function renderNote(note: SongNote, semitones: number): string {
-  // Four places is past anything a written length produces, and trims the binary dust a chain of
-  // halvings leaves behind.
+  // Past anything a written length produces, and trims the binary dust a chain of halvings leaves.
   const beats = Number(note.beats.toFixed(4))
   return `${transposeNote(note.note, semitones)}${beats === 1 ? '' : `:${beats}`}`
 }
@@ -156,9 +157,8 @@ function wrap(text: string, width: number): readonly string[] {
 }
 
 /**
- * A spec string shaped like the library's own: one line while it fits on one, otherwise whole bars
- * packed into the lines of a template literal. The spaces around each `|` are load-bearing —
- * `parseNotes` drops bar lines by token, not by character.
+ * A spec string shaped like the library's own: one line while it fits, otherwise whole bars packed into a
+ * template literal. The spaces around each `|` are load-bearing — `parseNotes` drops bar lines by token.
  */
 function renderSpec(groups: readonly (readonly SongNote[])[], semitones: number): string {
   const bars = groups.map((group) => group.map((note) => renderNote(note, semitones)).join(' '))
@@ -179,8 +179,8 @@ function renderSpec(groups: readonly (readonly SongNote[])[], semitones: number)
   }
   if (current !== '') lines.push(current)
 
-  // A bar wider than the line survives the packing above, which only breaks *between* bars. That is
-  // the ordinary case for a source with no bar lines at all: the whole melody is one bar.
+  // The packing above only breaks *between* bars, so a bar wider than the line survives it. Ordinary for a
+  // source with no bar lines at all, where the whole melody is one bar.
   const broken = lines.flatMap((line) => wrap(line, WIDTH - INDENT.length))
 
   return ['`', ...broken.map((line) => INDENT + line), '    `'].join('\n')
@@ -200,8 +200,8 @@ function readMode(text: string): string {
 }
 
 /**
- * A starting point for the difficulty tag rather than a verdict. Leaps and short notes are what
- * actually make a tune hard to play on a whistle; the number of notes barely matters.
+ * A starting point for the difficulty tag rather than a verdict. Leaps and short notes are what make a tune
+ * hard to play on a whistle; the number of notes barely matters.
  */
 function difficulty(notes: readonly SongNote[]): string {
   const midis = notes.map((note) => noteToMidi(note.note) ?? 0)
@@ -220,11 +220,11 @@ function difficulty(notes: readonly SongNote[]): string {
 }
 
 /**
- * The library entry a pasted melody would become. `text` is the paste itself, needed for the bar
- * lines and the mode; `song` is what `parseCustomSong` already made of it.
+ * The library entry a pasted melody would become. `text` is the paste itself, needed for the bar lines and
+ * the mode; `song` is what `parseCustomSong` already made of it.
  *
- * `subtitle` comes out as a placeholder on purpose: every entry names where its tune came from, and
- * that is the one thing here no amount of parsing can work out.
+ * `subtitle` comes out as a placeholder on purpose: every entry names where its tune came from, which is the
+ * one thing no amount of parsing can work out.
  */
 export function songDefinition(text: string, song: Song): SongDefinition {
   const { semitones, strays } = bestFit(song.notes)

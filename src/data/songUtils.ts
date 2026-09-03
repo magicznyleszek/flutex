@@ -1,9 +1,9 @@
 /**
- * What a song *is* — the shape, the spec-string reader, and how a song is fitted to one instrument.
- * The songs themselves live under `songs/`, whose files import `defineSong` from here.
+ * What a song *is* — the shape, the spec-string reader, and how a song is fitted to one instrument. The
+ * songs themselves live under `songs/`, whose files import `defineSong` from here.
  *
- * Keep the dependency one-way: nothing here may reach for `SONGS`. Every file under `songs/` calls
- * `defineSong` at its top level, so a cycle would be a crash on load rather than a warning.
+ * Nothing here may reach for `SONGS`: every file under `songs/` calls `defineSong` at its top level, so a
+ * cycle would be a crash on load rather than a warning.
  */
 import { type Instrument, type InstrumentId, nearestFingered } from './instruments'
 import { bestShift, keyShift, transposeKey, transposeNote } from '../lib/transpose'
@@ -15,11 +15,9 @@ export interface SongNote {
 }
 
 /**
- * The sections the library is written in, and the groups the song picker draws. The order here is
- * the order they appear in, running roughly from the easiest thing to play to the hardest.
- *
- * One file under `songs/` per entry, and `songs/index.ts` walks this list to build `SONGS` — so this
- * is the only place the order lives, and a song cannot end up under the wrong heading.
+ * The sections the library is written in and the groups the picker draws, in display order, roughly
+ * easiest to hardest. One file under `songs/` per entry, walked by `songs/index.ts` to build `SONGS` — so
+ * the order lives only here, and a song cannot end up under the wrong heading.
  */
 export const SONG_CATEGORIES = [
   { slug: 'exercises', label: 'Exercises' },
@@ -29,6 +27,8 @@ export const SONG_CATEGORIES = [
   { slug: 'english-dance', label: 'English dance tunes' },
   { slug: 'irish-scottish', label: 'Irish and Scottish' },
   { slug: 'old-time', label: 'American old-time' },
+  { slug: 'game-themes', label: 'Game themes' },
+  { slug: 'from-recordings', label: 'From recordings' },
   { slug: 'second-octave', label: 'Second octave' },
 ] as const
 
@@ -40,38 +40,35 @@ export interface Song {
   title: string
   subtitle?: string
   /**
-   * Which section it belongs to, stamped on by `songs/index.ts` from the file the song was written
-   * in. Optional because the custom song belongs to none of them: it is not in `SONGS` at all.
+   * Stamped on by `songs/index.ts` from the file the song was written in. Optional because the custom song
+   * belongs to no section: it is not in `SONGS` at all.
    */
   category?: SongCategory
   tags: readonly string[]
   /**
-   * The key the melody is written in, as a pitch-class name; the notes themselves are stored at
-   * concert pitch. What the key buys is a direction to transpose in — `keyShift` from here to the
-   * instrument's key is the move most likely to leave the melody diatonic, and so easy to finger.
+   * A pitch-class name; the notes themselves are stored at concert pitch. What the key buys is a direction to
+   * transpose in — `keyShift` to the instrument's key usually leaves the melody diatonic, and easy to finger.
    */
   key: string
   notes: readonly SongNote[]
   /**
-   * A shift in semitones to use on one instrument instead of the one worked out from the keys and
-   * the range: the escape hatch for a song whose automatic arrangement lands badly. A zero is as
-   * much an instruction as any other number — it is how "Concerning Hobbits" stays in D on the
-   * ocarinas.
+   * A shift to use on one instrument in place of the searched one, for a song whose automatic arrangement
+   * lands badly. A zero instructs as much as any other number — it is how "Concerning Hobbits" stays in D on
+   * the ocarinas.
    */
   overrides?: Readonly<Partial<Record<InstrumentId, number>>>
 }
 
 /**
- * The song a user types in themselves, which is not in `SONGS` — it is parsed out of saved text on
- * every load, and there is only ever one. Everything that keys off a song id treats this as just
- * another id, `isSongId` included, so the picker can select it.
+ * The song a user types in themselves: parsed out of saved text on every load, never in `SONGS`, and only
+ * ever one. Everything keying off a song id treats this as just another id, so the picker can select it.
  */
 export const CUSTOM_SONG_ID = 'custom'
 
 /**
- * `D5 A5:2 | F#5:0.5` — space-separated note names, `|` bar lines dropped, an optional `:beats`
- * suffix defaulting to one. Nothing is validated: the library is checked by the test suite, and
- * pasted text goes through `parseCustomSong` instead.
+ * `D5 A5:2 | F#5:0.5` — space-separated note names, `|` bar lines dropped, an optional `:beats` suffix
+ * defaulting to one. Nothing is validated: the library has the test suite, and pasted text goes through
+ * `parseCustomSong` instead.
  */
 export function parseNotes(spec: string): readonly SongNote[] {
   return spec
@@ -95,8 +92,8 @@ export interface SongInput {
 }
 
 /**
- * One library entry, written as a spec string rather than a note array. Optional fields are spread
- * in conditionally, so an entry without a subtitle has no `subtitle` key rather than an undefined one.
+ * One library entry, written as a spec string rather than a note array. Optional fields are spread in
+ * conditionally, so an entry without a subtitle has no `subtitle` key rather than an undefined one.
  */
 export const defineSong = (
   { id, title, subtitle, tags = [], key, spec, overrides }: SongInput,
@@ -115,11 +112,10 @@ export function songNoteNames(song: Pick<Song, 'notes'>): readonly string[] {
   return song.notes.map((entry) => entry.note)
 }
 
-/** A note the melody asks for that the instrument cannot finger, and the grip put there instead. */
+/** A note the melody asks for that the instrument cannot finger, and the nearest grip put there instead. */
 export interface Approximation {
   /** The note as the melody has it, after any transposition. */
   written: string
-  /** The nearest note the instrument does have a grip for. */
   played: string
 }
 
@@ -131,20 +127,20 @@ export interface Arrangement {
   /** The key it sounds in after the move. */
   key: string
   /**
-   * Every note swapped for a nearby one because the instrument has no grip for it, deduplicated, in
-   * the order the melody first reaches them. Empty for nearly every song. A note too far out for
-   * even that is left as written and turns up in `unplayableNotes` instead.
+   * Every note swapped for a nearby one for want of a grip, deduplicated, in the order the melody first
+   * reaches them. Empty for nearly every song. A note too far out even for that is left as written, and shows
+   * up in `unplayableNotes` instead.
    */
   approximations: readonly Approximation[]
 }
 
 /**
- * Fits a song to an instrument in two steps: move the whole melody if that lets the instrument play
- * more of it, then swap whatever notes are still out of reach for the nearest ones it can finger.
+ * Fits a song to an instrument in two steps: move the whole melody if that lets the instrument play more of
+ * it, then swap whatever notes are still out of reach for the nearest ones it can finger.
  *
- * The swap is not cosmetic. `notes` is what the trainer waits for, what the charts draw and what
- * **Hear it** plays, so a note with no grip used to be a wall the song could not be got past.
- * `approximations` is how the UI owns up to it rather than passing it off as the melody.
+ * The swap is not cosmetic. `notes` is what the trainer waits for, what the charts draw and what **Hear it**
+ * plays, so a note with no grip used to be a wall the song could not be got past; `approximations` is how the
+ * UI owns up to it rather than passing it off as the melody.
  *
  * `??`, not a truthiness check: an `overrides` entry of `0` means "leave it alone".
  */
@@ -160,8 +156,8 @@ export function songForInstrument(song: Song, instrument: Instrument): Arrangeme
     ? song.notes
     : song.notes.map((entry) => ({ ...entry, note: transposeNote(entry.note, semitones) }))
 
-  // Per distinct note rather than per position: the same note out of range in eight places is one
-  // thing to tell the player about, and one lookup rather than eight.
+  // Per distinct note, not per position: the same note out of range in eight places is one thing to tell the
+  // player about, and one lookup rather than eight.
   const swaps = new Map<string, string>()
   for (const { note } of shifted) {
     if (note in instrument.fingering || swaps.has(note)) continue
@@ -170,9 +166,8 @@ export function songForInstrument(song: Song, instrument: Instrument): Arrangeme
   }
 
   return {
-    // Only rebuilt when there is something to swap, so a song that needed neither step comes back as
-    // the very same array — which is what keeps the memo downstream from rebuilding the note row,
-    // and through it restarting the song.
+    // A song that needed neither step comes back as the very same array, which keeps the memo downstream from
+    // rebuilding the note row and through it restarting the song.
     notes: swaps.size === 0
       ? shifted
       : shifted.map((entry) => {

@@ -108,13 +108,12 @@ export default function App(): JSX.Element {
     [songId, customText],
   )
   const librarySong = useMemo(() => getSong(songId), [songId])
-  // Always a song, even when the text is nonsense: an empty one, whose lack of notes suppresses the
-  // trainer below. `songError` is the sentence shown instead.
+  // Always a song, even when the text is nonsense: an empty one, whose lack of notes suppresses the trainer.
   const song = custom === null ? librarySong : custom.ok ? custom.song : EMPTY_CUSTOM_SONG
   const songError = custom !== null && !custom.ok ? custom.error : null
 
-  // Everything downstream plays the arrangement, not the song: library notes are at concert pitch,
-  // and an instrument that cannot reach them gets the melody moved. Switching instrument re-runs it.
+  // Everything downstream plays the arrangement, not the song: library notes are at concert pitch, and an
+  // instrument that cannot reach them gets the melody moved.
   const arrangement = useMemo(() => songForInstrument(song, instrument), [song, instrument])
   const notes = useMemo(() => songNoteNames(arrangement), [arrangement])
   const range = useMemo(() => instrumentFreqRange(instrument), [instrument])
@@ -138,8 +137,8 @@ export default function App(): JSX.Element {
   const { records, recordCompletion } = useSongProgress()
   const record = records[song.id]
 
-  // A song with no notes reports finished the moment it loads — the state a custom song sits in
-  // while its text does not parse. Nobody played anything, so nothing is finished.
+  // A song with no notes reports finished the moment it loads, which is where a custom song sits while its
+  // text does not parse. Nobody played anything.
   const finished = view.finished && notes.length > 0
 
   // The effect reruns for as long as the song stays finished, so credit each run once.
@@ -152,8 +151,8 @@ export default function App(): JSX.Element {
     if (creditedRef.current) return
 
     creditedRef.current = true
-    // Except the custom song, which keeps one id while the melody changes: a personal best there
-    // would record a tune you no longer have.
+    // Except the custom song, which keeps one id while the melody changes: its best would be for a tune you
+    // no longer have.
     if (song.id !== CUSTOM_SONG_ID) recordCompletion(song.id, view.mistakes)
   }, [finished, view.mistakes, song.id, recordCompletion])
 
@@ -170,13 +169,13 @@ export default function App(): JSX.Element {
   // Practising is the one time nothing touches the screen for minutes, so hold it only while running.
   useWakeLock(listening || demo.playing)
 
-  // Playback owns the note row while it runs, so the charts show what is sounding rather than what
-  // the trainer waits for. Same helper the engine uses, so the two cannot disagree about "next".
+  // Playback owns the note row while it runs, so the charts show what is sounding rather than what the
+  // trainer waits for. Same helper the engine uses, so the two cannot disagree about "next".
   const demoRow = useMemo(() => noteWindow(notes, demo.index), [notes, demo.index])
   const row = demo.playing ? demoRow : view
 
-  // Notes counted while you play, notes gone by while it plays back: either way, how much of the song
-  // is behind you. Not `view.index`, which a mistake can send backwards without uncounting a hit.
+  // How much of the song is behind you, counted either way. Not `view.index`, which a mistake can send
+  // backwards without uncounting a hit.
   const played = demo.playing ? demo.index : view.hits
 
   const startDemo = (): void => {
@@ -184,15 +183,15 @@ export default function App(): JSX.Element {
     demo.start()
   }
 
-  // While the song is playing back, "over" means the playback: sending the trainer to its first note
-  // would change nothing on screen, since playback owns the note row for as long as it runs.
+  // While the song plays back, "over" means the playback: playback owns the note row, so resetting the
+  // trainer would change nothing on screen.
   const startOver = (): void => {
     if (demo.playing) demo.restart()
     else reset()
   }
 
-  // A live session is restartable by definition; once it ends the counters keep the button awake.
-  // Deliberately not the progress bars, which would flicker the button on every breath.
+  // Once a session ends the counters keep the button awake. Deliberately not the progress bars, which would
+  // flicker it on every breath.
   const canStartOver = demo.playing || listening || view.hits > 0 || view.mistakes > 0
 
   const demoHint = demo.playing
@@ -201,29 +200,28 @@ export default function App(): JSX.Element {
       ? 'Listening. Hold each note for a moment for it to count.'
       : 'Without a microphone the trainer only shows fingerings.'
 
-  // Container `md`: at `lg`'s 1140px this single centred column floats in its own empty half, and
-  // `sm` drops the settings selects to 205px, cutting "Soprano recorder (baroque)" off mid-word.
+  // Container `md`: at `lg`'s 1140px this one centred column floats in its own empty half, and `sm` drops the
+  // settings selects to 205px, cutting "Soprano recorder (baroque)" off mid-word.
   return (
     <Container size="md" py="xl">
       <Stack gap="lg">
         <Group justify="space-between" align="flex-end">
           <Stack gap={4}>
-            {/* The wordmark is the heading, so the h1 takes its name from the image label inside.
-                Below `xs` the glyph stands in: the wordmark crowds the counters on a phone. */}
+            {/* The wordmark is the heading, so the h1 takes its name from the image label inside. Below `xs`
+                the glyph stands in, the wordmark crowding the counters on a phone. */}
             <Title order={1} lh={1} m={0}>
               <Logo variant="icon" width={34} hiddenFrom="xs" />
               <Logo variant="logotype" width={132} visibleFrom="xs" />
             </Title>
-            {/* `visibleFrom`, since Mantine's breakpoint props are min-width only. Hiding this
-                below `sm` saves 81px rather than its own 41: it also unwraps the counters. */}
+            {/* Hiding this below `sm` saves 81px rather than its own 41 — it also unwraps the counters. */}
             <Text c="dimmed" size="sm" visibleFrom="sm">
               A recorder, tin whistle and ocarina trainer. It waits until you
               play the right note.
             </Text>
           </Stack>
           <Group gap="xs">
-            {/* `color="dark"` rather than `dark.4`: an explicit shade turns a light
-                badge from a tint into an opaque fill, which drops the text to 4.14:1. */}
+            {/* `color="dark"` rather than `dark.4`: an explicit shade turns a light badge from a tint into an
+                opaque fill, dropping the text to 4.14:1. */}
             <Badge variant="light" color="dark" leftSection={<MusicNoteIcon size={12} />}>
               {played} / {view.total}
             </Badge>
@@ -238,13 +236,13 @@ export default function App(): JSX.Element {
           </Group>
         </Group>
 
-        {/* Everything about the note being played, in one card: fingerings for the previous, current
-            and next note with their names, then the two meters that describe the middle one. */}
+        {/* Everything about the note being played in one card: three fingerings with their names, then the
+            two meters that describe the middle one. */}
         <Paper p="lg" withBorder>
           {songError !== null
             ? (
-                /* The whole card, not a line under the textarea: this is where you are looking
-                   when you expect a fingering, and there is nothing else to put here. */
+                /* The whole card, not a line under the textarea: this is where you look when you expect a
+                   fingering, and there is nothing else to put here. */
                 <Alert
                   color="alarm"
                   variant="light"
@@ -267,9 +265,8 @@ export default function App(): JSX.Element {
 
                   <Divider visibleFrom="sm" />
 
-                  {/* Hold first: it answers the question you have while a note is sounding — "is
-                      this counting yet?" — and belongs next to the chart it measures. The tuner is
-                      the finer correction you reach for once the hold bar refuses to move. */}
+                  {/* Hold first: it answers the question you have while a note sounds — "is this counting
+                      yet?" The tuner is the finer correction, for once the hold bar refuses to move. */}
                   <ProgressBars
                     holdProgress={view.holdProgress}
                     mistakeProgress={view.mistakeProgress}
@@ -312,13 +309,12 @@ export default function App(): JSX.Element {
 
         <Paper p="lg" withBorder>
           <Stack gap="sm">
-            {/* Start on its own row and full width: it is the one control you reach for without
-                looking, and the sentence under it explains whatever it just did. */}
+            {/* Its own row, full width: the one control you reach for without looking. */}
             <MicButton
               status={mic.status}
               error={mic.error}
-              // Playback comes out of the speakers, which the mic would hear and score as your
-              // playing. Whichever button you press last wins.
+              // The mic would hear playback out of the speakers and score it as your playing, so whichever
+              // button you press last wins.
               onStart={() => {
                 demo.stop()
                 void mic.start()
@@ -330,14 +326,13 @@ export default function App(): JSX.Element {
               {demoHint}
             </Text>
 
-            {/* The two toggles are wedged in here rather than in the header, which wraps on a 360px
-                phone. Fullscreen has to be on screen anyway: the browser only grants it from a tap.
-                Split into two nowrap groups, so a narrow screen drops them below the buttons
-                together instead of tearing "Start over" off on its own. */}
+            {/* The two toggles are here rather than in the header, which wraps on a 360px phone — and
+                fullscreen has to be on screen anyway, the browser granting it only from a tap. Two nowrap
+                groups, so a narrow screen drops both under the buttons rather than tearing "Start over". */}
             <Group gap="sm" justify="space-between">
               <Group gap="sm" wrap="nowrap">
-                {/* `signal` is the colour of the note you are asked to play, which is what playback
-                    is doing — and it keeps this off the green of Start. */}
+                {/* `signal` is the colour of the note you are asked to play, which is what playback shows —
+                    and it keeps this off the green of Start. */}
                 <Button
                   size="md"
                   variant="light"
@@ -352,9 +347,9 @@ export default function App(): JSX.Element {
                 >
                   {demo.playing ? 'Stop' : 'Hear it'}
                 </Button>
-                {/* A real action, not an aside, so a bordered button at Start's size rather than a
-                    text link. `default` and not red: it discards progress, but red would read as a
-                    warning about something already gone wrong. */}
+                {/* A real action, so a bordered button at Start's size rather than a text link. `default` and
+                    not red: it discards progress, but red would read as a warning about something gone
+                    wrong. */}
                 <Button
                   size="md"
                   variant="default"
@@ -418,12 +413,12 @@ export default function App(): JSX.Element {
             Pitch detection runs locally in the browser — nothing leaves your
             machine.
           </Text>
-          {/* A takedown route in the footer rather than buried in the README, so a rights holder who
-              lands here can find it. `--flutex-accent-ink` and not Mantine's anchor colour, which is
-              the filled primary and reads 3.51:1 at 12px on a light card. */}
+          {/* A takedown route in the footer rather than buried in the README, so a rights holder who lands
+              here can find it. `--flutex-accent-ink` and not Mantine's anchor colour, which is the filled
+              primary and reads 3.51:1 at 12px on a light card. */}
           <Text size="xs" c="dimmed" ta="center">
-            The songs are traditional or out of copyright, bar one transcription
-            written out for practice. To have anything taken down, write to{' '}
+            The songs are traditional or out of copyright, bar the game themes
+            and the tunes taken from recordings. To have anything taken down, write to{' '}
             <Anchor
               inherit
               c="var(--flutex-accent-ink)"

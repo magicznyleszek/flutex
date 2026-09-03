@@ -150,6 +150,9 @@
 /* Flat where the tube is a gradient: an SVG gradient needs an id to point at, and five charts are
    on screen at once. Same palette as the tube, so both kinds read as one material.
 
+   `.ocarinaShell` dresses the body and the neck under it alike, which is what lets the two overlap
+   into one silhouette instead of showing a seam.
+
    `.ocarinaBackPad` is the scrap of instrument a thumb hole is bored through, drawn under a hole
    that sits outside the front view so it reads as on the instrument rather than beside it. Dashing
    the hole was the other option, and at four viewBox units across a dash pattern looks like a

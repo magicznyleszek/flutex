@@ -1,5 +1,5 @@
 import { parseCustomSong } from '../src/data/customSong'
-import { INSTRUMENT_LIST } from '../src/data/instruments'
+import { BASE_INSTRUMENTS } from '../src/data/instruments'
 import { SHARED_NOTES, songDefinition } from '../src/data/songDefinition'
 import { SONGS } from '../src/data/songs'
 import { defineSong, songForInstrument, type Song } from '../src/data/songUtils'
@@ -32,23 +32,22 @@ K:Em
 `
 
 describe('the shared note set', () => {
-  // The library is written on these ten and the search aims at them, so a chart edit that moves the
-  // set has to be a deliberate one.
+  // The library is written on these ten and the search aims at them, so moving the set has to be deliberate.
   it('is the D major scale plus C natural', () => {
     expect(SHARED_NOTES).toEqual(['D5', 'E5', 'F#5', 'G5', 'A5', 'B5', 'C6', 'C#6', 'D6', 'E6'])
   })
 
-  it('is playable on every instrument', () => {
-    for (const instrument of INSTRUMENT_LIST) {
+  // Base instruments only: a variant plays another octave of the same grips, so shares nothing to intersect.
+  it('is playable on every instrument the library is written for', () => {
+    for (const instrument of BASE_INSTRUMENTS) {
       expect(SHARED_NOTES.filter((note) => !(note in instrument.fingering))).toEqual([])
     }
   })
 })
 
 describe('reading a tune into a definition', () => {
-  // The tune is in the library already, entered by hand from the same 1651 source. Reproducing it
-  // note for note is the strongest check that the whole chain agrees: the octave, the key, the
-  // repeats, the two endings, the bar lines and the `:beats`.
+  // The tune is in the library already, entered by hand from the same 1651 source. Matching it note for note
+  // checks the octave, the key, the repeats, the two endings, the bar lines and the `:beats` all at once.
   it('reproduces the library entry for a tune already in it', () => {
     const nonesuch = SONGS.find((song) => song.id === 'nonesuch')
     const definition = define(NONESUCH)
@@ -58,9 +57,8 @@ describe('reading a tune into a definition', () => {
     expect(reparse(definition.block).notes).toEqual(nonesuch?.notes)
   })
 
-  // An octave up would clear the bottom of the range but push the top past both ocarinas, so the
-  // answer is a fifth, which also pulls the tune into the whistle's D. The smaller move is the one
-  // that fits, and it is not the obvious one — which is why a machine picks it.
+  // An octave up would clear the bottom of the range but push the top past both ocarinas, so the answer is a
+  // fifth — the smaller move, and not the obvious one, which is why a machine picks it.
   it('moves a tune written below the instruments by the smallest move that fits', () => {
     const definition = define('X:1\nT:Low\nM:4/4\nL:1/4\nK:G\nG A B c|d e f g|')
 
@@ -76,6 +74,14 @@ describe('reading a tune into a definition', () => {
     expect(definition.block).toContain("spec: 'D5 E5 F#5 G5 | A5 B5 C#6 D6'")
   })
 
+  // A header putting `M:` after `K:` used to read as minor, the `M` being taken for the mode.
+  it('reads the mode from the key line only', () => {
+    // The letter is whatever the shift landed on, so only the mode word is pinned here.
+    expect(define('X:1\nT:Modal\nK:Em\nM:4/4\nL:1/4\nB B G A|').block)
+      .toMatch(/subtitle: 'SOURCE — [A-G]#? minor'/)
+    expect(define('X:1\nT:Plain\nK:D\nM:4/4\nL:1/4\nF F G A|').block).toContain('D major')
+  })
+
   it('names the notes no shift can rescue', () => {
     // Chromatic, so four notes are outside the shared set at every shift.
     const definition = define('X:1\nT:Chromatic\nM:4/4\nL:1/4\nK:C\nC ^C D ^D|E F ^F G|')
@@ -86,12 +92,12 @@ describe('reading a tune into a definition', () => {
 })
 
 describe('the generated block', () => {
-  // The point of the whole thing: a block that parses back into a song every instrument plays
-  // untouched, which is what `tests/data.test.ts` demands of anything pasted into the library.
+  // The point of the whole thing: a block that parses back into a song every instrument plays untouched,
+  // which is what `tests/data.test.ts` demands of anything pasted into the library.
   it('plays as written on every instrument', () => {
     const song = reparse(define(NONESUCH).block)
 
-    for (const instrument of INSTRUMENT_LIST) {
+    for (const instrument of BASE_INSTRUMENTS) {
       const arrangement = songForInstrument(song, instrument)
       expect(arrangement.semitones).toBe(0)
       expect(arrangement.approximations).toEqual([])
@@ -124,8 +130,8 @@ describe('the generated block', () => {
     for (const line of block.split('\n')) expect(line.length).toBeLessThanOrEqual(98)
   })
 
-  // The packer breaks between bars, so a source with none is one bar as wide as the melody. Wrapping
-  // has to fall back to breaking on notes, or the spec comes out as one long line.
+  // The packer breaks between bars, so a source with none is one bar as wide as the melody — wrapping has to
+  // fall back to breaking on notes.
   it('wraps a long tune that has no bar lines to break on', () => {
     const block = define('D5 E5 F#5 G5 A5 B5 C#6 D6 '.repeat(12)).block
 

@@ -10,8 +10,8 @@ export function pitchClass(key: string): number | null {
 }
 
 /**
- * Semitones from one key to another, normalised into ±6 so it is always the shorter way round: G to
- * C is +5, not -7. Same key either way, but the smaller number stays nearer the written register.
+ * Semitones from one key to another, normalised into ±6 so it is the shorter way round: G to C is +5, not -7.
+ * Same key either way, but the smaller number stays nearer the written register.
  */
 export function keyShift(from: string, to: string): number {
   const start = pitchClass(from)
@@ -43,9 +43,9 @@ export interface ShiftChoice {
 
 /**
  * How far to move a melody so an instrument can actually play it. `preferred` is the shift into the
- * instrument's own key, which usually comes out diatonic and so easiest to finger — but only a
- * preference, since a whistle in D plays in G all day. Both that and no shift are tried at every
- * octave, and note count decides. A melody that already fits is left exactly as written.
+ * instrument's own key, usually diatonic and so easiest to finger — but only a preference, a whistle in D
+ * playing in G all day. That and no shift are tried at every octave, and note count decides. A melody that
+ * already fits is left exactly as written.
  */
 export function bestShift(
   notes: readonly string[],
@@ -58,9 +58,9 @@ export function bestShift(
     candidates.add(preferred + octave * 12)
   }
 
-  // The sort is the tie-break, so the loop below needs no second comparison. Whole octaves first,
-  // being the one move that keeps the written key — an E dorian tune stays in E dorian rather than
-  // being pulled into the whistle's D. Then the smallest move, and on a tie the downward one.
+  // The sort is the tie-break, so the loop below needs no second comparison. Whole octaves first, being the
+  // one move that keeps the written key — an E dorian tune stays in E dorian rather than being pulled into
+  // the whistle's D. Then the smallest move, and on a tie the downward one.
   const ordered = [...candidates].sort(
     (left, right) =>
       Number(left % 12 !== 0) - Number(right % 12 !== 0)
